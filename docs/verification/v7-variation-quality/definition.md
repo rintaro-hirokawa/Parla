@@ -5,7 +5,7 @@ priority: P2
 category: AI能力・品質
 related_llm_calls: ["#3"]
 related_requirements: ["06-srs-mastery.md", "10-llm-calls.md"]
-status: not_started
+status: passed
 ---
 
 # V7: 類題生成の品質と多様性

@@ -5,7 +5,7 @@ priority: P1
 category: AI能力・品質
 related_llm_calls: ["#4"]
 related_requirements: ["05-learning-items.md", "10-llm-calls.md"]
-status: not_started
+status: passed
 ---
 
 # V3: 意味的重複検出

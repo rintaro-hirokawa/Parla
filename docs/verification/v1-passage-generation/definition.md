@@ -5,7 +5,7 @@ priority: P1
 category: AI能力・品質
 related_llm_calls: ["#1"]
 related_requirements: ["04-source-management.md", "10-llm-calls.md", "02-learning-cycle.md", "07-hint-system.md"]
-status: not_started
+status: completed
 ---
 
 # V1: パッセージ生成品質

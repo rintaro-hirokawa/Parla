@@ -36,3 +36,4 @@ uv run pytest                    # テスト
 
 - 定義: `docs/verification/`
 - コード・結果: `verification/`
+- `verification/` にはテスト（pytest）、lint、型チェックは不要
