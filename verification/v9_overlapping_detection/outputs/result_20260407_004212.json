@@ -1,0 +1,6176 @@
+{
+  "results": [
+    {
+      "case_id": "p1_sync",
+      "pattern": "sync",
+      "true_positives": 0,
+      "false_positives": 9,
+      "false_negatives": 0,
+      "precision": 0.0,
+      "recall": 1.0,
+      "fa_user_latency_ms": 1506.7056999978377,
+      "llm_latency_ms": 8688.612800000556,
+      "total_latency_ms": 10195.318499998393,
+      "user_loss": 0.01763141879719265,
+      "delayed_phrase_count": 2,
+      "total_phrase_count": 2,
+      "feedback": {
+        "delayed_phrases": [
+          {
+            "phrase": "but something that moves people's",
+            "delay_sec": 0.37,
+            "estimated_cause": "syntactic_complexity",
+            "suggestion": "\"something that...\"という関係代名詞の構造により、一瞬構文の処理に意識が向いた可能性があります。thatをリズムの区切りとして捉えず、一息で言い切る練習をしてみましょう。"
+          },
+          {
+            "phrase": "can build great ones.",
+            "delay_sec": 0.34,
+            "estimated_cause": "discourse_boundary",
+            "suggestion": "文の締めくくりで自然な減速が見られますが、0.34秒という僅かな差なので、特に修正の必要はありません。最後まで丁寧に発音できています。"
+          }
+        ],
+        "overall_comment": "全体的に非常に高い流暢さで、モデル音声にぴったりと付いていけています。特に0.5秒以上の大きな遅れがない点は、語彙や構文がしっかり定着している証拠です。この調子で、より長い一節でも同じリズムを保てるよう練習を続けましょう。"
+      },
+      "timestamp": "2026-04-06T15:41:22.177007+00:00"
+    },
+    {
+      "case_id": "p1_stumble",
+      "pattern": "stumble",
+      "true_positives": 0,
+      "false_positives": 44,
+      "false_negatives": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "fa_user_latency_ms": 1423.3511000020371,
+      "llm_latency_ms": 15327.826799999457,
+      "total_latency_ms": 16751.177900001494,
+      "user_loss": 0.01728325193099554,
+      "delayed_phrase_count": 1,
+      "total_phrase_count": 1,
+      "feedback": {
+        "delayed_phrases": [
+          {
+            "phrase": "young workers to listen to others and learn from both good and bad experiences. He believes that cars are not just a way to travel, but something that moves people's hearts. Ultimately, he thinks that only people who love cars can build great ones.",
+            "delay_sec": 0.92,
+            "estimated_cause": "syntactic_complexity",
+            "suggestion": "「not just... but...」や「that」節などの複雑な構文が続くため、構文理解に脳の処理が追いつかなくなった可能性があります。まずは一文を意味の塊（チャンク）ごとに区切り、内容をイメージしながら音読して構造に慣れることから始めましょう。"
+          }
+        ],
+        "overall_comment": "全体的に安定したスピードで進められており、非常に聞き取りやすいリズムです。後半の長い一節で生じた遅れは文法的な複雑さによるものなので、焦らずに意味の切れ目を意識して練習を重ねればすぐに改善します。自信を持って練習を続けていきましょう。"
+      },
+      "timestamp": "2026-04-06T15:41:39.089157+00:00"
+    },
+    {
+      "case_id": "p1_no_linking",
+      "pattern": "no_linking",
+      "true_positives": 7,
+      "false_positives": 0,
+      "false_negatives": 45,
+      "precision": 1.0,
+      "recall": 0.1346153846153846,
+      "fa_user_latency_ms": 1285.708600000362,
+      "llm_latency_ms": 10776.506499998504,
+      "total_latency_ms": 12062.215099998866,
+      "user_loss": 0.01905247212334452,
+      "delayed_phrase_count": 2,
+      "total_phrase_count": 2,
+      "feedback": {
+        "delayed_phrases": [
+          {
+            "phrase": "age sixty-nine.",
+            "delay_sec": 0.35,
+            "estimated_cause": "discourse_boundary",
+            "suggestion": "文末での0.35秒の遅れは非常に小さく、自然なポーズの範囲内です。次の文の冒頭に意識を向ける練習をすると、よりスムーズに移行できます。"
+          },
+          {
+            "phrase": "something that moves people's hearts.",
+            "delay_sec": 0.44,
+            "estimated_cause": "syntactic_complexity",
+            "suggestion": "関係代名詞thatを含む構造で、少し処理に時間がかかったようです。'something that moves'を一つの塊として捉え、一息で言う練習をしてみましょう。"
+          }
+        ],
+        "overall_comment": "全体として、モデルの音声にしっかりついていけており、B1レベルとして非常に良好なパフォーマンスです。遅延はいずれも0.5秒未満で、リズムを大きく崩すことなく音読できています。意味の塊（チャンク）を意識した練習を続けることで、さらに流暢さが向上します。"
+      },
+      "timestamp": "2026-04-06T15:41:51.323849+00:00"
+    },
+    {
+      "case_id": "p1_gradual",
+      "pattern": "gradual",
+      "true_positives": 0,
+      "false_positives": 37,
+      "false_negatives": 8,
+      "precision": 0.0,
+      "recall": 0.0,
+      "fa_user_latency_ms": 2367.480799999612,
+      "llm_latency_ms": 11631.433099999413,
+      "total_latency_ms": 13998.913899999025,
+      "user_loss": 0.017514274923840938,
+      "delayed_phrase_count": 1,
+      "total_phrase_count": 1,
+      "feedback": {
+        "delayed_phrases": [
+          {
+            "phrase": "learn from both good and bad experiences. He believes that cars are not just a way to travel, but something that moves people's hearts. Ultimately, he thinks that only people who love cars can build great ones.",
+            "delay_sec": 0.53,
+            "estimated_cause": "syntactic_complexity",
+            "suggestion": "「not just A, but B」や関係代名詞など、文の後半に向けて構造が複雑になったことで処理に時間がかかったようです。意味の塊（チャンク）ごとに区切ってリピート練習を行い、構造を意識せずに口に馴染むまで繰り返してみましょう。"
+          }
+        ],
+        "overall_comment": "非常に長い一節を最後まで安定したペースで音読できています。0.53秒の遅れはわずかであり、CEFR B1レベルとしては高い流暢さを保てています。Ultimatelyなどの長い単語や、文のつなぎ目でのリズムを意識すると、さらにモデル音声にシンクロできるようになります。"
+      },
+      "timestamp": "2026-04-06T15:42:05.488275+00:00"
+    },
+    {
+      "case_id": "p1_different_voice",
+      "pattern": "different_voice",
+      "true_positives": 0,
+      "false_positives": 41,
+      "false_negatives": 0,
+      "precision": 0.0,
+      "recall": 1.0,
+      "fa_user_latency_ms": 1260.5376999999862,
+      "llm_latency_ms": 5862.869900000078,
+      "total_latency_ms": 7123.407600000064,
+      "user_loss": 0.01654589703069866,
+      "delayed_phrase_count": 1,
+      "total_phrase_count": 1,
+      "feedback": {
+        "delayed_phrases": [
+          {
+            "phrase": "listen to others and learn from both good and bad experiences. He believes that cars are not just a way to travel, but something that moves people's hearts. Ultimately, he thinks that only people who love cars can build great ones.",
+            "delay_sec": 1.73,
+            "estimated_cause": "syntactic_complexity",
+            "suggestion": "「not just... but...」や「only people who...」といった構文が続くため、処理が追いつかなくなった可能性があります。意味のまとまりごとに区切ってリピート練習を行い、構造を体に覚えさせましょう。"
+          }
+        ],
+        "overall_comment": "全体的に安定したペースで進められていますが、文章が長くなり構文が複雑になる後半部分で遅れが蓄積しています。experiencesやUltimatelyといった音節の多い単語を滑らかに言えるよう部分的に練習すると、さらに流暢さが向上します。"
+      },
+      "timestamp": "2026-04-06T15:42:12.793865+00:00"
+    }
+  ],
+  "fa_data": {
+    "p1_sync": {
+      "reference": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.046,
+            "end": 0.43,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.499,
+            "end": 1.091,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 1.161,
+            "end": 1.265,
+            "loss": 0.0
+          },
+          {
+            "text": "chairman",
+            "start": 1.312,
+            "end": 1.637,
+            "loss": 0.0
+          },
+          {
+            "text": "of",
+            "start": 1.683,
+            "end": 1.73,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.788,
+            "end": 2.473,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 2.589,
+            "end": 2.74,
+            "loss": 0.0
+          },
+          {
+            "text": "still",
+            "start": 2.775,
+            "end": 2.984,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 3.042,
+            "end": 3.111,
+            "loss": 0.0
+          },
+          {
+            "text": "chief",
+            "start": 3.158,
+            "end": 3.39,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 3.448,
+            "end": 3.704,
+            "loss": 0.0
+          },
+          {
+            "text": "driver",
+            "start": 3.738,
+            "end": 4.075,
+            "loss": 0.0
+          },
+          {
+            "text": "at",
+            "start": 4.133,
+            "end": 4.191,
+            "loss": 0.0
+          },
+          {
+            "text": "age",
+            "start": 4.238,
+            "end": 4.435,
+            "loss": 0.0
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.47,
+            "end": 5.433,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 5.944,
+            "end": 6.06,
+            "loss": 0.0
+          },
+          {
+            "text": "often",
+            "start": 6.118,
+            "end": 6.327,
+            "loss": 0.0
+          },
+          {
+            "text": "wears",
+            "start": 6.374,
+            "end": 6.594,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 6.629,
+            "end": 6.664,
+            "loss": 0.0
+          },
+          {
+            "text": "racing",
+            "start": 6.722,
+            "end": 7.036,
+            "loss": 0.0
+          },
+          {
+            "text": "suit",
+            "start": 7.094,
+            "end": 7.361,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 7.477,
+            "end": 7.674,
+            "loss": 0.0
+          },
+          {
+            "text": "drives",
+            "start": 7.721,
+            "end": 8.046,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 8.092,
+            "end": 8.313,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 8.382,
+            "end": 8.661,
+            "loss": 0.0
+          },
+          {
+            "text": "on",
+            "start": 8.707,
+            "end": 8.8,
+            "loss": 0.0
+          },
+          {
+            "text": "tough",
+            "start": 8.87,
+            "end": 9.102,
+            "loss": 0.0
+          },
+          {
+            "text": "tracks.",
+            "start": 9.149,
+            "end": 9.764,
+            "loss": 0.0
+          },
+          {
+            "text": "His",
+            "start": 10.275,
+            "end": 10.449,
+            "loss": 0.0
+          },
+          {
+            "text": "philosophy",
+            "start": 10.495,
+            "end": 10.983,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 11.029,
+            "end": 11.088,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 11.146,
+            "end": 11.204,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 11.262,
+            "end": 11.505,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 11.575,
+            "end": 11.923,
+            "loss": 0.0
+          },
+          {
+            "text": "until",
+            "start": 11.97,
+            "end": 12.202,
+            "loss": 0.0
+          },
+          {
+            "text": "they",
+            "start": 12.249,
+            "end": 12.365,
+            "loss": 0.0
+          },
+          {
+            "text": "break.",
+            "start": 12.411,
+            "end": 12.957,
+            "loss": 0.0
+          },
+          {
+            "text": "By",
+            "start": 13.56,
+            "end": 13.7,
+            "loss": 0.0
+          },
+          {
+            "text": "fixing",
+            "start": 13.769,
+            "end": 14.083,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 14.129,
+            "end": 14.199,
+            "loss": 0.0
+          },
+          {
+            "text": "weakest",
+            "start": 14.234,
+            "end": 14.571,
+            "loss": 0.0
+          },
+          {
+            "text": "parts,",
+            "start": 14.629,
+            "end": 15.105,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 15.221,
+            "end": 15.314,
+            "loss": 0.0
+          },
+          {
+            "text": "company",
+            "start": 15.372,
+            "end": 15.685,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 15.732,
+            "end": 15.848,
+            "loss": 0.0
+          },
+          {
+            "text": "make",
+            "start": 15.894,
+            "end": 16.069,
+            "loss": 0.0
+          },
+          {
+            "text": "better",
+            "start": 16.115,
+            "end": 16.37,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 16.428,
+            "end": 16.823,
+            "loss": 0.0
+          },
+          {
+            "text": "step",
+            "start": 16.916,
+            "end": 17.183,
+            "loss": 0.0
+          },
+          {
+            "text": "by",
+            "start": 17.241,
+            "end": 17.357,
+            "loss": 0.0
+          },
+          {
+            "text": "step.",
+            "start": 17.438,
+            "end": 17.961,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 18.472,
+            "end": 18.588,
+            "loss": 0.0
+          },
+          {
+            "text": "also",
+            "start": 18.646,
+            "end": 18.913,
+            "loss": 0.0
+          },
+          {
+            "text": "teaches",
+            "start": 18.983,
+            "end": 19.343,
+            "loss": 0.0
+          },
+          {
+            "text": "young",
+            "start": 19.424,
+            "end": 19.621,
+            "loss": 0.0
+          },
+          {
+            "text": "workers",
+            "start": 19.679,
+            "end": 20.062,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.109,
+            "end": 20.167,
+            "loss": 0.0
+          },
+          {
+            "text": "listen",
+            "start": 20.236,
+            "end": 20.48,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.527,
+            "end": 20.585,
+            "loss": 0.0
+          },
+          {
+            "text": "others",
+            "start": 20.666,
+            "end": 21.003,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 21.154,
+            "end": 21.328,
+            "loss": 0.0
+          },
+          {
+            "text": "learn",
+            "start": 21.397,
+            "end": 21.618,
+            "loss": 0.0
+          },
+          {
+            "text": "from",
+            "start": 21.665,
+            "end": 21.792,
+            "loss": 0.0
+          },
+          {
+            "text": "both",
+            "start": 21.839,
+            "end": 22.024,
+            "loss": 0.0
+          },
+          {
+            "text": "good",
+            "start": 22.094,
+            "end": 22.35,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 22.408,
+            "end": 22.57,
+            "loss": 0.0
+          },
+          {
+            "text": "bad",
+            "start": 22.64,
+            "end": 22.849,
+            "loss": 0.0
+          },
+          {
+            "text": "experiences.",
+            "start": 22.907,
+            "end": 23.87,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 24.381,
+            "end": 24.509,
+            "loss": 0.0
+          },
+          {
+            "text": "believes",
+            "start": 24.567,
+            "end": 24.88,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 24.915,
+            "end": 25.043,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 25.101,
+            "end": 25.438,
+            "loss": 0.0
+          },
+          {
+            "text": "are",
+            "start": 25.473,
+            "end": 25.577,
+            "loss": 0.0
+          },
+          {
+            "text": "not",
+            "start": 25.612,
+            "end": 25.728,
+            "loss": 0.0
+          },
+          {
+            "text": "just",
+            "start": 25.774,
+            "end": 25.949,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 25.995,
+            "end": 26.018,
+            "loss": 0.0
+          },
+          {
+            "text": "way",
+            "start": 26.076,
+            "end": 26.204,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 26.262,
+            "end": 26.32,
+            "loss": 0.0
+          },
+          {
+            "text": "travel,",
+            "start": 26.378,
+            "end": 26.935,
+            "loss": 0.0
+          },
+          {
+            "text": "but",
+            "start": 27.052,
+            "end": 27.214,
+            "loss": 0.0
+          },
+          {
+            "text": "something",
+            "start": 27.261,
+            "end": 27.551,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 27.597,
+            "end": 27.702,
+            "loss": 0.0
+          },
+          {
+            "text": "moves",
+            "start": 27.76,
+            "end": 28.027,
+            "loss": 0.0
+          },
+          {
+            "text": "people's",
+            "start": 28.085,
+            "end": 28.434,
+            "loss": 0.0
+          },
+          {
+            "text": "hearts.",
+            "start": 28.492,
+            "end": 29.061,
+            "loss": 0.0
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.873,
+            "end": 30.581,
+            "loss": 0.0
+          },
+          {
+            "text": "he",
+            "start": 30.639,
+            "end": 30.721,
+            "loss": 0.0
+          },
+          {
+            "text": "thinks",
+            "start": 30.779,
+            "end": 30.988,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 31.023,
+            "end": 31.139,
+            "loss": 0.0
+          },
+          {
+            "text": "only",
+            "start": 31.197,
+            "end": 31.394,
+            "loss": 0.0
+          },
+          {
+            "text": "people",
+            "start": 31.452,
+            "end": 31.719,
+            "loss": 0.0
+          },
+          {
+            "text": "who",
+            "start": 31.742,
+            "end": 31.835,
+            "loss": 0.0
+          },
+          {
+            "text": "love",
+            "start": 31.893,
+            "end": 32.067,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 32.114,
+            "end": 32.497,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 32.555,
+            "end": 32.671,
+            "loss": 0.0
+          },
+          {
+            "text": "build",
+            "start": 32.718,
+            "end": 32.95,
+            "loss": 0.0
+          },
+          {
+            "text": "great",
+            "start": 33.02,
+            "end": 33.228,
+            "loss": 0.0
+          },
+          {
+            "text": "ones.",
+            "start": 33.298,
+            "end": 33.716,
+            "loss": 0.0
+          }
+        ],
+        "loss": 0.0,
+        "source": "tts_timestamps"
+      },
+      "user": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.159,
+            "end": 0.599,
+            "loss": 0.436767578125
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.639,
+            "end": 1.12,
+            "loss": 0.405815669468471
+          },
+          {
+            "text": "the",
+            "start": 1.259,
+            "end": 1.319,
+            "loss": 0.0010689894358317058
+          },
+          {
+            "text": "chairman",
+            "start": 1.399,
+            "end": 1.679,
+            "loss": 0.01030091941356659
+          },
+          {
+            "text": "of",
+            "start": 1.719,
+            "end": 1.779,
+            "loss": 0.0002624988555908203
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.86,
+            "end": 2.24,
+            "loss": 0.01155785151890346
+          },
+          {
+            "text": "is",
+            "start": 2.639,
+            "end": 2.759,
+            "loss": 0.0008411407470703125
+          },
+          {
+            "text": "still",
+            "start": 2.839,
+            "end": 3.039,
+            "loss": 0.0003020763397216797
+          },
+          {
+            "text": "the",
+            "start": 3.079,
+            "end": 3.139,
+            "loss": 0.0008530616760253906
+          },
+          {
+            "text": "chief",
+            "start": 3.259,
+            "end": 3.5,
+            "loss": 0.00635981559753418
+          },
+          {
+            "text": "test",
+            "start": 3.559,
+            "end": 3.72,
+            "loss": 0.0010343492031097412
+          },
+          {
+            "text": "driver",
+            "start": 3.799,
+            "end": 4.099,
+            "loss": 0.000271300474802653
+          },
+          {
+            "text": "at",
+            "start": 4.139,
+            "end": 4.219,
+            "loss": 0.0007143020629882812
+          },
+          {
+            "text": "age",
+            "start": 4.299,
+            "end": 4.5,
+            "loss": 0.0008006095886230469
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.539,
+            "end": 5.239,
+            "loss": 0.2030711824243719
+          },
+          {
+            "text": "He",
+            "start": 5.779,
+            "end": 5.879,
+            "loss": 0.0019140243530273438
+          },
+          {
+            "text": "often",
+            "start": 5.98,
+            "end": 6.179,
+            "loss": 0.00016596317291259766
+          },
+          {
+            "text": "wears",
+            "start": 6.259,
+            "end": 6.42,
+            "loss": 0.00012533664703369142
+          },
+          {
+            "text": "a",
+            "start": 6.48,
+            "end": 6.539,
+            "loss": 0.000354766845703125
+          },
+          {
+            "text": "racing",
+            "start": 6.579,
+            "end": 6.94,
+            "loss": 0.0002912084261576335
+          },
+          {
+            "text": "suit",
+            "start": 7.079,
+            "end": 7.339,
+            "loss": 0.0001201331615447998
+          },
+          {
+            "text": "and",
+            "start": 7.399,
+            "end": 7.48,
+            "loss": 0.000180204709370931
+          },
+          {
+            "text": "drives",
+            "start": 7.559,
+            "end": 7.899,
+            "loss": 0.00016276041666666666
+          },
+          {
+            "text": "test",
+            "start": 7.96,
+            "end": 8.159,
+            "loss": 0.0004025101661682129
+          },
+          {
+            "text": "cars",
+            "start": 8.26,
+            "end": 8.579,
+            "loss": 0.0001487135887145996
+          },
+          {
+            "text": "on",
+            "start": 8.639,
+            "end": 8.779,
+            "loss": 8.45789909362793e-05
+          },
+          {
+            "text": "tough",
+            "start": 8.84,
+            "end": 9.039,
+            "loss": 0.0005442619323730469
+          },
+          {
+            "text": "tracks.",
+            "start": 9.099,
+            "end": 9.579,
+            "loss": 0.007801413536071777
+          },
+          {
+            "text": "His",
+            "start": 10.079,
+            "end": 10.199,
+            "loss": 0.0005400975545247396
+          },
+          {
+            "text": "philosophy",
+            "start": 10.239,
+            "end": 10.84,
+            "loss": 0.00020984411239624023
+          },
+          {
+            "text": "is",
+            "start": 11.0,
+            "end": 11.119,
+            "loss": 0.0004299283027648926
+          },
+          {
+            "text": "to",
+            "start": 11.199,
+            "end": 11.26,
+            "loss": 0.0026149749755859375
+          },
+          {
+            "text": "test",
+            "start": 11.34,
+            "end": 11.599,
+            "loss": 0.000875622034072876
+          },
+          {
+            "text": "cars",
+            "start": 11.679,
+            "end": 12.019,
+            "loss": 0.00040787458419799805
+          },
+          {
+            "text": "until",
+            "start": 12.059,
+            "end": 12.34,
+            "loss": 0.00016431808471679689
+          },
+          {
+            "text": "they",
+            "start": 12.38,
+            "end": 12.46,
+            "loss": 0.00011867284774780273
+          },
+          {
+            "text": "break.",
+            "start": 12.579,
+            "end": 12.939,
+            "loss": 0.01367791493733724
+          },
+          {
+            "text": "By",
+            "start": 13.46,
+            "end": 13.539,
+            "loss": 0.0010504722595214844
+          },
+          {
+            "text": "fixing",
+            "start": 13.659,
+            "end": 13.96,
+            "loss": 0.00014656782150268555
+          },
+          {
+            "text": "the",
+            "start": 14.0,
+            "end": 14.099,
+            "loss": 0.0003244479497273763
+          },
+          {
+            "text": "weakest",
+            "start": 14.159,
+            "end": 14.479,
+            "loss": 0.0002808570861816406
+          },
+          {
+            "text": "parts,",
+            "start": 14.599,
+            "end": 14.939,
+            "loss": 0.00258636474609375
+          },
+          {
+            "text": "the",
+            "start": 15.279,
+            "end": 15.38,
+            "loss": 0.0006632010142008463
+          },
+          {
+            "text": "company",
+            "start": 15.439,
+            "end": 15.779,
+            "loss": 0.0002650703702654157
+          },
+          {
+            "text": "can",
+            "start": 15.819,
+            "end": 15.939,
+            "loss": 0.00033092498779296875
+          },
+          {
+            "text": "make",
+            "start": 15.979,
+            "end": 16.139,
+            "loss": 0.0002225637435913086
+          },
+          {
+            "text": "better",
+            "start": 16.199,
+            "end": 16.42,
+            "loss": 0.000614007314046224
+          },
+          {
+            "text": "cars",
+            "start": 16.5,
+            "end": 16.879,
+            "loss": 0.0003712177276611328
+          },
+          {
+            "text": "step",
+            "start": 17.139,
+            "end": 17.379,
+            "loss": 0.010212719440460205
+          },
+          {
+            "text": "by",
+            "start": 17.42,
+            "end": 17.579,
+            "loss": 0.00016254186630249023
+          },
+          {
+            "text": "step.",
+            "start": 17.659,
+            "end": 17.999,
+            "loss": 0.0010623455047607422
+          },
+          {
+            "text": "He",
+            "start": 18.52,
+            "end": 18.6,
+            "loss": 0.0013159513473510742
+          },
+          {
+            "text": "also",
+            "start": 18.68,
+            "end": 18.939,
+            "loss": 0.0005304813385009766
+          },
+          {
+            "text": "teaches",
+            "start": 19.059,
+            "end": 19.42,
+            "loss": 0.00021890231541224888
+          },
+          {
+            "text": "young",
+            "start": 19.5,
+            "end": 19.699,
+            "loss": 0.0006299734115600586
+          },
+          {
+            "text": "workers",
+            "start": 19.76,
+            "end": 20.139,
+            "loss": 0.0002311638423374721
+          },
+          {
+            "text": "to",
+            "start": 20.219,
+            "end": 20.299,
+            "loss": 0.0004457831382751465
+          },
+          {
+            "text": "listen",
+            "start": 20.34,
+            "end": 20.6,
+            "loss": 0.00035552183787027997
+          },
+          {
+            "text": "to",
+            "start": 20.659,
+            "end": 20.739,
+            "loss": 0.0004769563674926758
+          },
+          {
+            "text": "others",
+            "start": 20.84,
+            "end": 21.159,
+            "loss": 0.0002161860466003418
+          },
+          {
+            "text": "and",
+            "start": 21.219,
+            "end": 21.319,
+            "loss": 0.00038365523020426434
+          },
+          {
+            "text": "learn",
+            "start": 21.399,
+            "end": 21.639,
+            "loss": 0.0003009319305419922
+          },
+          {
+            "text": "from",
+            "start": 21.68,
+            "end": 21.819,
+            "loss": 0.0003654360771179199
+          },
+          {
+            "text": "both",
+            "start": 21.859,
+            "end": 22.1,
+            "loss": 0.0006142258644104004
+          },
+          {
+            "text": "good",
+            "start": 22.159,
+            "end": 22.479,
+            "loss": 0.0011936426162719727
+          },
+          {
+            "text": "and",
+            "start": 22.579,
+            "end": 22.799,
+            "loss": 0.0006390015284220377
+          },
+          {
+            "text": "bad",
+            "start": 22.859,
+            "end": 23.019,
+            "loss": 0.00031685829162597656
+          },
+          {
+            "text": "experiences.",
+            "start": 23.119,
+            "end": 24.039,
+            "loss": 0.0006696581840515137
+          },
+          {
+            "text": "He",
+            "start": 24.519,
+            "end": 24.6,
+            "loss": 0.000522613525390625
+          },
+          {
+            "text": "believes",
+            "start": 24.68,
+            "end": 25.1,
+            "loss": 0.0003044009208679199
+          },
+          {
+            "text": "that",
+            "start": 25.139,
+            "end": 25.259,
+            "loss": 0.0005373954772949219
+          },
+          {
+            "text": "cars",
+            "start": 25.34,
+            "end": 25.619,
+            "loss": 0.0010173916816711426
+          },
+          {
+            "text": "are",
+            "start": 25.659,
+            "end": 25.779,
+            "loss": 0.00030243396759033203
+          },
+          {
+            "text": "not",
+            "start": 25.819,
+            "end": 26.019,
+            "loss": 0.0004142920176188151
+          },
+          {
+            "text": "just",
+            "start": 26.079,
+            "end": 26.26,
+            "loss": 0.00027826428413391113
+          },
+          {
+            "text": "a",
+            "start": 26.299,
+            "end": 26.34,
+            "loss": 0.00142669677734375
+          },
+          {
+            "text": "way",
+            "start": 26.379,
+            "end": 26.5,
+            "loss": 0.00026917457580566406
+          },
+          {
+            "text": "to",
+            "start": 26.539,
+            "end": 26.639,
+            "loss": 0.0004267692565917969
+          },
+          {
+            "text": "travel,",
+            "start": 26.699,
+            "end": 27.099,
+            "loss": 0.12903353146144322
+          },
+          {
+            "text": "but",
+            "start": 27.5,
+            "end": 27.619,
+            "loss": 0.00035150845845540363
+          },
+          {
+            "text": "something",
+            "start": 27.68,
+            "end": 27.959,
+            "loss": 0.0003547933366563585
+          },
+          {
+            "text": "that",
+            "start": 28.019,
+            "end": 28.139,
+            "loss": 0.0003566443920135498
+          },
+          {
+            "text": "moves",
+            "start": 28.26,
+            "end": 28.539,
+            "loss": 0.0007733821868896485
+          },
+          {
+            "text": "people's",
+            "start": 28.639,
+            "end": 28.959,
+            "loss": 0.01988030970096588
+          },
+          {
+            "text": "hearts.",
+            "start": 29.019,
+            "end": 29.539,
+            "loss": 0.0021129335675920758
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.92,
+            "end": 30.5,
+            "loss": 0.0021706169301813297
+          },
+          {
+            "text": "he",
+            "start": 30.779,
+            "end": 30.899,
+            "loss": 0.0013816356658935547
+          },
+          {
+            "text": "thinks",
+            "start": 30.959,
+            "end": 31.159,
+            "loss": 0.00022198756535847983
+          },
+          {
+            "text": "that",
+            "start": 31.219,
+            "end": 31.339,
+            "loss": 0.00032004714012145996
+          },
+          {
+            "text": "only",
+            "start": 31.42,
+            "end": 31.579,
+            "loss": 0.0007531344890594482
+          },
+          {
+            "text": "people",
+            "start": 31.699,
+            "end": 31.979,
+            "loss": 0.00031256675720214844
+          },
+          {
+            "text": "who",
+            "start": 32.02,
+            "end": 32.139,
+            "loss": 0.0007321834564208984
+          },
+          {
+            "text": "love",
+            "start": 32.2,
+            "end": 32.419,
+            "loss": 0.00023043155670166016
+          },
+          {
+            "text": "cars",
+            "start": 32.5,
+            "end": 32.86,
+            "loss": 0.0004583597183227539
+          },
+          {
+            "text": "can",
+            "start": 32.939,
+            "end": 33.04,
+            "loss": 0.0002589225769042969
+          },
+          {
+            "text": "build",
+            "start": 33.139,
+            "end": 33.399,
+            "loss": 0.0001989603042602539
+          },
+          {
+            "text": "great",
+            "start": 33.459,
+            "end": 33.679,
+            "loss": 0.0005648136138916016
+          },
+          {
+            "text": "ones.",
+            "start": 33.759,
+            "end": 34.159,
+            "loss": 0.008705902099609374
+          }
+        ],
+        "loss": 0.01763141879719265,
+        "source": "forced_alignment"
+      },
+      "ground_truth_indices": []
+    },
+    "p1_stumble": {
+      "reference": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.046,
+            "end": 0.43,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.499,
+            "end": 1.091,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 1.161,
+            "end": 1.265,
+            "loss": 0.0
+          },
+          {
+            "text": "chairman",
+            "start": 1.312,
+            "end": 1.637,
+            "loss": 0.0
+          },
+          {
+            "text": "of",
+            "start": 1.683,
+            "end": 1.73,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.788,
+            "end": 2.473,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 2.589,
+            "end": 2.74,
+            "loss": 0.0
+          },
+          {
+            "text": "still",
+            "start": 2.775,
+            "end": 2.984,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 3.042,
+            "end": 3.111,
+            "loss": 0.0
+          },
+          {
+            "text": "chief",
+            "start": 3.158,
+            "end": 3.39,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 3.448,
+            "end": 3.704,
+            "loss": 0.0
+          },
+          {
+            "text": "driver",
+            "start": 3.738,
+            "end": 4.075,
+            "loss": 0.0
+          },
+          {
+            "text": "at",
+            "start": 4.133,
+            "end": 4.191,
+            "loss": 0.0
+          },
+          {
+            "text": "age",
+            "start": 4.238,
+            "end": 4.435,
+            "loss": 0.0
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.47,
+            "end": 5.433,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 5.944,
+            "end": 6.06,
+            "loss": 0.0
+          },
+          {
+            "text": "often",
+            "start": 6.118,
+            "end": 6.327,
+            "loss": 0.0
+          },
+          {
+            "text": "wears",
+            "start": 6.374,
+            "end": 6.594,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 6.629,
+            "end": 6.664,
+            "loss": 0.0
+          },
+          {
+            "text": "racing",
+            "start": 6.722,
+            "end": 7.036,
+            "loss": 0.0
+          },
+          {
+            "text": "suit",
+            "start": 7.094,
+            "end": 7.361,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 7.477,
+            "end": 7.674,
+            "loss": 0.0
+          },
+          {
+            "text": "drives",
+            "start": 7.721,
+            "end": 8.046,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 8.092,
+            "end": 8.313,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 8.382,
+            "end": 8.661,
+            "loss": 0.0
+          },
+          {
+            "text": "on",
+            "start": 8.707,
+            "end": 8.8,
+            "loss": 0.0
+          },
+          {
+            "text": "tough",
+            "start": 8.87,
+            "end": 9.102,
+            "loss": 0.0
+          },
+          {
+            "text": "tracks.",
+            "start": 9.149,
+            "end": 9.764,
+            "loss": 0.0
+          },
+          {
+            "text": "His",
+            "start": 10.275,
+            "end": 10.449,
+            "loss": 0.0
+          },
+          {
+            "text": "philosophy",
+            "start": 10.495,
+            "end": 10.983,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 11.029,
+            "end": 11.088,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 11.146,
+            "end": 11.204,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 11.262,
+            "end": 11.505,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 11.575,
+            "end": 11.923,
+            "loss": 0.0
+          },
+          {
+            "text": "until",
+            "start": 11.97,
+            "end": 12.202,
+            "loss": 0.0
+          },
+          {
+            "text": "they",
+            "start": 12.249,
+            "end": 12.365,
+            "loss": 0.0
+          },
+          {
+            "text": "break.",
+            "start": 12.411,
+            "end": 12.957,
+            "loss": 0.0
+          },
+          {
+            "text": "By",
+            "start": 13.56,
+            "end": 13.7,
+            "loss": 0.0
+          },
+          {
+            "text": "fixing",
+            "start": 13.769,
+            "end": 14.083,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 14.129,
+            "end": 14.199,
+            "loss": 0.0
+          },
+          {
+            "text": "weakest",
+            "start": 14.234,
+            "end": 14.571,
+            "loss": 0.0
+          },
+          {
+            "text": "parts,",
+            "start": 14.629,
+            "end": 15.105,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 15.221,
+            "end": 15.314,
+            "loss": 0.0
+          },
+          {
+            "text": "company",
+            "start": 15.372,
+            "end": 15.685,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 15.732,
+            "end": 15.848,
+            "loss": 0.0
+          },
+          {
+            "text": "make",
+            "start": 15.894,
+            "end": 16.069,
+            "loss": 0.0
+          },
+          {
+            "text": "better",
+            "start": 16.115,
+            "end": 16.37,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 16.428,
+            "end": 16.823,
+            "loss": 0.0
+          },
+          {
+            "text": "step",
+            "start": 16.916,
+            "end": 17.183,
+            "loss": 0.0
+          },
+          {
+            "text": "by",
+            "start": 17.241,
+            "end": 17.357,
+            "loss": 0.0
+          },
+          {
+            "text": "step.",
+            "start": 17.438,
+            "end": 17.961,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 18.472,
+            "end": 18.588,
+            "loss": 0.0
+          },
+          {
+            "text": "also",
+            "start": 18.646,
+            "end": 18.913,
+            "loss": 0.0
+          },
+          {
+            "text": "teaches",
+            "start": 18.983,
+            "end": 19.343,
+            "loss": 0.0
+          },
+          {
+            "text": "young",
+            "start": 19.424,
+            "end": 19.621,
+            "loss": 0.0
+          },
+          {
+            "text": "workers",
+            "start": 19.679,
+            "end": 20.062,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.109,
+            "end": 20.167,
+            "loss": 0.0
+          },
+          {
+            "text": "listen",
+            "start": 20.236,
+            "end": 20.48,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.527,
+            "end": 20.585,
+            "loss": 0.0
+          },
+          {
+            "text": "others",
+            "start": 20.666,
+            "end": 21.003,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 21.154,
+            "end": 21.328,
+            "loss": 0.0
+          },
+          {
+            "text": "learn",
+            "start": 21.397,
+            "end": 21.618,
+            "loss": 0.0
+          },
+          {
+            "text": "from",
+            "start": 21.665,
+            "end": 21.792,
+            "loss": 0.0
+          },
+          {
+            "text": "both",
+            "start": 21.839,
+            "end": 22.024,
+            "loss": 0.0
+          },
+          {
+            "text": "good",
+            "start": 22.094,
+            "end": 22.35,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 22.408,
+            "end": 22.57,
+            "loss": 0.0
+          },
+          {
+            "text": "bad",
+            "start": 22.64,
+            "end": 22.849,
+            "loss": 0.0
+          },
+          {
+            "text": "experiences.",
+            "start": 22.907,
+            "end": 23.87,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 24.381,
+            "end": 24.509,
+            "loss": 0.0
+          },
+          {
+            "text": "believes",
+            "start": 24.567,
+            "end": 24.88,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 24.915,
+            "end": 25.043,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 25.101,
+            "end": 25.438,
+            "loss": 0.0
+          },
+          {
+            "text": "are",
+            "start": 25.473,
+            "end": 25.577,
+            "loss": 0.0
+          },
+          {
+            "text": "not",
+            "start": 25.612,
+            "end": 25.728,
+            "loss": 0.0
+          },
+          {
+            "text": "just",
+            "start": 25.774,
+            "end": 25.949,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 25.995,
+            "end": 26.018,
+            "loss": 0.0
+          },
+          {
+            "text": "way",
+            "start": 26.076,
+            "end": 26.204,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 26.262,
+            "end": 26.32,
+            "loss": 0.0
+          },
+          {
+            "text": "travel,",
+            "start": 26.378,
+            "end": 26.935,
+            "loss": 0.0
+          },
+          {
+            "text": "but",
+            "start": 27.052,
+            "end": 27.214,
+            "loss": 0.0
+          },
+          {
+            "text": "something",
+            "start": 27.261,
+            "end": 27.551,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 27.597,
+            "end": 27.702,
+            "loss": 0.0
+          },
+          {
+            "text": "moves",
+            "start": 27.76,
+            "end": 28.027,
+            "loss": 0.0
+          },
+          {
+            "text": "people's",
+            "start": 28.085,
+            "end": 28.434,
+            "loss": 0.0
+          },
+          {
+            "text": "hearts.",
+            "start": 28.492,
+            "end": 29.061,
+            "loss": 0.0
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.873,
+            "end": 30.581,
+            "loss": 0.0
+          },
+          {
+            "text": "he",
+            "start": 30.639,
+            "end": 30.721,
+            "loss": 0.0
+          },
+          {
+            "text": "thinks",
+            "start": 30.779,
+            "end": 30.988,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 31.023,
+            "end": 31.139,
+            "loss": 0.0
+          },
+          {
+            "text": "only",
+            "start": 31.197,
+            "end": 31.394,
+            "loss": 0.0
+          },
+          {
+            "text": "people",
+            "start": 31.452,
+            "end": 31.719,
+            "loss": 0.0
+          },
+          {
+            "text": "who",
+            "start": 31.742,
+            "end": 31.835,
+            "loss": 0.0
+          },
+          {
+            "text": "love",
+            "start": 31.893,
+            "end": 32.067,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 32.114,
+            "end": 32.497,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 32.555,
+            "end": 32.671,
+            "loss": 0.0
+          },
+          {
+            "text": "build",
+            "start": 32.718,
+            "end": 32.95,
+            "loss": 0.0
+          },
+          {
+            "text": "great",
+            "start": 33.02,
+            "end": 33.228,
+            "loss": 0.0
+          },
+          {
+            "text": "ones.",
+            "start": 33.298,
+            "end": 33.716,
+            "loss": 0.0
+          }
+        ],
+        "loss": 0.0,
+        "source": "tts_timestamps"
+      },
+      "user": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.059,
+            "end": 0.459,
+            "loss": 0.44287109375
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.5,
+            "end": 1.0,
+            "loss": 0.2795290265764509
+          },
+          {
+            "text": "the",
+            "start": 1.419,
+            "end": 1.459,
+            "loss": 0.0016419092814127605
+          },
+          {
+            "text": "chairman",
+            "start": 1.559,
+            "end": 1.879,
+            "loss": 0.004181385040283203
+          },
+          {
+            "text": "of",
+            "start": 1.919,
+            "end": 1.979,
+            "loss": 0.00025331974029541016
+          },
+          {
+            "text": "Toyota,",
+            "start": 2.059,
+            "end": 2.539,
+            "loss": 0.02137810843331473
+          },
+          {
+            "text": "is",
+            "start": 2.939,
+            "end": 3.059,
+            "loss": 0.001445770263671875
+          },
+          {
+            "text": "still",
+            "start": 3.119,
+            "end": 3.299,
+            "loss": 0.0002855539321899414
+          },
+          {
+            "text": "the",
+            "start": 3.399,
+            "end": 3.439,
+            "loss": 0.0007003148396809896
+          },
+          {
+            "text": "chief",
+            "start": 3.539,
+            "end": 3.799,
+            "loss": 0.004834175109863281
+          },
+          {
+            "text": "test",
+            "start": 3.859,
+            "end": 4.079,
+            "loss": 0.0012306571006774902
+          },
+          {
+            "text": "driver",
+            "start": 4.159,
+            "end": 4.5,
+            "loss": 0.0002556443214416504
+          },
+          {
+            "text": "at",
+            "start": 4.539,
+            "end": 4.639,
+            "loss": 0.0007071495056152344
+          },
+          {
+            "text": "age",
+            "start": 4.739,
+            "end": 4.94,
+            "loss": 0.0007182757059733073
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 5.0,
+            "end": 5.699,
+            "loss": 0.25549394434148615
+          },
+          {
+            "text": "He",
+            "start": 6.199,
+            "end": 6.279,
+            "loss": 0.0012745857238769531
+          },
+          {
+            "text": "often",
+            "start": 6.399,
+            "end": 6.599,
+            "loss": 0.00034017562866210936
+          },
+          {
+            "text": "wears",
+            "start": 6.679,
+            "end": 6.859,
+            "loss": 0.0002566337585449219
+          },
+          {
+            "text": "a",
+            "start": 6.92,
+            "end": 6.94,
+            "loss": 0.000476837158203125
+          },
+          {
+            "text": "racing",
+            "start": 7.0,
+            "end": 7.319,
+            "loss": 0.0002399881680806478
+          },
+          {
+            "text": "suit",
+            "start": 7.44,
+            "end": 7.719,
+            "loss": 0.00027176737785339355
+          },
+          {
+            "text": "and",
+            "start": 7.779,
+            "end": 7.899,
+            "loss": 0.00019375483194986978
+          },
+          {
+            "text": "drives",
+            "start": 7.96,
+            "end": 8.3,
+            "loss": 0.00025252501169840497
+          },
+          {
+            "text": "test",
+            "start": 8.359,
+            "end": 8.599,
+            "loss": 0.0005808174610137939
+          },
+          {
+            "text": "cars",
+            "start": 8.699,
+            "end": 8.979,
+            "loss": 0.0002562403678894043
+          },
+          {
+            "text": "on",
+            "start": 9.059,
+            "end": 9.139,
+            "loss": 0.00019341707229614258
+          },
+          {
+            "text": "tough",
+            "start": 9.26,
+            "end": 9.479,
+            "loss": 0.001104450225830078
+          },
+          {
+            "text": "tracks.",
+            "start": 9.559,
+            "end": 10.019,
+            "loss": 0.002999373844691685
+          },
+          {
+            "text": "His",
+            "start": 10.619,
+            "end": 10.739,
+            "loss": 0.0005822579065958658
+          },
+          {
+            "text": "philosophy",
+            "start": 10.8,
+            "end": 11.359,
+            "loss": 0.00022150278091430663
+          },
+          {
+            "text": "is",
+            "start": 11.42,
+            "end": 11.52,
+            "loss": 0.00029164552688598633
+          },
+          {
+            "text": "to",
+            "start": 11.579,
+            "end": 11.64,
+            "loss": 0.001140594482421875
+          },
+          {
+            "text": "test",
+            "start": 11.759,
+            "end": 12.019,
+            "loss": 0.0014081001281738281
+          },
+          {
+            "text": "cars",
+            "start": 12.139,
+            "end": 12.539,
+            "loss": 0.0006410479545593262
+          },
+          {
+            "text": "until",
+            "start": 12.619,
+            "end": 12.899,
+            "loss": 0.00022618770599365235
+          },
+          {
+            "text": "they",
+            "start": 12.939,
+            "end": 13.039,
+            "loss": 0.00019928812980651855
+          },
+          {
+            "text": "break.",
+            "start": 13.159,
+            "end": 13.5,
+            "loss": 0.020677189032236736
+          },
+          {
+            "text": "By",
+            "start": 14.159,
+            "end": 14.319,
+            "loss": 0.0015358924865722656
+          },
+          {
+            "text": "fixing",
+            "start": 14.38,
+            "end": 14.699,
+            "loss": 0.00021298726399739584
+          },
+          {
+            "text": "the",
+            "start": 14.759,
+            "end": 14.819,
+            "loss": 0.0005511442820231119
+          },
+          {
+            "text": "weakest",
+            "start": 14.899,
+            "end": 15.259,
+            "loss": 0.0007721696581159319
+          },
+          {
+            "text": "parts,",
+            "start": 15.359,
+            "end": 15.739,
+            "loss": 0.00295257568359375
+          },
+          {
+            "text": "the",
+            "start": 16.039,
+            "end": 16.119,
+            "loss": 0.000904083251953125
+          },
+          {
+            "text": "company",
+            "start": 16.18,
+            "end": 16.5,
+            "loss": 0.00043257645198277066
+          },
+          {
+            "text": "can",
+            "start": 16.579,
+            "end": 16.699,
+            "loss": 0.0005182822545369467
+          },
+          {
+            "text": "make",
+            "start": 16.739,
+            "end": 16.879,
+            "loss": 0.0004826188087463379
+          },
+          {
+            "text": "better",
+            "start": 17.0,
+            "end": 17.239,
+            "loss": 0.012259264787038168
+          },
+          {
+            "text": "cars",
+            "start": 17.299,
+            "end": 17.619,
+            "loss": 0.004172801971435547
+          },
+          {
+            "text": "step",
+            "start": 17.68,
+            "end": 18.039,
+            "loss": 0.002795696258544922
+          },
+          {
+            "text": "by",
+            "start": 18.459,
+            "end": 18.659,
+            "loss": 0.0072784423828125
+          },
+          {
+            "text": "step.",
+            "start": 18.739,
+            "end": 19.159,
+            "loss": 0.003920221328735351
+          },
+          {
+            "text": "He",
+            "start": 19.379,
+            "end": 19.479,
+            "loss": 0.002949237823486328
+          },
+          {
+            "text": "also",
+            "start": 19.559,
+            "end": 19.899,
+            "loss": 0.0013266205787658691
+          },
+          {
+            "text": "teaches",
+            "start": 19.959,
+            "end": 20.5,
+            "loss": 0.000953878675188337
+          },
+          {
+            "text": "young",
+            "start": 20.899,
+            "end": 21.02,
+            "loss": 0.011220741271972656
+          },
+          {
+            "text": "workers",
+            "start": 21.059,
+            "end": 21.42,
+            "loss": 0.0003791196005684989
+          },
+          {
+            "text": "to",
+            "start": 21.479,
+            "end": 21.619,
+            "loss": 0.0020656585693359375
+          },
+          {
+            "text": "listen",
+            "start": 21.979,
+            "end": 22.259,
+            "loss": 0.01558313767115275
+          },
+          {
+            "text": "to",
+            "start": 22.299,
+            "end": 22.42,
+            "loss": 0.0005900859832763672
+          },
+          {
+            "text": "others",
+            "start": 22.519,
+            "end": 22.879,
+            "loss": 0.0005805492401123047
+          },
+          {
+            "text": "and",
+            "start": 22.939,
+            "end": 23.039,
+            "loss": 0.0005966027577718099
+          },
+          {
+            "text": "learn",
+            "start": 23.139,
+            "end": 23.379,
+            "loss": 0.0005832910537719727
+          },
+          {
+            "text": "from",
+            "start": 23.42,
+            "end": 23.539,
+            "loss": 0.0005404353141784668
+          },
+          {
+            "text": "both",
+            "start": 23.619,
+            "end": 23.84,
+            "loss": 0.0010215044021606445
+          },
+          {
+            "text": "good",
+            "start": 23.92,
+            "end": 24.18,
+            "loss": 0.0010637342929840088
+          },
+          {
+            "text": "and",
+            "start": 24.26,
+            "end": 24.439,
+            "loss": 0.0006852944691975912
+          },
+          {
+            "text": "bad",
+            "start": 24.5,
+            "end": 24.68,
+            "loss": 0.0003306865692138672
+          },
+          {
+            "text": "experiences.",
+            "start": 24.779,
+            "end": 25.699,
+            "loss": 0.0011281867822011311
+          },
+          {
+            "text": "He",
+            "start": 26.239,
+            "end": 26.34,
+            "loss": 0.0011725425720214844
+          },
+          {
+            "text": "believes",
+            "start": 26.379,
+            "end": 26.699,
+            "loss": 0.0003810077905654907
+          },
+          {
+            "text": "that",
+            "start": 26.739,
+            "end": 26.879,
+            "loss": 0.000698387622833252
+          },
+          {
+            "text": "cars",
+            "start": 26.959,
+            "end": 27.299,
+            "loss": 0.0016280412673950195
+          },
+          {
+            "text": "are",
+            "start": 27.379,
+            "end": 27.5,
+            "loss": 0.0007421175638834635
+          },
+          {
+            "text": "not",
+            "start": 27.539,
+            "end": 27.699,
+            "loss": 0.000531156857808431
+          },
+          {
+            "text": "just",
+            "start": 27.76,
+            "end": 27.92,
+            "loss": 0.00043582916259765625
+          },
+          {
+            "text": "a",
+            "start": 27.959,
+            "end": 28.0,
+            "loss": 0.00159454345703125
+          },
+          {
+            "text": "way",
+            "start": 28.039,
+            "end": 28.119,
+            "loss": 0.00037384033203125
+          },
+          {
+            "text": "to",
+            "start": 28.159,
+            "end": 28.259,
+            "loss": 0.00052642822265625
+          },
+          {
+            "text": "travel,",
+            "start": 28.319,
+            "end": 28.779,
+            "loss": 0.17543346541268484
+          },
+          {
+            "text": "but",
+            "start": 28.979,
+            "end": 29.119,
+            "loss": 0.0008379220962524414
+          },
+          {
+            "text": "something",
+            "start": 29.199,
+            "end": 29.459,
+            "loss": 0.00047477086385091144
+          },
+          {
+            "text": "that",
+            "start": 29.519,
+            "end": 29.639,
+            "loss": 0.0004616975784301758
+          },
+          {
+            "text": "moves",
+            "start": 29.719,
+            "end": 29.959,
+            "loss": 0.00048265457153320315
+          },
+          {
+            "text": "people's",
+            "start": 30.059,
+            "end": 30.359,
+            "loss": 0.018643230199813843
+          },
+          {
+            "text": "hearts.",
+            "start": 30.42,
+            "end": 30.879,
+            "loss": 0.0024890218462262836
+          },
+          {
+            "text": "Ultimately,",
+            "start": 31.459,
+            "end": 32.059,
+            "loss": 0.006813504479148171
+          },
+          {
+            "text": "he",
+            "start": 32.159,
+            "end": 32.279,
+            "loss": 0.0020176172256469727
+          },
+          {
+            "text": "thinks",
+            "start": 32.34,
+            "end": 32.579,
+            "loss": 0.00021129846572875977
+          },
+          {
+            "text": "that",
+            "start": 32.639,
+            "end": 32.779,
+            "loss": 0.0004832148551940918
+          },
+          {
+            "text": "only",
+            "start": 32.899,
+            "end": 33.099,
+            "loss": 0.0021638572216033936
+          },
+          {
+            "text": "people",
+            "start": 33.219,
+            "end": 33.5,
+            "loss": 0.00035434961318969727
+          },
+          {
+            "text": "who",
+            "start": 33.54,
+            "end": 33.659,
+            "loss": 0.0007971525192260742
+          },
+          {
+            "text": "love",
+            "start": 33.7,
+            "end": 33.919,
+            "loss": 0.00028845667839050293
+          },
+          {
+            "text": "cars",
+            "start": 34.0,
+            "end": 34.439,
+            "loss": 0.0006660223007202148
+          },
+          {
+            "text": "can",
+            "start": 34.52,
+            "end": 34.659,
+            "loss": 0.0006205240885416666
+          },
+          {
+            "text": "build",
+            "start": 34.719,
+            "end": 34.979,
+            "loss": 0.00041294097900390625
+          },
+          {
+            "text": "great",
+            "start": 35.04,
+            "end": 35.239,
+            "loss": 0.0008398056030273438
+          },
+          {
+            "text": "ones.",
+            "start": 35.319,
+            "end": 35.719,
+            "loss": 0.01582489013671875
+          }
+        ],
+        "loss": 0.01728325193099554,
+        "source": "forced_alignment"
+      },
+      "ground_truth_indices": [
+        49,
+        50,
+        51,
+        52,
+        53
+      ]
+    },
+    "p1_no_linking": {
+      "reference": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.046,
+            "end": 0.43,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.499,
+            "end": 1.091,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 1.161,
+            "end": 1.265,
+            "loss": 0.0
+          },
+          {
+            "text": "chairman",
+            "start": 1.312,
+            "end": 1.637,
+            "loss": 0.0
+          },
+          {
+            "text": "of",
+            "start": 1.683,
+            "end": 1.73,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.788,
+            "end": 2.473,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 2.589,
+            "end": 2.74,
+            "loss": 0.0
+          },
+          {
+            "text": "still",
+            "start": 2.775,
+            "end": 2.984,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 3.042,
+            "end": 3.111,
+            "loss": 0.0
+          },
+          {
+            "text": "chief",
+            "start": 3.158,
+            "end": 3.39,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 3.448,
+            "end": 3.704,
+            "loss": 0.0
+          },
+          {
+            "text": "driver",
+            "start": 3.738,
+            "end": 4.075,
+            "loss": 0.0
+          },
+          {
+            "text": "at",
+            "start": 4.133,
+            "end": 4.191,
+            "loss": 0.0
+          },
+          {
+            "text": "age",
+            "start": 4.238,
+            "end": 4.435,
+            "loss": 0.0
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.47,
+            "end": 5.433,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 5.944,
+            "end": 6.06,
+            "loss": 0.0
+          },
+          {
+            "text": "often",
+            "start": 6.118,
+            "end": 6.327,
+            "loss": 0.0
+          },
+          {
+            "text": "wears",
+            "start": 6.374,
+            "end": 6.594,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 6.629,
+            "end": 6.664,
+            "loss": 0.0
+          },
+          {
+            "text": "racing",
+            "start": 6.722,
+            "end": 7.036,
+            "loss": 0.0
+          },
+          {
+            "text": "suit",
+            "start": 7.094,
+            "end": 7.361,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 7.477,
+            "end": 7.674,
+            "loss": 0.0
+          },
+          {
+            "text": "drives",
+            "start": 7.721,
+            "end": 8.046,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 8.092,
+            "end": 8.313,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 8.382,
+            "end": 8.661,
+            "loss": 0.0
+          },
+          {
+            "text": "on",
+            "start": 8.707,
+            "end": 8.8,
+            "loss": 0.0
+          },
+          {
+            "text": "tough",
+            "start": 8.87,
+            "end": 9.102,
+            "loss": 0.0
+          },
+          {
+            "text": "tracks.",
+            "start": 9.149,
+            "end": 9.764,
+            "loss": 0.0
+          },
+          {
+            "text": "His",
+            "start": 10.275,
+            "end": 10.449,
+            "loss": 0.0
+          },
+          {
+            "text": "philosophy",
+            "start": 10.495,
+            "end": 10.983,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 11.029,
+            "end": 11.088,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 11.146,
+            "end": 11.204,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 11.262,
+            "end": 11.505,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 11.575,
+            "end": 11.923,
+            "loss": 0.0
+          },
+          {
+            "text": "until",
+            "start": 11.97,
+            "end": 12.202,
+            "loss": 0.0
+          },
+          {
+            "text": "they",
+            "start": 12.249,
+            "end": 12.365,
+            "loss": 0.0
+          },
+          {
+            "text": "break.",
+            "start": 12.411,
+            "end": 12.957,
+            "loss": 0.0
+          },
+          {
+            "text": "By",
+            "start": 13.56,
+            "end": 13.7,
+            "loss": 0.0
+          },
+          {
+            "text": "fixing",
+            "start": 13.769,
+            "end": 14.083,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 14.129,
+            "end": 14.199,
+            "loss": 0.0
+          },
+          {
+            "text": "weakest",
+            "start": 14.234,
+            "end": 14.571,
+            "loss": 0.0
+          },
+          {
+            "text": "parts,",
+            "start": 14.629,
+            "end": 15.105,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 15.221,
+            "end": 15.314,
+            "loss": 0.0
+          },
+          {
+            "text": "company",
+            "start": 15.372,
+            "end": 15.685,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 15.732,
+            "end": 15.848,
+            "loss": 0.0
+          },
+          {
+            "text": "make",
+            "start": 15.894,
+            "end": 16.069,
+            "loss": 0.0
+          },
+          {
+            "text": "better",
+            "start": 16.115,
+            "end": 16.37,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 16.428,
+            "end": 16.823,
+            "loss": 0.0
+          },
+          {
+            "text": "step",
+            "start": 16.916,
+            "end": 17.183,
+            "loss": 0.0
+          },
+          {
+            "text": "by",
+            "start": 17.241,
+            "end": 17.357,
+            "loss": 0.0
+          },
+          {
+            "text": "step.",
+            "start": 17.438,
+            "end": 17.961,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 18.472,
+            "end": 18.588,
+            "loss": 0.0
+          },
+          {
+            "text": "also",
+            "start": 18.646,
+            "end": 18.913,
+            "loss": 0.0
+          },
+          {
+            "text": "teaches",
+            "start": 18.983,
+            "end": 19.343,
+            "loss": 0.0
+          },
+          {
+            "text": "young",
+            "start": 19.424,
+            "end": 19.621,
+            "loss": 0.0
+          },
+          {
+            "text": "workers",
+            "start": 19.679,
+            "end": 20.062,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.109,
+            "end": 20.167,
+            "loss": 0.0
+          },
+          {
+            "text": "listen",
+            "start": 20.236,
+            "end": 20.48,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.527,
+            "end": 20.585,
+            "loss": 0.0
+          },
+          {
+            "text": "others",
+            "start": 20.666,
+            "end": 21.003,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 21.154,
+            "end": 21.328,
+            "loss": 0.0
+          },
+          {
+            "text": "learn",
+            "start": 21.397,
+            "end": 21.618,
+            "loss": 0.0
+          },
+          {
+            "text": "from",
+            "start": 21.665,
+            "end": 21.792,
+            "loss": 0.0
+          },
+          {
+            "text": "both",
+            "start": 21.839,
+            "end": 22.024,
+            "loss": 0.0
+          },
+          {
+            "text": "good",
+            "start": 22.094,
+            "end": 22.35,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 22.408,
+            "end": 22.57,
+            "loss": 0.0
+          },
+          {
+            "text": "bad",
+            "start": 22.64,
+            "end": 22.849,
+            "loss": 0.0
+          },
+          {
+            "text": "experiences.",
+            "start": 22.907,
+            "end": 23.87,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 24.381,
+            "end": 24.509,
+            "loss": 0.0
+          },
+          {
+            "text": "believes",
+            "start": 24.567,
+            "end": 24.88,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 24.915,
+            "end": 25.043,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 25.101,
+            "end": 25.438,
+            "loss": 0.0
+          },
+          {
+            "text": "are",
+            "start": 25.473,
+            "end": 25.577,
+            "loss": 0.0
+          },
+          {
+            "text": "not",
+            "start": 25.612,
+            "end": 25.728,
+            "loss": 0.0
+          },
+          {
+            "text": "just",
+            "start": 25.774,
+            "end": 25.949,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 25.995,
+            "end": 26.018,
+            "loss": 0.0
+          },
+          {
+            "text": "way",
+            "start": 26.076,
+            "end": 26.204,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 26.262,
+            "end": 26.32,
+            "loss": 0.0
+          },
+          {
+            "text": "travel,",
+            "start": 26.378,
+            "end": 26.935,
+            "loss": 0.0
+          },
+          {
+            "text": "but",
+            "start": 27.052,
+            "end": 27.214,
+            "loss": 0.0
+          },
+          {
+            "text": "something",
+            "start": 27.261,
+            "end": 27.551,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 27.597,
+            "end": 27.702,
+            "loss": 0.0
+          },
+          {
+            "text": "moves",
+            "start": 27.76,
+            "end": 28.027,
+            "loss": 0.0
+          },
+          {
+            "text": "people's",
+            "start": 28.085,
+            "end": 28.434,
+            "loss": 0.0
+          },
+          {
+            "text": "hearts.",
+            "start": 28.492,
+            "end": 29.061,
+            "loss": 0.0
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.873,
+            "end": 30.581,
+            "loss": 0.0
+          },
+          {
+            "text": "he",
+            "start": 30.639,
+            "end": 30.721,
+            "loss": 0.0
+          },
+          {
+            "text": "thinks",
+            "start": 30.779,
+            "end": 30.988,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 31.023,
+            "end": 31.139,
+            "loss": 0.0
+          },
+          {
+            "text": "only",
+            "start": 31.197,
+            "end": 31.394,
+            "loss": 0.0
+          },
+          {
+            "text": "people",
+            "start": 31.452,
+            "end": 31.719,
+            "loss": 0.0
+          },
+          {
+            "text": "who",
+            "start": 31.742,
+            "end": 31.835,
+            "loss": 0.0
+          },
+          {
+            "text": "love",
+            "start": 31.893,
+            "end": 32.067,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 32.114,
+            "end": 32.497,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 32.555,
+            "end": 32.671,
+            "loss": 0.0
+          },
+          {
+            "text": "build",
+            "start": 32.718,
+            "end": 32.95,
+            "loss": 0.0
+          },
+          {
+            "text": "great",
+            "start": 33.02,
+            "end": 33.228,
+            "loss": 0.0
+          },
+          {
+            "text": "ones.",
+            "start": 33.298,
+            "end": 33.716,
+            "loss": 0.0
+          }
+        ],
+        "loss": 0.0,
+        "source": "tts_timestamps"
+      },
+      "user": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.059,
+            "end": 0.439,
+            "loss": 0.5185546875
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.539,
+            "end": 1.039,
+            "loss": 0.5126323699951172
+          },
+          {
+            "text": "the",
+            "start": 1.159,
+            "end": 1.219,
+            "loss": 0.0017833709716796875
+          },
+          {
+            "text": "chairman",
+            "start": 1.299,
+            "end": 1.579,
+            "loss": 0.010417237877845764
+          },
+          {
+            "text": "of",
+            "start": 1.62,
+            "end": 1.679,
+            "loss": 0.00025975704193115234
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.74,
+            "end": 2.159,
+            "loss": 0.014115469796316964
+          },
+          {
+            "text": "is",
+            "start": 2.639,
+            "end": 2.74,
+            "loss": 0.00177001953125
+          },
+          {
+            "text": "still",
+            "start": 2.819,
+            "end": 3.0,
+            "loss": 0.0002461910247802734
+          },
+          {
+            "text": "the",
+            "start": 3.039,
+            "end": 3.099,
+            "loss": 0.0009192625681559244
+          },
+          {
+            "text": "chief",
+            "start": 3.199,
+            "end": 3.419,
+            "loss": 0.004956531524658203
+          },
+          {
+            "text": "test",
+            "start": 3.48,
+            "end": 3.679,
+            "loss": 0.0011572837829589844
+          },
+          {
+            "text": "driver",
+            "start": 3.759,
+            "end": 4.179,
+            "loss": 0.00035576025644938153
+          },
+          {
+            "text": "at",
+            "start": 4.219,
+            "end": 4.36,
+            "loss": 0.0010862350463867188
+          },
+          {
+            "text": "age",
+            "start": 4.46,
+            "end": 4.639,
+            "loss": 0.0009427070617675781
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.759,
+            "end": 5.499,
+            "loss": 0.25681547685102984
+          },
+          {
+            "text": "He",
+            "start": 5.839,
+            "end": 5.92,
+            "loss": 0.0016565322875976562
+          },
+          {
+            "text": "often",
+            "start": 6.0,
+            "end": 6.179,
+            "loss": 0.00028882026672363283
+          },
+          {
+            "text": "wears",
+            "start": 6.259,
+            "end": 6.44,
+            "loss": 0.00017957687377929689
+          },
+          {
+            "text": "a",
+            "start": 6.48,
+            "end": 6.519,
+            "loss": 0.00069427490234375
+          },
+          {
+            "text": "racing",
+            "start": 6.579,
+            "end": 6.92,
+            "loss": 0.0001990199089050293
+          },
+          {
+            "text": "suit",
+            "start": 7.039,
+            "end": 7.259,
+            "loss": 0.0001703202724456787
+          },
+          {
+            "text": "and",
+            "start": 7.299,
+            "end": 7.399,
+            "loss": 0.00020901362101236978
+          },
+          {
+            "text": "drives",
+            "start": 7.46,
+            "end": 7.759,
+            "loss": 0.00020102659861246744
+          },
+          {
+            "text": "test",
+            "start": 7.819,
+            "end": 8.019,
+            "loss": 0.0005886256694793701
+          },
+          {
+            "text": "cars",
+            "start": 8.119,
+            "end": 8.399,
+            "loss": 0.00027114152908325195
+          },
+          {
+            "text": "on",
+            "start": 8.46,
+            "end": 8.599,
+            "loss": 0.00016188621520996094
+          },
+          {
+            "text": "tough",
+            "start": 8.659,
+            "end": 8.859,
+            "loss": 0.0007851600646972656
+          },
+          {
+            "text": "tracks.",
+            "start": 8.92,
+            "end": 9.479,
+            "loss": 0.0024124213627406527
+          },
+          {
+            "text": "His",
+            "start": 9.96,
+            "end": 10.099,
+            "loss": 0.0008993943532307943
+          },
+          {
+            "text": "philosophy",
+            "start": 10.159,
+            "end": 10.76,
+            "loss": 0.0002318263053894043
+          },
+          {
+            "text": "is",
+            "start": 10.88,
+            "end": 11.0,
+            "loss": 0.0008307099342346191
+          },
+          {
+            "text": "to",
+            "start": 11.039,
+            "end": 11.1,
+            "loss": 0.0011487007141113281
+          },
+          {
+            "text": "test",
+            "start": 11.199,
+            "end": 11.439,
+            "loss": 0.0010123848915100098
+          },
+          {
+            "text": "cars",
+            "start": 11.559,
+            "end": 11.859,
+            "loss": 0.0005497932434082031
+          },
+          {
+            "text": "until",
+            "start": 11.899,
+            "end": 12.099,
+            "loss": 0.00011851787567138672
+          },
+          {
+            "text": "they",
+            "start": 12.159,
+            "end": 12.239,
+            "loss": 0.0003039836883544922
+          },
+          {
+            "text": "break.",
+            "start": 12.319,
+            "end": 12.699,
+            "loss": 0.0179826021194458
+          },
+          {
+            "text": "By",
+            "start": 13.059,
+            "end": 13.199,
+            "loss": 0.0015964508056640625
+          },
+          {
+            "text": "fixing",
+            "start": 13.259,
+            "end": 13.619,
+            "loss": 0.00023311376571655273
+          },
+          {
+            "text": "the",
+            "start": 13.659,
+            "end": 13.699,
+            "loss": 0.0006612141927083334
+          },
+          {
+            "text": "weakest",
+            "start": 13.799,
+            "end": 14.179,
+            "loss": 0.0011830670492989676
+          },
+          {
+            "text": "parts,",
+            "start": 14.299,
+            "end": 14.719,
+            "loss": 0.0020029942194620767
+          },
+          {
+            "text": "the",
+            "start": 15.039,
+            "end": 15.099,
+            "loss": 0.0011013348897298176
+          },
+          {
+            "text": "company",
+            "start": 15.159,
+            "end": 15.5,
+            "loss": 0.00035374505179268975
+          },
+          {
+            "text": "can",
+            "start": 15.539,
+            "end": 15.659,
+            "loss": 0.0006546974182128906
+          },
+          {
+            "text": "make",
+            "start": 15.699,
+            "end": 15.839,
+            "loss": 0.0002803504467010498
+          },
+          {
+            "text": "better",
+            "start": 15.92,
+            "end": 16.139,
+            "loss": 0.0007544557253519694
+          },
+          {
+            "text": "cars",
+            "start": 16.199,
+            "end": 16.559,
+            "loss": 0.0005715489387512207
+          },
+          {
+            "text": "step",
+            "start": 16.819,
+            "end": 17.119,
+            "loss": 0.003929585218429565
+          },
+          {
+            "text": "by",
+            "start": 17.18,
+            "end": 17.379,
+            "loss": 0.00027877092361450195
+          },
+          {
+            "text": "step.",
+            "start": 17.42,
+            "end": 17.879,
+            "loss": 0.003235912322998047
+          },
+          {
+            "text": "He",
+            "start": 18.319,
+            "end": 18.42,
+            "loss": 0.0016400814056396484
+          },
+          {
+            "text": "also",
+            "start": 18.479,
+            "end": 18.76,
+            "loss": 0.000630110502243042
+          },
+          {
+            "text": "teaches",
+            "start": 18.819,
+            "end": 19.119,
+            "loss": 0.00026363985879080635
+          },
+          {
+            "text": "young",
+            "start": 19.199,
+            "end": 19.34,
+            "loss": 0.0006087303161621093
+          },
+          {
+            "text": "workers",
+            "start": 19.42,
+            "end": 19.779,
+            "loss": 0.00020366055624825613
+          },
+          {
+            "text": "to",
+            "start": 19.84,
+            "end": 19.92,
+            "loss": 0.0007007122039794922
+          },
+          {
+            "text": "listen",
+            "start": 19.979,
+            "end": 20.239,
+            "loss": 0.00042768319447835285
+          },
+          {
+            "text": "to",
+            "start": 20.279,
+            "end": 20.379,
+            "loss": 0.00046753883361816406
+          },
+          {
+            "text": "others",
+            "start": 20.459,
+            "end": 20.799,
+            "loss": 0.0002880493799845378
+          },
+          {
+            "text": "and",
+            "start": 20.859,
+            "end": 20.999,
+            "loss": 0.0003338257471720378
+          },
+          {
+            "text": "learn",
+            "start": 21.059,
+            "end": 21.239,
+            "loss": 0.0003594636917114258
+          },
+          {
+            "text": "from",
+            "start": 21.279,
+            "end": 21.379,
+            "loss": 0.0005941092967987061
+          },
+          {
+            "text": "both",
+            "start": 21.459,
+            "end": 21.699,
+            "loss": 0.0012238919734954834
+          },
+          {
+            "text": "good",
+            "start": 21.779,
+            "end": 22.059,
+            "loss": 0.001290351152420044
+          },
+          {
+            "text": "and",
+            "start": 22.159,
+            "end": 22.379,
+            "loss": 0.00046674410502115887
+          },
+          {
+            "text": "bad",
+            "start": 22.439,
+            "end": 22.619,
+            "loss": 0.0004006226857503255
+          },
+          {
+            "text": "experiences.",
+            "start": 22.719,
+            "end": 23.699,
+            "loss": 0.0006281236807505289
+          },
+          {
+            "text": "He",
+            "start": 24.019,
+            "end": 24.1,
+            "loss": 0.0017352104187011719
+          },
+          {
+            "text": "believes",
+            "start": 24.139,
+            "end": 24.5,
+            "loss": 0.0007727295160293579
+          },
+          {
+            "text": "that",
+            "start": 24.539,
+            "end": 24.719,
+            "loss": 0.0008331835269927979
+          },
+          {
+            "text": "cars",
+            "start": 24.799,
+            "end": 25.139,
+            "loss": 0.0021990537643432617
+          },
+          {
+            "text": "are",
+            "start": 25.199,
+            "end": 25.299,
+            "loss": 0.0005608002344767252
+          },
+          {
+            "text": "not",
+            "start": 25.359,
+            "end": 25.559,
+            "loss": 0.0004576444625854492
+          },
+          {
+            "text": "just",
+            "start": 25.619,
+            "end": 25.799,
+            "loss": 0.00045362114906311035
+          },
+          {
+            "text": "a",
+            "start": 25.84,
+            "end": 25.899,
+            "loss": 0.00128173828125
+          },
+          {
+            "text": "way",
+            "start": 25.939,
+            "end": 26.059,
+            "loss": 0.0002498626708984375
+          },
+          {
+            "text": "to",
+            "start": 26.099,
+            "end": 26.219,
+            "loss": 0.0004811286926269531
+          },
+          {
+            "text": "travel,",
+            "start": 26.279,
+            "end": 26.739,
+            "loss": 0.05099684851510184
+          },
+          {
+            "text": "but",
+            "start": 27.279,
+            "end": 27.399,
+            "loss": 0.0005769729614257812
+          },
+          {
+            "text": "something",
+            "start": 27.459,
+            "end": 27.739,
+            "loss": 0.0006293985578748914
+          },
+          {
+            "text": "that",
+            "start": 27.799,
+            "end": 27.899,
+            "loss": 0.0005329251289367676
+          },
+          {
+            "text": "moves",
+            "start": 28.059,
+            "end": 28.379,
+            "loss": 0.0008652210235595703
+          },
+          {
+            "text": "people's",
+            "start": 28.479,
+            "end": 28.819,
+            "loss": 0.0162058025598526
+          },
+          {
+            "text": "hearts.",
+            "start": 28.879,
+            "end": 29.459,
+            "loss": 0.0021669864654541016
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.719,
+            "end": 30.139,
+            "loss": 0.010161703283136541
+          },
+          {
+            "text": "he",
+            "start": 30.26,
+            "end": 30.399,
+            "loss": 0.0028864145278930664
+          },
+          {
+            "text": "thinks",
+            "start": 30.439,
+            "end": 30.639,
+            "loss": 0.00034423669179280597
+          },
+          {
+            "text": "that",
+            "start": 30.699,
+            "end": 30.839,
+            "loss": 0.0005994141101837158
+          },
+          {
+            "text": "only",
+            "start": 30.939,
+            "end": 31.139,
+            "loss": 0.0019835233688354492
+          },
+          {
+            "text": "people",
+            "start": 31.239,
+            "end": 31.479,
+            "loss": 0.0003602306048075358
+          },
+          {
+            "text": "who",
+            "start": 31.519,
+            "end": 31.639,
+            "loss": 0.0017083485921223958
+          },
+          {
+            "text": "love",
+            "start": 31.679,
+            "end": 31.859,
+            "loss": 0.00026109814643859863
+          },
+          {
+            "text": "cars",
+            "start": 31.939,
+            "end": 32.279,
+            "loss": 0.0006502866744995117
+          },
+          {
+            "text": "can",
+            "start": 32.34,
+            "end": 32.459,
+            "loss": 0.0006604989369710287
+          },
+          {
+            "text": "build",
+            "start": 32.54,
+            "end": 32.719,
+            "loss": 0.0005053520202636719
+          },
+          {
+            "text": "great",
+            "start": 32.799,
+            "end": 33.04,
+            "loss": 0.0007085323333740235
+          },
+          {
+            "text": "ones.",
+            "start": 33.139,
+            "end": 33.52,
+            "loss": 0.018677902221679688
+          }
+        ],
+        "loss": 0.01905247212334452,
+        "source": "forced_alignment"
+      },
+      "ground_truth_indices": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        32,
+        33,
+        34,
+        35,
+        36,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97
+      ]
+    },
+    "p1_gradual": {
+      "reference": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.046,
+            "end": 0.43,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.499,
+            "end": 1.091,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 1.161,
+            "end": 1.265,
+            "loss": 0.0
+          },
+          {
+            "text": "chairman",
+            "start": 1.312,
+            "end": 1.637,
+            "loss": 0.0
+          },
+          {
+            "text": "of",
+            "start": 1.683,
+            "end": 1.73,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.788,
+            "end": 2.473,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 2.589,
+            "end": 2.74,
+            "loss": 0.0
+          },
+          {
+            "text": "still",
+            "start": 2.775,
+            "end": 2.984,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 3.042,
+            "end": 3.111,
+            "loss": 0.0
+          },
+          {
+            "text": "chief",
+            "start": 3.158,
+            "end": 3.39,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 3.448,
+            "end": 3.704,
+            "loss": 0.0
+          },
+          {
+            "text": "driver",
+            "start": 3.738,
+            "end": 4.075,
+            "loss": 0.0
+          },
+          {
+            "text": "at",
+            "start": 4.133,
+            "end": 4.191,
+            "loss": 0.0
+          },
+          {
+            "text": "age",
+            "start": 4.238,
+            "end": 4.435,
+            "loss": 0.0
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.47,
+            "end": 5.433,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 5.944,
+            "end": 6.06,
+            "loss": 0.0
+          },
+          {
+            "text": "often",
+            "start": 6.118,
+            "end": 6.327,
+            "loss": 0.0
+          },
+          {
+            "text": "wears",
+            "start": 6.374,
+            "end": 6.594,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 6.629,
+            "end": 6.664,
+            "loss": 0.0
+          },
+          {
+            "text": "racing",
+            "start": 6.722,
+            "end": 7.036,
+            "loss": 0.0
+          },
+          {
+            "text": "suit",
+            "start": 7.094,
+            "end": 7.361,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 7.477,
+            "end": 7.674,
+            "loss": 0.0
+          },
+          {
+            "text": "drives",
+            "start": 7.721,
+            "end": 8.046,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 8.092,
+            "end": 8.313,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 8.382,
+            "end": 8.661,
+            "loss": 0.0
+          },
+          {
+            "text": "on",
+            "start": 8.707,
+            "end": 8.8,
+            "loss": 0.0
+          },
+          {
+            "text": "tough",
+            "start": 8.87,
+            "end": 9.102,
+            "loss": 0.0
+          },
+          {
+            "text": "tracks.",
+            "start": 9.149,
+            "end": 9.764,
+            "loss": 0.0
+          },
+          {
+            "text": "His",
+            "start": 10.275,
+            "end": 10.449,
+            "loss": 0.0
+          },
+          {
+            "text": "philosophy",
+            "start": 10.495,
+            "end": 10.983,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 11.029,
+            "end": 11.088,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 11.146,
+            "end": 11.204,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 11.262,
+            "end": 11.505,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 11.575,
+            "end": 11.923,
+            "loss": 0.0
+          },
+          {
+            "text": "until",
+            "start": 11.97,
+            "end": 12.202,
+            "loss": 0.0
+          },
+          {
+            "text": "they",
+            "start": 12.249,
+            "end": 12.365,
+            "loss": 0.0
+          },
+          {
+            "text": "break.",
+            "start": 12.411,
+            "end": 12.957,
+            "loss": 0.0
+          },
+          {
+            "text": "By",
+            "start": 13.56,
+            "end": 13.7,
+            "loss": 0.0
+          },
+          {
+            "text": "fixing",
+            "start": 13.769,
+            "end": 14.083,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 14.129,
+            "end": 14.199,
+            "loss": 0.0
+          },
+          {
+            "text": "weakest",
+            "start": 14.234,
+            "end": 14.571,
+            "loss": 0.0
+          },
+          {
+            "text": "parts,",
+            "start": 14.629,
+            "end": 15.105,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 15.221,
+            "end": 15.314,
+            "loss": 0.0
+          },
+          {
+            "text": "company",
+            "start": 15.372,
+            "end": 15.685,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 15.732,
+            "end": 15.848,
+            "loss": 0.0
+          },
+          {
+            "text": "make",
+            "start": 15.894,
+            "end": 16.069,
+            "loss": 0.0
+          },
+          {
+            "text": "better",
+            "start": 16.115,
+            "end": 16.37,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 16.428,
+            "end": 16.823,
+            "loss": 0.0
+          },
+          {
+            "text": "step",
+            "start": 16.916,
+            "end": 17.183,
+            "loss": 0.0
+          },
+          {
+            "text": "by",
+            "start": 17.241,
+            "end": 17.357,
+            "loss": 0.0
+          },
+          {
+            "text": "step.",
+            "start": 17.438,
+            "end": 17.961,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 18.472,
+            "end": 18.588,
+            "loss": 0.0
+          },
+          {
+            "text": "also",
+            "start": 18.646,
+            "end": 18.913,
+            "loss": 0.0
+          },
+          {
+            "text": "teaches",
+            "start": 18.983,
+            "end": 19.343,
+            "loss": 0.0
+          },
+          {
+            "text": "young",
+            "start": 19.424,
+            "end": 19.621,
+            "loss": 0.0
+          },
+          {
+            "text": "workers",
+            "start": 19.679,
+            "end": 20.062,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.109,
+            "end": 20.167,
+            "loss": 0.0
+          },
+          {
+            "text": "listen",
+            "start": 20.236,
+            "end": 20.48,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.527,
+            "end": 20.585,
+            "loss": 0.0
+          },
+          {
+            "text": "others",
+            "start": 20.666,
+            "end": 21.003,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 21.154,
+            "end": 21.328,
+            "loss": 0.0
+          },
+          {
+            "text": "learn",
+            "start": 21.397,
+            "end": 21.618,
+            "loss": 0.0
+          },
+          {
+            "text": "from",
+            "start": 21.665,
+            "end": 21.792,
+            "loss": 0.0
+          },
+          {
+            "text": "both",
+            "start": 21.839,
+            "end": 22.024,
+            "loss": 0.0
+          },
+          {
+            "text": "good",
+            "start": 22.094,
+            "end": 22.35,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 22.408,
+            "end": 22.57,
+            "loss": 0.0
+          },
+          {
+            "text": "bad",
+            "start": 22.64,
+            "end": 22.849,
+            "loss": 0.0
+          },
+          {
+            "text": "experiences.",
+            "start": 22.907,
+            "end": 23.87,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 24.381,
+            "end": 24.509,
+            "loss": 0.0
+          },
+          {
+            "text": "believes",
+            "start": 24.567,
+            "end": 24.88,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 24.915,
+            "end": 25.043,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 25.101,
+            "end": 25.438,
+            "loss": 0.0
+          },
+          {
+            "text": "are",
+            "start": 25.473,
+            "end": 25.577,
+            "loss": 0.0
+          },
+          {
+            "text": "not",
+            "start": 25.612,
+            "end": 25.728,
+            "loss": 0.0
+          },
+          {
+            "text": "just",
+            "start": 25.774,
+            "end": 25.949,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 25.995,
+            "end": 26.018,
+            "loss": 0.0
+          },
+          {
+            "text": "way",
+            "start": 26.076,
+            "end": 26.204,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 26.262,
+            "end": 26.32,
+            "loss": 0.0
+          },
+          {
+            "text": "travel,",
+            "start": 26.378,
+            "end": 26.935,
+            "loss": 0.0
+          },
+          {
+            "text": "but",
+            "start": 27.052,
+            "end": 27.214,
+            "loss": 0.0
+          },
+          {
+            "text": "something",
+            "start": 27.261,
+            "end": 27.551,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 27.597,
+            "end": 27.702,
+            "loss": 0.0
+          },
+          {
+            "text": "moves",
+            "start": 27.76,
+            "end": 28.027,
+            "loss": 0.0
+          },
+          {
+            "text": "people's",
+            "start": 28.085,
+            "end": 28.434,
+            "loss": 0.0
+          },
+          {
+            "text": "hearts.",
+            "start": 28.492,
+            "end": 29.061,
+            "loss": 0.0
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.873,
+            "end": 30.581,
+            "loss": 0.0
+          },
+          {
+            "text": "he",
+            "start": 30.639,
+            "end": 30.721,
+            "loss": 0.0
+          },
+          {
+            "text": "thinks",
+            "start": 30.779,
+            "end": 30.988,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 31.023,
+            "end": 31.139,
+            "loss": 0.0
+          },
+          {
+            "text": "only",
+            "start": 31.197,
+            "end": 31.394,
+            "loss": 0.0
+          },
+          {
+            "text": "people",
+            "start": 31.452,
+            "end": 31.719,
+            "loss": 0.0
+          },
+          {
+            "text": "who",
+            "start": 31.742,
+            "end": 31.835,
+            "loss": 0.0
+          },
+          {
+            "text": "love",
+            "start": 31.893,
+            "end": 32.067,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 32.114,
+            "end": 32.497,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 32.555,
+            "end": 32.671,
+            "loss": 0.0
+          },
+          {
+            "text": "build",
+            "start": 32.718,
+            "end": 32.95,
+            "loss": 0.0
+          },
+          {
+            "text": "great",
+            "start": 33.02,
+            "end": 33.228,
+            "loss": 0.0
+          },
+          {
+            "text": "ones.",
+            "start": 33.298,
+            "end": 33.716,
+            "loss": 0.0
+          }
+        ],
+        "loss": 0.0,
+        "source": "tts_timestamps"
+      },
+      "user": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.059,
+            "end": 0.439,
+            "loss": 0.423583984375
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.5,
+            "end": 1.0,
+            "loss": 0.34116690499441965
+          },
+          {
+            "text": "the",
+            "start": 1.179,
+            "end": 1.279,
+            "loss": 0.001911481221516927
+          },
+          {
+            "text": "chairman",
+            "start": 1.319,
+            "end": 1.599,
+            "loss": 0.01339806616306305
+          },
+          {
+            "text": "of",
+            "start": 1.659,
+            "end": 1.719,
+            "loss": 0.00037384033203125
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.779,
+            "end": 2.18,
+            "loss": 0.013827732631138392
+          },
+          {
+            "text": "is",
+            "start": 2.579,
+            "end": 2.679,
+            "loss": 0.001308441162109375
+          },
+          {
+            "text": "still",
+            "start": 2.74,
+            "end": 2.899,
+            "loss": 0.000262761116027832
+          },
+          {
+            "text": "the",
+            "start": 2.98,
+            "end": 3.039,
+            "loss": 0.0009881655375162761
+          },
+          {
+            "text": "chief",
+            "start": 3.119,
+            "end": 3.339,
+            "loss": 0.004863071441650391
+          },
+          {
+            "text": "test",
+            "start": 3.399,
+            "end": 3.579,
+            "loss": 0.001048356294631958
+          },
+          {
+            "text": "driver",
+            "start": 3.659,
+            "end": 3.98,
+            "loss": 0.00022367636362711588
+          },
+          {
+            "text": "at",
+            "start": 4.039,
+            "end": 4.179,
+            "loss": 0.0007543563842773438
+          },
+          {
+            "text": "age",
+            "start": 4.279,
+            "end": 4.48,
+            "loss": 0.0007990201314290365
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.599,
+            "end": 5.339,
+            "loss": 0.2443021210757169
+          },
+          {
+            "text": "He",
+            "start": 5.819,
+            "end": 5.9,
+            "loss": 0.0010876655578613281
+          },
+          {
+            "text": "often",
+            "start": 6.0,
+            "end": 6.179,
+            "loss": 0.0003161430358886719
+          },
+          {
+            "text": "wears",
+            "start": 6.239,
+            "end": 6.42,
+            "loss": 0.00022819042205810547
+          },
+          {
+            "text": "a",
+            "start": 6.46,
+            "end": 6.5,
+            "loss": 0.00067901611328125
+          },
+          {
+            "text": "racing",
+            "start": 6.539,
+            "end": 6.899,
+            "loss": 0.00014557441075642905
+          },
+          {
+            "text": "suit",
+            "start": 7.0,
+            "end": 7.219,
+            "loss": 0.00023615360260009766
+          },
+          {
+            "text": "and",
+            "start": 7.259,
+            "end": 7.379,
+            "loss": 0.00026869773864746094
+          },
+          {
+            "text": "drives",
+            "start": 7.419,
+            "end": 7.719,
+            "loss": 0.0003070235252380371
+          },
+          {
+            "text": "test",
+            "start": 7.799,
+            "end": 8.019,
+            "loss": 0.0008241236209869385
+          },
+          {
+            "text": "cars",
+            "start": 8.119,
+            "end": 8.399,
+            "loss": 0.00033035874366760254
+          },
+          {
+            "text": "on",
+            "start": 8.479,
+            "end": 8.599,
+            "loss": 0.00019866228103637695
+          },
+          {
+            "text": "tough",
+            "start": 8.659,
+            "end": 8.88,
+            "loss": 0.0008955001831054688
+          },
+          {
+            "text": "tracks.",
+            "start": 8.939,
+            "end": 9.399,
+            "loss": 0.002213444028581892
+          },
+          {
+            "text": "His",
+            "start": 9.979,
+            "end": 10.099,
+            "loss": 0.0006465117136637369
+          },
+          {
+            "text": "philosophy",
+            "start": 10.159,
+            "end": 10.859,
+            "loss": 0.00020911693572998047
+          },
+          {
+            "text": "is",
+            "start": 10.939,
+            "end": 11.059,
+            "loss": 0.000986337661743164
+          },
+          {
+            "text": "to",
+            "start": 11.179,
+            "end": 11.42,
+            "loss": 0.002597808837890625
+          },
+          {
+            "text": "test",
+            "start": 11.859,
+            "end": 12.179,
+            "loss": 0.08605420589447021
+          },
+          {
+            "text": "cars",
+            "start": 12.239,
+            "end": 12.559,
+            "loss": 0.0010649561882019043
+          },
+          {
+            "text": "until",
+            "start": 12.599,
+            "end": 12.899,
+            "loss": 0.0004483461380004883
+          },
+          {
+            "text": "they",
+            "start": 12.939,
+            "end": 13.019,
+            "loss": 0.0002160966396331787
+          },
+          {
+            "text": "break.",
+            "start": 13.159,
+            "end": 13.5,
+            "loss": 0.039612770080566406
+          },
+          {
+            "text": "By",
+            "start": 13.899,
+            "end": 13.96,
+            "loss": 0.0029582977294921875
+          },
+          {
+            "text": "fixing",
+            "start": 14.099,
+            "end": 14.46,
+            "loss": 0.00024304787317911783
+          },
+          {
+            "text": "the",
+            "start": 14.539,
+            "end": 14.659,
+            "loss": 0.001682599385579427
+          },
+          {
+            "text": "weakest",
+            "start": 15.059,
+            "end": 15.399,
+            "loss": 0.010620389665876116
+          },
+          {
+            "text": "parts,",
+            "start": 15.5,
+            "end": 15.939,
+            "loss": 0.009369611740112305
+          },
+          {
+            "text": "the",
+            "start": 16.219,
+            "end": 16.299,
+            "loss": 0.0009473164876302084
+          },
+          {
+            "text": "company",
+            "start": 16.359,
+            "end": 16.639,
+            "loss": 0.00036372457231794087
+          },
+          {
+            "text": "can",
+            "start": 16.699,
+            "end": 16.799,
+            "loss": 0.0006585915883382162
+          },
+          {
+            "text": "make",
+            "start": 16.859,
+            "end": 17.039,
+            "loss": 0.0005497932434082031
+          },
+          {
+            "text": "better",
+            "start": 17.079,
+            "end": 17.34,
+            "loss": 0.0008897781372070312
+          },
+          {
+            "text": "cars",
+            "start": 17.42,
+            "end": 17.799,
+            "loss": 0.0006722211837768555
+          },
+          {
+            "text": "step",
+            "start": 18.0,
+            "end": 18.279,
+            "loss": 0.0005328655242919922
+          },
+          {
+            "text": "by",
+            "start": 18.319,
+            "end": 18.5,
+            "loss": 0.00014221668243408203
+          },
+          {
+            "text": "step.",
+            "start": 18.579,
+            "end": 18.979,
+            "loss": 0.0014008522033691407
+          },
+          {
+            "text": "He",
+            "start": 19.479,
+            "end": 19.559,
+            "loss": 0.0019085407257080078
+          },
+          {
+            "text": "also",
+            "start": 19.639,
+            "end": 19.92,
+            "loss": 0.0008055567741394043
+          },
+          {
+            "text": "teaches",
+            "start": 19.959,
+            "end": 20.26,
+            "loss": 0.0003446340560913086
+          },
+          {
+            "text": "young",
+            "start": 20.34,
+            "end": 20.539,
+            "loss": 0.000733041763305664
+          },
+          {
+            "text": "workers",
+            "start": 20.619,
+            "end": 21.079,
+            "loss": 0.0002212865012032645
+          },
+          {
+            "text": "to",
+            "start": 21.119,
+            "end": 21.199,
+            "loss": 0.0007467269897460938
+          },
+          {
+            "text": "listen",
+            "start": 21.26,
+            "end": 21.539,
+            "loss": 0.00035633643468221027
+          },
+          {
+            "text": "to",
+            "start": 21.579,
+            "end": 21.719,
+            "loss": 0.000499427318572998
+          },
+          {
+            "text": "others",
+            "start": 21.819,
+            "end": 22.439,
+            "loss": 0.0003903508186340332
+          },
+          {
+            "text": "and",
+            "start": 22.519,
+            "end": 22.619,
+            "loss": 0.0005713701248168945
+          },
+          {
+            "text": "learn",
+            "start": 22.719,
+            "end": 22.979,
+            "loss": 0.00045843124389648436
+          },
+          {
+            "text": "from",
+            "start": 23.079,
+            "end": 23.199,
+            "loss": 0.0005257725715637207
+          },
+          {
+            "text": "both",
+            "start": 23.279,
+            "end": 23.519,
+            "loss": 0.0012327134609222412
+          },
+          {
+            "text": "good",
+            "start": 23.579,
+            "end": 23.799,
+            "loss": 0.0009202957153320312
+          },
+          {
+            "text": "and",
+            "start": 23.879,
+            "end": 24.039,
+            "loss": 0.00044540564219156903
+          },
+          {
+            "text": "bad",
+            "start": 24.1,
+            "end": 24.279,
+            "loss": 0.0002822478612263997
+          },
+          {
+            "text": "experiences.",
+            "start": 24.359,
+            "end": 25.319,
+            "loss": 0.00045232971509297687
+          },
+          {
+            "text": "He",
+            "start": 25.819,
+            "end": 25.899,
+            "loss": 0.0007297992706298828
+          },
+          {
+            "text": "believes",
+            "start": 25.939,
+            "end": 26.26,
+            "loss": 0.00016611814498901367
+          },
+          {
+            "text": "that",
+            "start": 26.299,
+            "end": 26.399,
+            "loss": 0.0006484091281890869
+          },
+          {
+            "text": "cars",
+            "start": 26.479,
+            "end": 26.779,
+            "loss": 0.0013568401336669922
+          },
+          {
+            "text": "are",
+            "start": 26.819,
+            "end": 26.939,
+            "loss": 0.000493168830871582
+          },
+          {
+            "text": "not",
+            "start": 27.0,
+            "end": 27.199,
+            "loss": 0.0005257129669189453
+          },
+          {
+            "text": "just",
+            "start": 27.26,
+            "end": 27.42,
+            "loss": 0.0003388524055480957
+          },
+          {
+            "text": "a",
+            "start": 27.459,
+            "end": 27.519,
+            "loss": 0.001373291015625
+          },
+          {
+            "text": "way",
+            "start": 27.559,
+            "end": 27.68,
+            "loss": 0.0002393325169881185
+          },
+          {
+            "text": "to",
+            "start": 27.719,
+            "end": 27.819,
+            "loss": 0.00043773651123046875
+          },
+          {
+            "text": "travel,",
+            "start": 27.879,
+            "end": 28.319,
+            "loss": 0.07547461986541748
+          },
+          {
+            "text": "but",
+            "start": 28.739,
+            "end": 28.859,
+            "loss": 0.00015616416931152344
+          },
+          {
+            "text": "something",
+            "start": 28.92,
+            "end": 29.199,
+            "loss": 0.0005613300535413954
+          },
+          {
+            "text": "that",
+            "start": 29.239,
+            "end": 29.359,
+            "loss": 0.0002136826515197754
+          },
+          {
+            "text": "moves",
+            "start": 29.459,
+            "end": 29.739,
+            "loss": 0.0004865169525146484
+          },
+          {
+            "text": "people's",
+            "start": 29.84,
+            "end": 30.159,
+            "loss": 0.020371437072753906
+          },
+          {
+            "text": "hearts.",
+            "start": 30.219,
+            "end": 30.76,
+            "loss": 0.0023557288306100027
+          },
+          {
+            "text": "Ultimately,",
+            "start": 31.239,
+            "end": 31.899,
+            "loss": 0.005503275177695535
+          },
+          {
+            "text": "he",
+            "start": 32.04,
+            "end": 32.18,
+            "loss": 0.0038383007049560547
+          },
+          {
+            "text": "thinks",
+            "start": 32.219,
+            "end": 32.419,
+            "loss": 0.0002633333206176758
+          },
+          {
+            "text": "that",
+            "start": 32.459,
+            "end": 32.619,
+            "loss": 0.0008912384510040283
+          },
+          {
+            "text": "only",
+            "start": 32.7,
+            "end": 32.939,
+            "loss": 0.001324385404586792
+          },
+          {
+            "text": "people",
+            "start": 33.059,
+            "end": 33.319,
+            "loss": 0.00039138396581013996
+          },
+          {
+            "text": "who",
+            "start": 33.36,
+            "end": 33.479,
+            "loss": 0.0005447069803873698
+          },
+          {
+            "text": "love",
+            "start": 33.54,
+            "end": 33.719,
+            "loss": 0.00025141239166259766
+          },
+          {
+            "text": "cars",
+            "start": 33.799,
+            "end": 34.18,
+            "loss": 0.0005300045013427734
+          },
+          {
+            "text": "can",
+            "start": 34.239,
+            "end": 34.36,
+            "loss": 0.0003718137741088867
+          },
+          {
+            "text": "build",
+            "start": 34.399,
+            "end": 34.599,
+            "loss": 0.0002987146377563477
+          },
+          {
+            "text": "great",
+            "start": 34.68,
+            "end": 34.88,
+            "loss": 0.000772857666015625
+          },
+          {
+            "text": "ones.",
+            "start": 34.979,
+            "end": 35.319,
+            "loss": 0.0248809814453125
+          }
+        ],
+        "loss": 0.017514274923840938,
+        "source": "forced_alignment"
+      },
+      "ground_truth_indices": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ]
+    },
+    "p1_different_voice": {
+      "reference": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.046,
+            "end": 0.43,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.499,
+            "end": 1.091,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 1.161,
+            "end": 1.265,
+            "loss": 0.0
+          },
+          {
+            "text": "chairman",
+            "start": 1.312,
+            "end": 1.637,
+            "loss": 0.0
+          },
+          {
+            "text": "of",
+            "start": 1.683,
+            "end": 1.73,
+            "loss": 0.0
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.788,
+            "end": 2.473,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 2.589,
+            "end": 2.74,
+            "loss": 0.0
+          },
+          {
+            "text": "still",
+            "start": 2.775,
+            "end": 2.984,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 3.042,
+            "end": 3.111,
+            "loss": 0.0
+          },
+          {
+            "text": "chief",
+            "start": 3.158,
+            "end": 3.39,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 3.448,
+            "end": 3.704,
+            "loss": 0.0
+          },
+          {
+            "text": "driver",
+            "start": 3.738,
+            "end": 4.075,
+            "loss": 0.0
+          },
+          {
+            "text": "at",
+            "start": 4.133,
+            "end": 4.191,
+            "loss": 0.0
+          },
+          {
+            "text": "age",
+            "start": 4.238,
+            "end": 4.435,
+            "loss": 0.0
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 4.47,
+            "end": 5.433,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 5.944,
+            "end": 6.06,
+            "loss": 0.0
+          },
+          {
+            "text": "often",
+            "start": 6.118,
+            "end": 6.327,
+            "loss": 0.0
+          },
+          {
+            "text": "wears",
+            "start": 6.374,
+            "end": 6.594,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 6.629,
+            "end": 6.664,
+            "loss": 0.0
+          },
+          {
+            "text": "racing",
+            "start": 6.722,
+            "end": 7.036,
+            "loss": 0.0
+          },
+          {
+            "text": "suit",
+            "start": 7.094,
+            "end": 7.361,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 7.477,
+            "end": 7.674,
+            "loss": 0.0
+          },
+          {
+            "text": "drives",
+            "start": 7.721,
+            "end": 8.046,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 8.092,
+            "end": 8.313,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 8.382,
+            "end": 8.661,
+            "loss": 0.0
+          },
+          {
+            "text": "on",
+            "start": 8.707,
+            "end": 8.8,
+            "loss": 0.0
+          },
+          {
+            "text": "tough",
+            "start": 8.87,
+            "end": 9.102,
+            "loss": 0.0
+          },
+          {
+            "text": "tracks.",
+            "start": 9.149,
+            "end": 9.764,
+            "loss": 0.0
+          },
+          {
+            "text": "His",
+            "start": 10.275,
+            "end": 10.449,
+            "loss": 0.0
+          },
+          {
+            "text": "philosophy",
+            "start": 10.495,
+            "end": 10.983,
+            "loss": 0.0
+          },
+          {
+            "text": "is",
+            "start": 11.029,
+            "end": 11.088,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 11.146,
+            "end": 11.204,
+            "loss": 0.0
+          },
+          {
+            "text": "test",
+            "start": 11.262,
+            "end": 11.505,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 11.575,
+            "end": 11.923,
+            "loss": 0.0
+          },
+          {
+            "text": "until",
+            "start": 11.97,
+            "end": 12.202,
+            "loss": 0.0
+          },
+          {
+            "text": "they",
+            "start": 12.249,
+            "end": 12.365,
+            "loss": 0.0
+          },
+          {
+            "text": "break.",
+            "start": 12.411,
+            "end": 12.957,
+            "loss": 0.0
+          },
+          {
+            "text": "By",
+            "start": 13.56,
+            "end": 13.7,
+            "loss": 0.0
+          },
+          {
+            "text": "fixing",
+            "start": 13.769,
+            "end": 14.083,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 14.129,
+            "end": 14.199,
+            "loss": 0.0
+          },
+          {
+            "text": "weakest",
+            "start": 14.234,
+            "end": 14.571,
+            "loss": 0.0
+          },
+          {
+            "text": "parts,",
+            "start": 14.629,
+            "end": 15.105,
+            "loss": 0.0
+          },
+          {
+            "text": "the",
+            "start": 15.221,
+            "end": 15.314,
+            "loss": 0.0
+          },
+          {
+            "text": "company",
+            "start": 15.372,
+            "end": 15.685,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 15.732,
+            "end": 15.848,
+            "loss": 0.0
+          },
+          {
+            "text": "make",
+            "start": 15.894,
+            "end": 16.069,
+            "loss": 0.0
+          },
+          {
+            "text": "better",
+            "start": 16.115,
+            "end": 16.37,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 16.428,
+            "end": 16.823,
+            "loss": 0.0
+          },
+          {
+            "text": "step",
+            "start": 16.916,
+            "end": 17.183,
+            "loss": 0.0
+          },
+          {
+            "text": "by",
+            "start": 17.241,
+            "end": 17.357,
+            "loss": 0.0
+          },
+          {
+            "text": "step.",
+            "start": 17.438,
+            "end": 17.961,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 18.472,
+            "end": 18.588,
+            "loss": 0.0
+          },
+          {
+            "text": "also",
+            "start": 18.646,
+            "end": 18.913,
+            "loss": 0.0
+          },
+          {
+            "text": "teaches",
+            "start": 18.983,
+            "end": 19.343,
+            "loss": 0.0
+          },
+          {
+            "text": "young",
+            "start": 19.424,
+            "end": 19.621,
+            "loss": 0.0
+          },
+          {
+            "text": "workers",
+            "start": 19.679,
+            "end": 20.062,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.109,
+            "end": 20.167,
+            "loss": 0.0
+          },
+          {
+            "text": "listen",
+            "start": 20.236,
+            "end": 20.48,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 20.527,
+            "end": 20.585,
+            "loss": 0.0
+          },
+          {
+            "text": "others",
+            "start": 20.666,
+            "end": 21.003,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 21.154,
+            "end": 21.328,
+            "loss": 0.0
+          },
+          {
+            "text": "learn",
+            "start": 21.397,
+            "end": 21.618,
+            "loss": 0.0
+          },
+          {
+            "text": "from",
+            "start": 21.665,
+            "end": 21.792,
+            "loss": 0.0
+          },
+          {
+            "text": "both",
+            "start": 21.839,
+            "end": 22.024,
+            "loss": 0.0
+          },
+          {
+            "text": "good",
+            "start": 22.094,
+            "end": 22.35,
+            "loss": 0.0
+          },
+          {
+            "text": "and",
+            "start": 22.408,
+            "end": 22.57,
+            "loss": 0.0
+          },
+          {
+            "text": "bad",
+            "start": 22.64,
+            "end": 22.849,
+            "loss": 0.0
+          },
+          {
+            "text": "experiences.",
+            "start": 22.907,
+            "end": 23.87,
+            "loss": 0.0
+          },
+          {
+            "text": "He",
+            "start": 24.381,
+            "end": 24.509,
+            "loss": 0.0
+          },
+          {
+            "text": "believes",
+            "start": 24.567,
+            "end": 24.88,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 24.915,
+            "end": 25.043,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 25.101,
+            "end": 25.438,
+            "loss": 0.0
+          },
+          {
+            "text": "are",
+            "start": 25.473,
+            "end": 25.577,
+            "loss": 0.0
+          },
+          {
+            "text": "not",
+            "start": 25.612,
+            "end": 25.728,
+            "loss": 0.0
+          },
+          {
+            "text": "just",
+            "start": 25.774,
+            "end": 25.949,
+            "loss": 0.0
+          },
+          {
+            "text": "a",
+            "start": 25.995,
+            "end": 26.018,
+            "loss": 0.0
+          },
+          {
+            "text": "way",
+            "start": 26.076,
+            "end": 26.204,
+            "loss": 0.0
+          },
+          {
+            "text": "to",
+            "start": 26.262,
+            "end": 26.32,
+            "loss": 0.0
+          },
+          {
+            "text": "travel,",
+            "start": 26.378,
+            "end": 26.935,
+            "loss": 0.0
+          },
+          {
+            "text": "but",
+            "start": 27.052,
+            "end": 27.214,
+            "loss": 0.0
+          },
+          {
+            "text": "something",
+            "start": 27.261,
+            "end": 27.551,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 27.597,
+            "end": 27.702,
+            "loss": 0.0
+          },
+          {
+            "text": "moves",
+            "start": 27.76,
+            "end": 28.027,
+            "loss": 0.0
+          },
+          {
+            "text": "people's",
+            "start": 28.085,
+            "end": 28.434,
+            "loss": 0.0
+          },
+          {
+            "text": "hearts.",
+            "start": 28.492,
+            "end": 29.061,
+            "loss": 0.0
+          },
+          {
+            "text": "Ultimately,",
+            "start": 29.873,
+            "end": 30.581,
+            "loss": 0.0
+          },
+          {
+            "text": "he",
+            "start": 30.639,
+            "end": 30.721,
+            "loss": 0.0
+          },
+          {
+            "text": "thinks",
+            "start": 30.779,
+            "end": 30.988,
+            "loss": 0.0
+          },
+          {
+            "text": "that",
+            "start": 31.023,
+            "end": 31.139,
+            "loss": 0.0
+          },
+          {
+            "text": "only",
+            "start": 31.197,
+            "end": 31.394,
+            "loss": 0.0
+          },
+          {
+            "text": "people",
+            "start": 31.452,
+            "end": 31.719,
+            "loss": 0.0
+          },
+          {
+            "text": "who",
+            "start": 31.742,
+            "end": 31.835,
+            "loss": 0.0
+          },
+          {
+            "text": "love",
+            "start": 31.893,
+            "end": 32.067,
+            "loss": 0.0
+          },
+          {
+            "text": "cars",
+            "start": 32.114,
+            "end": 32.497,
+            "loss": 0.0
+          },
+          {
+            "text": "can",
+            "start": 32.555,
+            "end": 32.671,
+            "loss": 0.0
+          },
+          {
+            "text": "build",
+            "start": 32.718,
+            "end": 32.95,
+            "loss": 0.0
+          },
+          {
+            "text": "great",
+            "start": 33.02,
+            "end": 33.228,
+            "loss": 0.0
+          },
+          {
+            "text": "ones.",
+            "start": 33.298,
+            "end": 33.716,
+            "loss": 0.0
+          }
+        ],
+        "loss": 0.0,
+        "source": "tts_timestamps"
+      },
+      "user": {
+        "words": [
+          {
+            "text": "Akio",
+            "start": 0.079,
+            "end": 0.439,
+            "loss": 0.43914794921875
+          },
+          {
+            "text": "Toyoda,",
+            "start": 0.56,
+            "end": 1.059,
+            "loss": 0.3085735866001674
+          },
+          {
+            "text": "the",
+            "start": 1.179,
+            "end": 1.299,
+            "loss": 0.0015730857849121094
+          },
+          {
+            "text": "chairman",
+            "start": 1.379,
+            "end": 1.74,
+            "loss": 0.01608717441558838
+          },
+          {
+            "text": "of",
+            "start": 1.799,
+            "end": 1.879,
+            "loss": 0.0003610849380493164
+          },
+          {
+            "text": "Toyota,",
+            "start": 1.979,
+            "end": 2.48,
+            "loss": 0.020024572099958147
+          },
+          {
+            "text": "is",
+            "start": 3.059,
+            "end": 3.199,
+            "loss": 0.0015306472778320312
+          },
+          {
+            "text": "still",
+            "start": 3.24,
+            "end": 3.519,
+            "loss": 0.00028631687164306643
+          },
+          {
+            "text": "the",
+            "start": 3.599,
+            "end": 3.659,
+            "loss": 0.0009630521138509115
+          },
+          {
+            "text": "chief",
+            "start": 3.759,
+            "end": 4.0,
+            "loss": 0.004784178733825683
+          },
+          {
+            "text": "test",
+            "start": 4.059,
+            "end": 4.279,
+            "loss": 0.0009253025054931641
+          },
+          {
+            "text": "driver",
+            "start": 4.339,
+            "end": 4.659,
+            "loss": 0.00019647677739461264
+          },
+          {
+            "text": "at",
+            "start": 5.059,
+            "end": 5.139,
+            "loss": 0.0007686614990234375
+          },
+          {
+            "text": "age",
+            "start": 5.239,
+            "end": 5.46,
+            "loss": 0.0010318358739217122
+          },
+          {
+            "text": "sixty-nine.",
+            "start": 5.519,
+            "end": 6.299,
+            "loss": 0.2584013613787564
+          },
+          {
+            "text": "He",
+            "start": 6.899,
+            "end": 6.98,
+            "loss": 0.0007824897766113281
+          },
+          {
+            "text": "often",
+            "start": 7.039,
+            "end": 7.219,
+            "loss": 0.0001215219497680664
+          },
+          {
+            "text": "wears",
+            "start": 7.299,
+            "end": 7.48,
+            "loss": 0.00015668869018554689
+          },
+          {
+            "text": "a",
+            "start": 7.539,
+            "end": 7.579,
+            "loss": 0.000469207763671875
+          },
+          {
+            "text": "racing",
+            "start": 7.619,
+            "end": 7.98,
+            "loss": 0.0002298752466837565
+          },
+          {
+            "text": "suit",
+            "start": 8.099,
+            "end": 8.38,
+            "loss": 0.00016126036643981934
+          },
+          {
+            "text": "and",
+            "start": 8.84,
+            "end": 8.96,
+            "loss": 0.000626524289449056
+          },
+          {
+            "text": "drives",
+            "start": 9.019,
+            "end": 9.399,
+            "loss": 0.00025884310404459637
+          },
+          {
+            "text": "test",
+            "start": 9.5,
+            "end": 9.679,
+            "loss": 0.0018684864044189453
+          },
+          {
+            "text": "cars",
+            "start": 9.8,
+            "end": 10.139,
+            "loss": 0.0003910660743713379
+          },
+          {
+            "text": "on",
+            "start": 10.199,
+            "end": 10.399,
+            "loss": 0.00027179718017578125
+          },
+          {
+            "text": "tough",
+            "start": 10.46,
+            "end": 10.699,
+            "loss": 0.0011311054229736328
+          },
+          {
+            "text": "tracks.",
+            "start": 10.76,
+            "end": 11.219,
+            "loss": 0.002179997307913644
+          },
+          {
+            "text": "His",
+            "start": 11.899,
+            "end": 12.019,
+            "loss": 0.0006119410196940104
+          },
+          {
+            "text": "philosophy",
+            "start": 12.079,
+            "end": 12.619,
+            "loss": 0.00026966333389282225
+          },
+          {
+            "text": "is",
+            "start": 12.859,
+            "end": 13.059,
+            "loss": 0.00046181678771972656
+          },
+          {
+            "text": "to",
+            "start": 13.199,
+            "end": 13.319,
+            "loss": 0.009527206420898438
+          },
+          {
+            "text": "test",
+            "start": 13.399,
+            "end": 13.639,
+            "loss": 0.0029433369636535645
+          },
+          {
+            "text": "cars",
+            "start": 13.779,
+            "end": 14.199,
+            "loss": 0.0010921955108642578
+          },
+          {
+            "text": "until",
+            "start": 14.639,
+            "end": 14.859,
+            "loss": 0.0014913320541381837
+          },
+          {
+            "text": "they",
+            "start": 14.92,
+            "end": 15.079,
+            "loss": 0.00022125244140625
+          },
+          {
+            "text": "break.",
+            "start": 15.139,
+            "end": 15.46,
+            "loss": 0.024115125338236492
+          },
+          {
+            "text": "By",
+            "start": 16.119,
+            "end": 16.219,
+            "loss": 0.0008587837219238281
+          },
+          {
+            "text": "fixing",
+            "start": 16.34,
+            "end": 16.659,
+            "loss": 0.00022653738657633463
+          },
+          {
+            "text": "the",
+            "start": 16.719,
+            "end": 16.76,
+            "loss": 0.0005310376485188802
+          },
+          {
+            "text": "weakest",
+            "start": 16.84,
+            "end": 17.139,
+            "loss": 0.002495748656136649
+          },
+          {
+            "text": "parts,",
+            "start": 17.26,
+            "end": 17.639,
+            "loss": 0.003919045130411784
+          },
+          {
+            "text": "the",
+            "start": 18.119,
+            "end": 18.18,
+            "loss": 0.0013910929361979167
+          },
+          {
+            "text": "company",
+            "start": 18.239,
+            "end": 18.6,
+            "loss": 0.0004134007862636021
+          },
+          {
+            "text": "can",
+            "start": 18.659,
+            "end": 18.799,
+            "loss": 0.0002733866373697917
+          },
+          {
+            "text": "make",
+            "start": 18.819,
+            "end": 18.959,
+            "loss": 0.00029346346855163574
+          },
+          {
+            "text": "better",
+            "start": 19.059,
+            "end": 19.279,
+            "loss": 0.0008720755577087402
+          },
+          {
+            "text": "cars",
+            "start": 19.34,
+            "end": 19.859,
+            "loss": 0.0005450248718261719
+          },
+          {
+            "text": "step",
+            "start": 20.0,
+            "end": 20.199,
+            "loss": 0.0005435943603515625
+          },
+          {
+            "text": "by",
+            "start": 20.26,
+            "end": 20.439,
+            "loss": 0.00015157461166381836
+          },
+          {
+            "text": "step.",
+            "start": 20.5,
+            "end": 20.819,
+            "loss": 0.001302480697631836
+          },
+          {
+            "text": "He",
+            "start": 21.479,
+            "end": 21.559,
+            "loss": 0.0010344982147216797
+          },
+          {
+            "text": "also",
+            "start": 21.639,
+            "end": 21.979,
+            "loss": 0.0004639923572540283
+          },
+          {
+            "text": "teaches",
+            "start": 22.039,
+            "end": 22.379,
+            "loss": 0.0003948211669921875
+          },
+          {
+            "text": "young",
+            "start": 22.459,
+            "end": 22.639,
+            "loss": 0.0006587028503417969
+          },
+          {
+            "text": "workers",
+            "start": 22.699,
+            "end": 23.42,
+            "loss": 0.0002586160387311663
+          },
+          {
+            "text": "to",
+            "start": 23.479,
+            "end": 23.579,
+            "loss": 0.0012526512145996094
+          },
+          {
+            "text": "listen",
+            "start": 23.619,
+            "end": 23.819,
+            "loss": 0.0006579955418904623
+          },
+          {
+            "text": "to",
+            "start": 23.899,
+            "end": 24.02,
+            "loss": 0.0002848505973815918
+          },
+          {
+            "text": "others",
+            "start": 24.079,
+            "end": 24.439,
+            "loss": 0.00029152631759643555
+          },
+          {
+            "text": "and",
+            "start": 24.939,
+            "end": 25.079,
+            "loss": 0.0007705291112263998
+          },
+          {
+            "text": "learn",
+            "start": 25.139,
+            "end": 25.379,
+            "loss": 0.0002414226531982422
+          },
+          {
+            "text": "from",
+            "start": 25.479,
+            "end": 25.619,
+            "loss": 0.0004917383193969727
+          },
+          {
+            "text": "both",
+            "start": 25.659,
+            "end": 25.899,
+            "loss": 0.00048682093620300293
+          },
+          {
+            "text": "good",
+            "start": 25.959,
+            "end": 26.539,
+            "loss": 0.0007348954677581787
+          },
+          {
+            "text": "and",
+            "start": 26.599,
+            "end": 26.76,
+            "loss": 0.0004508495330810547
+          },
+          {
+            "text": "bad",
+            "start": 26.819,
+            "end": 27.079,
+            "loss": 0.0001455545425415039
+          },
+          {
+            "text": "experiences.",
+            "start": 27.18,
+            "end": 28.0,
+            "loss": 0.00040702025095621747
+          },
+          {
+            "text": "He",
+            "start": 28.519,
+            "end": 28.6,
+            "loss": 0.0014945268630981445
+          },
+          {
+            "text": "believes",
+            "start": 28.659,
+            "end": 29.059,
+            "loss": 0.0002598762512207031
+          },
+          {
+            "text": "that",
+            "start": 29.079,
+            "end": 29.18,
+            "loss": 0.0007122159004211426
+          },
+          {
+            "text": "cars",
+            "start": 29.299,
+            "end": 29.719,
+            "loss": 0.0006737709045410156
+          },
+          {
+            "text": "are",
+            "start": 29.739,
+            "end": 29.86,
+            "loss": 0.000538031260172526
+          },
+          {
+            "text": "not",
+            "start": 29.879,
+            "end": 30.079,
+            "loss": 0.00045621395111083984
+          },
+          {
+            "text": "just",
+            "start": 30.139,
+            "end": 30.299,
+            "loss": 0.00022685527801513672
+          },
+          {
+            "text": "a",
+            "start": 30.34,
+            "end": 30.379,
+            "loss": 0.002197265625
+          },
+          {
+            "text": "way",
+            "start": 30.42,
+            "end": 30.52,
+            "loss": 0.00026595592498779297
+          },
+          {
+            "text": "to",
+            "start": 30.579,
+            "end": 30.719,
+            "loss": 0.0005676746368408203
+          },
+          {
+            "text": "travel,",
+            "start": 30.779,
+            "end": 31.139,
+            "loss": 0.06264075211116246
+          },
+          {
+            "text": "but",
+            "start": 31.779,
+            "end": 31.94,
+            "loss": 0.000526587168375651
+          },
+          {
+            "text": "something",
+            "start": 31.979,
+            "end": 32.56,
+            "loss": 0.00034823682573106553
+          },
+          {
+            "text": "that",
+            "start": 32.599,
+            "end": 32.72,
+            "loss": 0.000284731388092041
+          },
+          {
+            "text": "moves",
+            "start": 32.819,
+            "end": 33.399,
+            "loss": 0.0003036022186279297
+          },
+          {
+            "text": "people's",
+            "start": 33.459,
+            "end": 33.86,
+            "loss": 0.012754350900650024
+          },
+          {
+            "text": "hearts.",
+            "start": 33.899,
+            "end": 34.399,
+            "loss": 0.0017654895782470703
+          },
+          {
+            "text": "Ultimately,",
+            "start": 35.139,
+            "end": 36.099,
+            "loss": 0.004632559689608487
+          },
+          {
+            "text": "he",
+            "start": 36.159,
+            "end": 36.299,
+            "loss": 0.0017948150634765625
+          },
+          {
+            "text": "thinks",
+            "start": 36.319,
+            "end": 36.54,
+            "loss": 0.00030483802159627277
+          },
+          {
+            "text": "that",
+            "start": 36.579,
+            "end": 36.739,
+            "loss": 0.0003581047058105469
+          },
+          {
+            "text": "only",
+            "start": 36.84,
+            "end": 37.079,
+            "loss": 0.001226663589477539
+          },
+          {
+            "text": "people",
+            "start": 37.119,
+            "end": 37.36,
+            "loss": 0.00036281347274780273
+          },
+          {
+            "text": "who",
+            "start": 37.399,
+            "end": 37.579,
+            "loss": 0.0014807383219401042
+          },
+          {
+            "text": "love",
+            "start": 37.599,
+            "end": 37.799,
+            "loss": 0.0007090866565704346
+          },
+          {
+            "text": "cars",
+            "start": 37.86,
+            "end": 38.559,
+            "loss": 0.0006616115570068359
+          },
+          {
+            "text": "can",
+            "start": 38.619,
+            "end": 38.819,
+            "loss": 0.0012766520182291667
+          },
+          {
+            "text": "build",
+            "start": 38.879,
+            "end": 39.2,
+            "loss": 0.0008697986602783203
+          },
+          {
+            "text": "great",
+            "start": 39.259,
+            "end": 39.5,
+            "loss": 0.0006349802017211914
+          },
+          {
+            "text": "ones.",
+            "start": 39.559,
+            "end": 39.979,
+            "loss": 0.05054407119750977
+          }
+        ],
+        "loss": 0.01654589703069866,
+        "source": "forced_alignment"
+      },
+      "ground_truth_indices": []
+    }
+  }
+}
