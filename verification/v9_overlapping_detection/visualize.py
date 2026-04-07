@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
-from config import DELAY_THRESHOLD_SEC, OUTPUTS_DIR
+from config import DELAY_THRESHOLD_SEC, LOSS_THRESHOLD, OUTPUTS_DIR
 from delay_detection import SMOOTHING_WINDOW, _smooth
-from models import ExperimentResult, FAResult
+from models import ExperimentResult, FAResult, PronunciationResult
 
 
 def _compute_deviations(
@@ -52,91 +52,118 @@ def plot_delay_chart(
     tp: int = 0,
     fp: int = 0,
     fn: int = 0,
+    show: bool = False,
+    loss_threshold: float = LOSS_THRESHOLD,
 ) -> Path:
-    """1テストケースの累積偏差折れ線チャートを生成する."""
+    """1テストケースの2パネルチャートを生成する.
+
+    上パネル: ベースライン補正累積偏差（リズム）
+    下パネル: 単語ごとの FA loss（発音確信度）
+    """
     raw_dev, smoothed_dev, computed_baseline = _compute_deviations(ref, user)
     if baseline is None:
         baseline = computed_baseline
     n = len(smoothed_dev)
     words = [ref.words[i].text for i in range(n)]
+    losses = [user.words[i].loss for i in range(n)]
     gt_set = set(ground_truth_indices)
 
-    fig, ax = plt.subplots(figsize=(max(14, n * 0.18), 5.5))
+    fig, (ax_dev, ax_loss) = plt.subplots(
+        2, 1,
+        figsize=(max(14, n * 0.18), 8),
+        height_ratios=[3, 1.5],
+        sharex=True,
+    )
     x = np.arange(n)
+
+    # ===== 上パネル: 偏差折れ線 =====
 
     # ground truth 背景帯
     if gt_set:
-        # 連続区間ごとに帯を描画
         sorted_gt = sorted(gt_set)
         region_start = sorted_gt[0]
         for j in range(1, len(sorted_gt)):
             if sorted_gt[j] != sorted_gt[j - 1] + 1:
-                ax.axvspan(region_start - 0.5, sorted_gt[j - 1] + 0.5,
-                           alpha=0.10, color="#3498db", zorder=0)
+                ax_dev.axvspan(region_start - 0.5, sorted_gt[j - 1] + 0.5,
+                               alpha=0.10, color="#3498db", zorder=0)
                 region_start = sorted_gt[j]
-        ax.axvspan(region_start - 0.5, sorted_gt[-1] + 0.5,
-                   alpha=0.10, color="#3498db", zorder=0,
-                   label="Ground truth")
+        ax_dev.axvspan(region_start - 0.5, sorted_gt[-1] + 0.5,
+                       alpha=0.10, color="#3498db", zorder=0,
+                       label="Ground truth")
 
     # 閾値超え区間の塗りつぶし
     smoothed_arr = np.array(smoothed_dev)
     above = smoothed_arr > threshold
-    ax.fill_between(x, smoothed_arr, threshold,
-                    where=above, alpha=0.3, color="#e74c3c",
-                    interpolate=True, label="Detected delay", zorder=2)
+    ax_dev.fill_between(x, smoothed_arr, threshold,
+                        where=above, alpha=0.3, color="#e74c3c",
+                        interpolate=True, label="Detected delay", zorder=2)
 
     # 生偏差（薄い線）
-    ax.plot(x, raw_dev, color="#bdc3c7", linewidth=0.8, alpha=0.6,
-            label="Raw deviation", zorder=1)
+    ax_dev.plot(x, raw_dev, color="#bdc3c7", linewidth=0.8, alpha=0.6,
+                label="Raw deviation", zorder=1)
 
     # 平滑化偏差（太い折れ線）
-    ax.plot(x, smoothed_dev, color="#2c3e50", linewidth=2.0,
-            label="Smoothed deviation", zorder=3)
+    ax_dev.plot(x, smoothed_dev, color="#2c3e50", linewidth=2.0,
+                label="Smoothed deviation", zorder=3)
 
     # 閾値ライン
-    ax.axhline(y=threshold, color="#e67e22", linestyle="--", linewidth=1.0,
-               label=f"Threshold ({threshold}s)", zorder=1)
+    ax_dev.axhline(y=threshold, color="#e67e22", linestyle="--", linewidth=1.0,
+                   label=f"Threshold ({threshold}s)", zorder=1)
+    ax_dev.axhline(y=0, color="#7f8c8d", linewidth=0.5, zorder=1)
 
-    # ベースライン（ゼロ線）
-    ax.axhline(y=0, color="#7f8c8d", linewidth=0.5, zorder=1)
-
-    # X軸ラベル（間引き: 5単語おき + ground truth の端）
-    show_indices = set(range(0, n, 5))
-    if gt_set:
-        show_indices.add(min(gt_set))
-        show_indices.add(max(gt_set))
-    labels = [words[i] if i in show_indices else "" for i in range(n)]
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=60, ha="right", fontsize=7)
-
-    # 軸
-    ax.set_ylabel("Deviation from baseline (s)", fontsize=10)
-    ax.set_xlabel("Word index", fontsize=10)
-    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
+    ax_dev.set_ylabel("Deviation from baseline (s)", fontsize=10)
+    ax_dev.yaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
 
     # タイトル
     title = f"{case_id}  [{pattern}]"
     if gt_set:
         title += f"  |  TP={tp}  FP={fp}  FN={fn}"
-    ax.set_title(title, fontsize=12, fontweight="bold")
+    high_loss_count = sum(1 for l in losses if l > loss_threshold)
+    title += f"  |  High loss words: {high_loss_count}"
+    ax_dev.set_title(title, fontsize=12, fontweight="bold")
 
     # ベースライン注釈
-    ax.annotate(
+    ax_dev.annotate(
         f"Baseline (shadowing delay): {baseline:.3f}s",
         xy=(0.98, 0.02), xycoords="axes fraction",
         ha="right", va="bottom", fontsize=8,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8),
     )
+    ax_dev.legend(loc="upper left", fontsize=8)
 
-    # 凡例
-    ax.legend(loc="upper left", fontsize=8)
-    ax.set_xlim(-1, n)
+    # ===== 下パネル: loss バー =====
+
+    bar_colors = ["#e74c3c" if l > loss_threshold else "#bdc3c7" for l in losses]
+    ax_loss.bar(x, losses, color=bar_colors, width=0.8, edgecolor="none")
+    ax_loss.axhline(y=loss_threshold, color="#e67e22", linestyle="--",
+                    linewidth=1.0, label=f"Loss threshold ({loss_threshold})")
+    ax_loss.set_ylabel("FA Loss", fontsize=10)
+    ax_loss.set_xlabel("Word index", fontsize=10)
+    ax_loss.legend(loc="upper left", fontsize=8)
+
+    # X軸ラベル（下パネルのみ）
+    show_indices = set(range(0, n, 5))
+    if gt_set:
+        show_indices.add(min(gt_set))
+        show_indices.add(max(gt_set))
+    # 高 loss 単語もラベル表示
+    for i, l in enumerate(losses):
+        if l > loss_threshold:
+            show_indices.add(i)
+    labels = [words[i] if i in show_indices else "" for i in range(n)]
+    ax_loss.set_xticks(x)
+    ax_loss.set_xticklabels(labels, rotation=60, ha="right", fontsize=7)
+
+    ax_dev.set_xlim(-1, n)
 
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
     print(f"  チャート保存: {output_path.name}")
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
     return output_path
 
 
@@ -198,6 +225,288 @@ def plot_summary(
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  サマリチャート保存: {output_path.name}")
+    return output_path
+
+
+def plot_pronunciation_chart(
+    case_id: str,
+    pron_result: PronunciationResult,
+    output_path: Path,
+    show: bool = False,
+    exclude_insertions: bool = True,
+) -> Path:
+    """Azure Pronunciation Assessment の結果チャートを生成する.
+
+    上パネル: 単語ごとの AccuracyScore バー（色分け）
+    下パネル: ErrorType マーカー
+
+    Args:
+        exclude_insertions: True の場合、Insertion（リファレンスにない余分な単語）を
+            チャートから除外する。リファレンス単語ベースの表示になる。
+    """
+    if exclude_insertions:
+        words = [w for w in pron_result.words if w.error_type != "Insertion"]
+    else:
+        words = pron_result.words
+    n = len(words)
+    if n == 0:
+        print("  WARNING: No words to plot")
+        return output_path
+
+    fig, (ax_acc, ax_err) = plt.subplots(
+        2, 1,
+        figsize=(max(14, n * 0.2), 7),
+        height_ratios=[3, 1],
+        sharex=True,
+    )
+    x = np.arange(n)
+
+    # === 上パネル: AccuracyScore バー ===
+    scores = [w.accuracy_score for w in words]
+    bar_colors = []
+    for s, w in zip(scores, words):
+        if w.error_type == "Omission":
+            bar_colors.append("#95a5a6")  # 灰（発音されなかった）
+        elif s >= 80:
+            bar_colors.append("#2ecc71")  # 緑
+        elif s >= 60:
+            bar_colors.append("#f39c12")  # オレンジ
+        else:
+            bar_colors.append("#e74c3c")  # 赤
+
+    ax_acc.bar(x, scores, color=bar_colors, width=0.8, edgecolor="none")
+    ax_acc.axhline(y=60, color="#e67e22", linestyle="--", linewidth=1.0,
+                   alpha=0.7, label="Mispronunciation threshold (60)")
+    ax_acc.set_ylabel("Accuracy Score", fontsize=10)
+    ax_acc.set_ylim(0, 105)
+
+    # スコアサマリをタイトルに
+    ps = pron_result
+    title = (f"{case_id}  |  PronScore: {ps.pronunciation_score:.0f}  "
+             f"Accuracy: {ps.accuracy_score:.0f}  Fluency: {ps.fluency_score:.0f}  "
+             f"Completeness: {ps.completeness_score:.0f}  Prosody: {ps.prosody_score:.0f}")
+    ax_acc.set_title(title, fontsize=11, fontweight="bold")
+    ax_acc.legend(loc="lower left", fontsize=8)
+
+    # === 下パネル: ErrorType マーカー ===
+    error_colors = {
+        "None": "#2ecc71",
+        "Mispronunciation": "#e74c3c",
+        "Omission": "#95a5a6",
+        "Insertion": "#9b59b6",
+    }
+    error_markers = {
+        "None": "o",
+        "Mispronunciation": "X",
+        "Omission": "s",
+        "Insertion": "D",
+    }
+    error_types_to_show = ("None", "Mispronunciation", "Omission")
+    if not exclude_insertions:
+        error_types_to_show = ("None", "Mispronunciation", "Omission", "Insertion")
+    for error_type in error_types_to_show:
+        indices = [i for i, w in enumerate(words) if w.error_type == error_type]
+        if indices:
+            ax_err.scatter(
+                indices, [0] * len(indices),
+                c=error_colors.get(error_type, "#bdc3c7"),
+                marker=error_markers.get(error_type, "o"),
+                s=60, label=error_type, zorder=3,
+            )
+    ax_err.set_ylim(-0.5, 0.5)
+    ax_err.set_yticks([])
+    ax_err.set_xlabel("Word index", fontsize=10)
+    ax_err.legend(loc="upper left", fontsize=8, ncol=4)
+
+    # X軸ラベル
+    # 低スコア/エラー単語 + 5単語おきにラベル表示
+    show_indices = set(range(0, n, 5))
+    for i, w in enumerate(words):
+        if w.accuracy_score < 60 or w.error_type != "None":
+            show_indices.add(i)
+    labels = [words[i].word if i in show_indices else "" for i in range(n)]
+    ax_err.set_xticks(x)
+    ax_err.set_xticklabels(labels, rotation=60, ha="right", fontsize=7)
+
+    ax_acc.set_xlim(-1, n)
+    fig.tight_layout()
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    print(f"  発音評価チャート保存: {output_path.name}")
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+    return output_path
+
+
+def plot_combined_chart(
+    case_id: str,
+    pron_result: PronunciationResult,
+    ref_timestamps: FAResult,
+    output_path: Path,
+    threshold: float = DELAY_THRESHOLD_SEC,
+    show: bool = False,
+    exclude_insertions: bool = True,
+    baseline_correction: bool = False,
+) -> Path:
+    """発音評価 + タイミング偏差の3パネル統合チャートを生成する.
+
+    上パネル: タイミング偏差折れ線
+    中パネル: AccuracyScore バー
+    下パネル: ErrorType マーカー
+
+    Args:
+        baseline_correction: True でベースライン（median）補正を適用。
+            オーバーラッピングでは False（同時発話がゴール）。
+            シャドーイングでは True（一定の遅延は正常）。
+    """
+    if exclude_insertions:
+        words = [w for w in pron_result.words if w.error_type != "Insertion"]
+    else:
+        words = list(pron_result.words)
+    n = len(words)
+    if n == 0:
+        print("  WARNING: No words to plot")
+        return output_path
+
+    ref_words = ref_timestamps.words
+    n_ref = len(ref_words)
+
+    fig, (ax_dev, ax_acc, ax_err) = plt.subplots(
+        3, 1,
+        figsize=(max(14, n * 0.2), 10),
+        height_ratios=[2.5, 2, 0.8],
+        sharex=True,
+    )
+    x = np.arange(n)
+
+    # === 上パネル: タイミング偏差 ===
+    # Omission/Insertion でない単語のみ偏差を計算
+    # リファレンス単語とのマッチングが必要
+    raw_deviations = []
+    ref_idx = 0
+    for w in words:
+        if w.offset_sec >= 0 and w.error_type not in ("Omission", "Insertion") and ref_idx < n_ref:
+            # リファレンス側で同じ単語を探す
+            while ref_idx < n_ref and ref_words[ref_idx].text.lower().strip(".,!?;:") != w.word.lower().strip(".,!?;:"):
+                ref_idx += 1
+            if ref_idx < n_ref:
+                raw_deviations.append(w.offset_sec - ref_words[ref_idx].start)
+                ref_idx += 1
+            else:
+                raw_deviations.append(None)
+        else:
+            raw_deviations.append(None)
+
+    # ベースライン計算（None を除外）
+    valid_devs = [d for d in raw_deviations if d is not None]
+    if valid_devs:
+        if baseline_correction:
+            import statistics
+            baseline = statistics.median(valid_devs)
+        else:
+            baseline = 0.0
+        deviations = [(d - baseline if d is not None else None) for d in raw_deviations]
+        smoothed = []
+        for i in range(n):
+            window = [deviations[j] for j in range(max(0, i-1), min(n, i+2)) if deviations[j] is not None]
+            smoothed.append(sum(window) / len(window) if window else None)
+
+        dev_plot = [d if d is not None else float('nan') for d in deviations]
+        smooth_plot = [d if d is not None else float('nan') for d in smoothed]
+
+        ax_dev.plot(x, dev_plot, color="#bdc3c7", linewidth=0.8, alpha=0.6, label="Raw deviation")
+        ax_dev.plot(x, smooth_plot, color="#2c3e50", linewidth=2.0, label="Smoothed deviation")
+
+        smooth_arr = np.array([d if d is not None else 0 for d in smoothed])
+        above = smooth_arr > threshold
+        ax_dev.fill_between(x, smooth_arr, threshold, where=above,
+                            alpha=0.3, color="#e74c3c", interpolate=True, label="Detected delay")
+
+        ax_dev.axhline(y=threshold, color="#e67e22", linestyle="--", linewidth=1.0,
+                       label=f"Threshold ({threshold}s)")
+        ax_dev.axhline(y=0, color="#7f8c8d", linewidth=0.5)
+
+        mode_label = "Baseline corrected (shadowing)" if baseline_correction else "Raw (overlapping)"
+        annotation = f"{mode_label}"
+        if baseline_correction:
+            annotation += f"  |  Baseline: {baseline:.3f}s"
+        ax_dev.annotate(annotation, xy=(0.98, 0.02), xycoords="axes fraction",
+                        ha="right", va="bottom", fontsize=8,
+                        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+    else:
+        ax_dev.text(0.5, 0.5, "No timing data available", ha="center", va="center",
+                    transform=ax_dev.transAxes, fontsize=12, color="#7f8c8d")
+
+    ax_dev.set_ylabel("Timing deviation (s)", fontsize=9)
+    ax_dev.legend(loc="upper left", fontsize=7)
+
+    ps = pron_result
+    title = (f"{case_id}  |  PronScore: {ps.pronunciation_score:.0f}  "
+             f"Accuracy: {ps.accuracy_score:.0f}  Fluency: {ps.fluency_score:.0f}  "
+             f"Completeness: {ps.completeness_score:.0f}  Prosody: {ps.prosody_score:.0f}")
+    ax_dev.set_title(title, fontsize=11, fontweight="bold")
+
+    # === 中パネル: AccuracyScore バー ===
+    scores = [w.accuracy_score for w in words]
+    bar_colors = []
+    for s, w in zip(scores, words):
+        if w.error_type == "Omission":
+            bar_colors.append("#95a5a6")
+        elif s >= 80:
+            bar_colors.append("#2ecc71")
+        elif s >= 60:
+            bar_colors.append("#f39c12")
+        else:
+            bar_colors.append("#e74c3c")
+
+    ax_acc.bar(x, scores, color=bar_colors, width=0.8, edgecolor="none")
+    ax_acc.axhline(y=60, color="#e67e22", linestyle="--", linewidth=1.0, alpha=0.7,
+                   label="Mispronunciation threshold (60)")
+    ax_acc.set_ylabel("Accuracy Score", fontsize=9)
+    ax_acc.set_ylim(0, 105)
+    ax_acc.legend(loc="lower left", fontsize=7)
+
+    # === 下パネル: ErrorType マーカー ===
+    error_colors = {"None": "#2ecc71", "Mispronunciation": "#e74c3c",
+                    "Omission": "#95a5a6", "Insertion": "#9b59b6"}
+    error_markers = {"None": "o", "Mispronunciation": "X", "Omission": "s", "Insertion": "D"}
+    types_to_show = ("None", "Mispronunciation", "Omission")
+    if not exclude_insertions:
+        types_to_show = ("None", "Mispronunciation", "Omission", "Insertion")
+    for et in types_to_show:
+        indices = [i for i, w in enumerate(words) if w.error_type == et]
+        if indices:
+            ax_err.scatter(indices, [0] * len(indices),
+                           c=error_colors.get(et, "#bdc3c7"),
+                           marker=error_markers.get(et, "o"),
+                           s=60, label=et, zorder=3)
+    ax_err.set_ylim(-0.5, 0.5)
+    ax_err.set_yticks([])
+    ax_err.set_xlabel("Word index", fontsize=9)
+    ax_err.legend(loc="upper left", fontsize=7, ncol=4)
+
+    # X軸ラベル
+    show_indices = set(range(0, n, 5))
+    for i, w in enumerate(words):
+        if w.accuracy_score < 60 or w.error_type != "None":
+            show_indices.add(i)
+    labels = [words[i].word if i in show_indices else "" for i in range(n)]
+    ax_err.set_xticks(x)
+    ax_err.set_xticklabels(labels, rotation=60, ha="right", fontsize=7)
+
+    ax_dev.set_xlim(-1, n)
+    fig.tight_layout()
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    print(f"  統合チャート保存: {output_path.name}")
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
     return output_path
 
 

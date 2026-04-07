@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import statistics
 
-from config import DELAY_THRESHOLD_SEC
+from config import DELAY_THRESHOLD_SEC, LOSS_THRESHOLD
 from models import (
     DelayDetectionResult,
     FAResult,
+    HighLossWord,
     PhraseDelay,
     WordDelay,
 )
@@ -124,12 +125,24 @@ def detect_delays(
             is_delayed=True,
         ))
 
+    # 7. 高 loss 単語の収集
+    high_loss_words = [
+        HighLossWord(
+            word=user_words[i].text,
+            word_index=i,
+            loss=user_words[i].loss,
+        )
+        for i in range(n)
+        if user_words[i].loss > LOSS_THRESHOLD
+    ]
+
     return DelayDetectionResult(
         word_delays=word_delays,
         phrase_delays=phrase_delays,
         delayed_phrase_count=len(phrase_delays),
-        total_phrase_count=len(phrase_delays),  # 区間数 = 検出数
+        total_phrase_count=len(phrase_delays),
         offset_sec=baseline,
+        high_loss_words=high_loss_words,
     )
 
 

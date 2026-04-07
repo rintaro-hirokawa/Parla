@@ -34,3 +34,8 @@ audio/
 # SQLite
 *.db
 *.sqlite3
+
+# Verification intermediate outputs (reproducible, large files)
+verification/*/outputs/practice/
+verification/*/outputs/result_*.json
+verification/*/outputs/charts/

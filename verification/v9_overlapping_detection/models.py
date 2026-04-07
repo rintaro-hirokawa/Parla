@@ -57,6 +57,14 @@ class PhraseDelay(BaseModel):
     is_delayed: bool
 
 
+class HighLossWord(BaseModel):
+    """FA loss が高い単語（発音不明瞭 / スキップ / 言い間違いの可能性）."""
+
+    word: str
+    word_index: int
+    loss: float
+
+
 class DelayDetectionResult(BaseModel):
     """遅れ検出の全体結果."""
 
@@ -65,6 +73,7 @@ class DelayDetectionResult(BaseModel):
     delayed_phrase_count: int
     total_phrase_count: int
     offset_sec: float  # 正規化に使った先頭オフセット
+    high_loss_words: list[HighLossWord] = []
 
 
 # --- LLM フィードバック ---
@@ -84,6 +93,30 @@ class LLMFeedback(BaseModel):
 
     delayed_phrases: list[PhraseFeedback]
     overall_comment: str
+
+
+# --- Azure Pronunciation Assessment ---
+
+
+class PronWordResult(BaseModel):
+    """Azure Pronunciation Assessment の単語レベル結果."""
+
+    word: str
+    accuracy_score: float  # 0-100
+    error_type: str  # None / Omission / Insertion / Mispronunciation
+    offset_sec: float = -1.0  # 音声先頭からの開始時刻（秒）。-1 は未取得
+    duration_sec: float = 0.0  # 単語の発話時間（秒）
+
+
+class PronunciationResult(BaseModel):
+    """Azure Pronunciation Assessment の全体結果."""
+
+    words: list[PronWordResult]
+    accuracy_score: float  # 全体 0-100
+    fluency_score: float
+    completeness_score: float
+    prosody_score: float
+    pronunciation_score: float  # 総合
 
 
 # --- テストケース ---

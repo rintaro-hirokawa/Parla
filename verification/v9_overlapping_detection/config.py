@@ -29,10 +29,26 @@ FAST_SPEED = 1.15
 # 遅れ検知パラメータ
 DELAY_THRESHOLD_SEC = 0.3
 PHRASE_WINDOW_WORDS = 3
+LOSS_THRESHOLD = 0.5
 
 # LLM
 LLM_MODEL = "gemini/gemini-3-flash-preview"
 MAX_RETRIES = 2
+
+
+# Azure Speech Service
+def get_azure_speech_key() -> str:
+    key = os.environ.get("AZURE_SPEECH_KEY", "")
+    if not key:
+        raise ValueError("AZURE_SPEECH_KEY 環境変数を設定してください")
+    return key
+
+
+def get_azure_speech_region() -> str:
+    region = os.environ.get("AZURE_SPEECH_REGION", "")
+    if not region:
+        raise ValueError("AZURE_SPEECH_REGION 環境変数を設定してください")
+    return region
 
 
 def get_elevenlabs_api_key() -> str:
