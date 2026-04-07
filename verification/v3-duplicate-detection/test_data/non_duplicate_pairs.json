@@ -1,0 +1,72 @@
+[
+  {
+    "case_id": "ndp-01",
+    "case_type": "non_duplicate",
+    "target_pattern": "the most X",
+    "nearest_stock_id": "si-004",
+    "description": "比較級 vs 最上級。more X than Y ≠ the most X"
+  },
+  {
+    "case_id": "ndp-02",
+    "case_type": "non_duplicate",
+    "target_pattern": "take care of",
+    "nearest_stock_id": "si-005",
+    "description": "動詞句だが意味が異なる。take a look at ≠ take care of"
+  },
+  {
+    "case_id": "ndp-03",
+    "case_type": "non_duplicate",
+    "target_pattern": "used to do",
+    "nearest_stock_id": "si-006",
+    "description": "文法的に異なる。be used to ~ing（慣れている）≠ used to do（以前は〜していた）"
+  },
+  {
+    "case_id": "ndp-04",
+    "case_type": "non_duplicate",
+    "target_pattern": "look forward to",
+    "nearest_stock_id": "si-005",
+    "description": "take a look at ≠ look forward to"
+  },
+  {
+    "case_id": "ndp-05",
+    "case_type": "non_duplicate",
+    "target_pattern": "make sure",
+    "nearest_stock_id": "si-009",
+    "description": "make sense ≠ make sure"
+  },
+  {
+    "case_id": "ndp-06",
+    "case_type": "non_duplicate",
+    "target_pattern": "in case of",
+    "nearest_stock_id": "si-007",
+    "description": "in addition to ≠ in case of"
+  },
+  {
+    "case_id": "ndp-07",
+    "case_type": "non_duplicate",
+    "target_pattern": "turn out to be",
+    "nearest_stock_id": null,
+    "description": "ストック内に類似パターンなし。完全な新規"
+  },
+  {
+    "case_id": "ndp-08",
+    "case_type": "non_duplicate",
+    "target_pattern": "as long as",
+    "nearest_stock_id": "si-033",
+    "description": "類義の接続詞だが別表現。as long as ≠ provided that"
+  },
+  {
+    "case_id": "ndp-09",
+    "case_type": "non_duplicate",
+    "target_pattern": "be in charge of ~ing",
+    "nearest_stock_id": "si-002",
+    "description": "類義だが別表現。be in charge of ≠ be responsible for。学習者は両方別々に覚える必要がある"
+  },
+  {
+    "case_id": "ndp-10",
+    "case_type": "non_duplicate",
+    "target_pattern": "be accustomed to ~ing",
+    "nearest_stock_id": "si-006",
+    "description": "類義だが別表現。be accustomed to ≠ be used to。学習者は両方別々に覚える必要がある"
+  }
+]

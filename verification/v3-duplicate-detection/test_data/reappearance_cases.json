@@ -1,0 +1,30 @@
+[
+  {
+    "case_id": "reap-01",
+    "case_type": "reappearance",
+    "target_pattern": "be responsible for ~ing",
+    "expected_match_stock_id": "si-002",
+    "description": "ストック済み項目の再出。同じパターンを別文脈で再び間違える"
+  },
+  {
+    "case_id": "reap-02",
+    "case_type": "reappearance",
+    "target_pattern": "take a look at",
+    "expected_match_stock_id": "si-005",
+    "description": "ストック済み項目の再出。別のセンテンスで再度間違える"
+  },
+  {
+    "case_id": "reap-03",
+    "case_type": "reappearance",
+    "target_pattern": "environmental impact",
+    "expected_match_stock_id": "si-003",
+    "description": "ストック済み項目の再出。別文脈で使えない"
+  },
+  {
+    "case_id": "reap-04",
+    "case_type": "reappearance",
+    "target_pattern": "be used to ~ing",
+    "expected_match_stock_id": "si-006",
+    "description": "ストック済み項目の再出。同パターンを再度間違える"
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "scenario_id": "sc-01",
+    "case_ids": ["dup-01", "dup-06"],
+    "japanese_prompt": "リモートワークと出社勤務の違いについて説明してください",
+    "model_answer": "Working from home is more flexible than going to the office. You can manage your own schedule and avoid commuting. However, office work is more effective for team collaboration.",
+    "user_utterance_text": "Working from home is... much more flexible than going to office. You can manage your schedule. But office work is... effectiver than... for team collaboration.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "A discussion about the pros and cons of remote work versus office work."
+  },
+  {
+    "scenario_id": "sc-02",
+    "case_ids": ["dup-02", "ndp-09", "reap-01"],
+    "japanese_prompt": "プロジェクトマネージャーの役割について説明してください",
+    "model_answer": "A project manager is responsible for managing the timeline and budget. They are in charge of coordinating team members and ensuring deliverables are met on time.",
+    "user_utterance_text": "A project manager is... responsible for doing... managing the timeline. They are... in charge of... coordinating the team members.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "An explanation of what project managers do in their daily work."
+  },
+  {
+    "scenario_id": "sc-03",
+    "case_ids": ["dup-03", "ndp-01"],
+    "japanese_prompt": "環境問題について話してください",
+    "model_answer": "The environmental impact of plastic waste is significant. Reducing plastic use is the most effective way to protect marine ecosystems.",
+    "user_utterance_text": "The... impact on the environment of plastic waste is... significant. Reducing plastic is the most... effective way to protect marine ecosystems.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "A discussion about environmental issues and solutions for plastic waste."
+  },
+  {
+    "scenario_id": "sc-04",
+    "case_ids": ["ndp-02", "ndp-04", "reap-02"],
+    "japanese_prompt": "来週のプレゼンの準備状況を説明してください",
+    "model_answer": "Let me take a look at the slides before the meeting. I look forward to presenting our findings. Please take care of the logistics.",
+    "user_utterance_text": "Let me take a look at the slides. I... look forward to presenting. Please take care of the... logistics.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "Preparing for an upcoming presentation at work."
+  },
+  {
+    "scenario_id": "sc-05",
+    "case_ids": ["ndp-03", "ndp-10", "reap-04"],
+    "japanese_prompt": "新しい国に引っ越した経験について話してください",
+    "model_answer": "I used to live in Japan, and now I am used to living abroad. I am accustomed to dealing with different cultures every day.",
+    "user_utterance_text": "I used to live in Japan, and now I am... used to living abroad. I am... accustomed to dealing with different cultures.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "Sharing personal experiences about moving to a different country."
+  },
+  {
+    "scenario_id": "sc-06",
+    "case_ids": ["ndp-05", "ndp-06", "ndp-07", "ndp-08"],
+    "japanese_prompt": "新しいビジネスを始めるために必要なことを説明してください",
+    "model_answer": "Make sure you have a solid business plan. In case of unexpected costs, keep a reserve fund. As long as you stay focused, your efforts will turn out to be worthwhile. In addition to funding, networking is crucial.",
+    "user_utterance_text": "Make sure you have a... business plan. In case of unexpected costs, keep a fund. As long as you stay... focused, your efforts will turn out to be... worthwhile.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "Advice on starting a new business venture."
+  },
+  {
+    "scenario_id": "sc-07",
+    "case_ids": ["reap-03"],
+    "japanese_prompt": "再生可能エネルギーの重要性について説明してください",
+    "model_answer": "The environmental impact of fossil fuels is well documented. Renewable energy sources can significantly reduce carbon emissions.",
+    "user_utterance_text": "The... environmental impact of fossil fuels is... well documented. Renewable energy can reduce carbon emissions.",
+    "cefr_level": "B1",
+    "english_variant": "American",
+    "passage_context": "A discussion about renewable energy and its benefits for the environment."
+  }
+]

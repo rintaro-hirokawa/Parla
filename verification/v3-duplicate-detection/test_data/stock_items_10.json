@@ -1,0 +1,72 @@
+[
+  {
+    "item_id": "si-001",
+    "pattern": "A is more X than B",
+    "category": "文法",
+    "sub_tag": "比較",
+    "example_sentence": "This approach is more effective than the previous one."
+  },
+  {
+    "item_id": "si-002",
+    "pattern": "be responsible for ~ing",
+    "category": "コロケーション",
+    "sub_tag": "",
+    "example_sentence": "She is responsible for managing the entire project."
+  },
+  {
+    "item_id": "si-003",
+    "pattern": "environmental impact",
+    "category": "コロケーション",
+    "sub_tag": "",
+    "example_sentence": "We need to consider the environmental impact of this decision."
+  },
+  {
+    "item_id": "si-004",
+    "pattern": "more X than Y",
+    "category": "文法",
+    "sub_tag": "比較",
+    "example_sentence": "There are more advantages than disadvantages."
+  },
+  {
+    "item_id": "si-005",
+    "pattern": "take a look at",
+    "category": "表現",
+    "sub_tag": "",
+    "example_sentence": "Let me take a look at the report before the meeting."
+  },
+  {
+    "item_id": "si-006",
+    "pattern": "be used to ~ing",
+    "category": "文法",
+    "sub_tag": "動名詞",
+    "example_sentence": "I am used to working from home now."
+  },
+  {
+    "item_id": "si-007",
+    "pattern": "in addition to",
+    "category": "表現",
+    "sub_tag": "",
+    "example_sentence": "In addition to the main course, we offer several electives."
+  },
+  {
+    "item_id": "si-008",
+    "pattern": "as a result of",
+    "category": "表現",
+    "sub_tag": "",
+    "example_sentence": "As a result of the policy change, sales increased."
+  },
+  {
+    "item_id": "si-009",
+    "pattern": "make sense",
+    "category": "表現",
+    "sub_tag": "",
+    "example_sentence": "Does this explanation make sense to you?"
+  },
+  {
+    "item_id": "si-010",
+    "pattern": "come up with",
+    "category": "表現",
+    "sub_tag": "",
+    "example_sentence": "We need to come up with a new strategy."
+  }
+]

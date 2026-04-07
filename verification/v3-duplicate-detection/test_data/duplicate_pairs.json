@@ -1,0 +1,38 @@
+[
+  {
+    "case_id": "dup-01",
+    "case_type": "duplicate",
+    "target_pattern": "A is much more X than B",
+    "expected_match_stock_id": "si-001",
+    "description": "修飾語追加のみ。意味的に同一パターン"
+  },
+  {
+    "case_id": "dup-02",
+    "case_type": "duplicate",
+    "target_pattern": "be responsible for doing something",
+    "expected_match_stock_id": "si-002",
+    "description": "表記揺れ。~ing → doing something"
+  },
+  {
+    "case_id": "dup-03",
+    "case_type": "duplicate",
+    "target_pattern": "impact on the environment",
+    "expected_match_stock_id": "si-003",
+    "description": "語順変化。environmental impact → impact on the environment"
+  },
+  {
+    "case_id": "dup-04",
+    "case_type": "duplicate",
+    "target_pattern": "take advantage of something",
+    "expected_match_stock_id": "si-034",
+    "min_stock_size": 50,
+    "description": "表記揺れ。si-034 'take advantage of' はstock_50以上にのみ存在"
+  },
+  {
+    "case_id": "dup-06",
+    "case_type": "duplicate",
+    "target_pattern": "A is X-er than B",
+    "expected_match_stock_id": "si-001",
+    "description": "比較級の形式違い。more X than → X-er than。同じ文法パターンの表層形バリエーション"
+  }
+]

@@ -40,3 +40,4 @@ audio/
 
 # Verification intermediate outputs (reproducible, large files)
 verification/*/outputs/
+verification/*/results/
