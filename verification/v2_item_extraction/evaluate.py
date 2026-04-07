@@ -75,7 +75,7 @@ def evaluate(data: dict) -> None:
                     reapp = f" [再出: {item['matched_stock_item_id']}]"
                 print(f"    - [{item['category']}/{item['sub_tag'] or '-'}] "
                       f"{item['pattern']} "
-                      f"(conf={item['confidence']:.2f}, {item['default_action']})"
+                      f"(優先度={item['priority']})"
                       f"{reapp}")
                 print(f"      {item['explanation']}")
         else:
@@ -117,17 +117,14 @@ def evaluate(data: dict) -> None:
             for inv in invalid_subtags:
                 print(f"      - {inv}")
 
-        # confidence分布
-        confidences = [item["confidence"] for item in all_items]
-        print(f"\n  Confidence:")
-        print(f"    平均: {statistics.mean(confidences):.2f}")
-        if len(confidences) > 1:
-            print(f"    標準偏差: {statistics.stdev(confidences):.2f}")
-        print(f"    範囲: {min(confidences):.2f} - {max(confidences):.2f}")
-
-        action_counter = Counter(item["default_action"] for item in all_items)
-        print(f"    auto_stock: {action_counter.get('auto_stock', 0)}")
-        print(f"    review_later: {action_counter.get('review_later', 0)}")
+        # 習得優先度分布
+        priorities = [item["priority"] for item in all_items]
+        priority_counter = Counter(priorities)
+        print(f"\n  習得優先度:")
+        for level in [5, 4, 3, 2]:
+            count = priority_counter.get(level, 0)
+            label = {5: "最優先", 4: "早めに", 3: "望ましい", 2: "余裕あれば"}[level]
+            print(f"    {level} ({label}): {count}")
 
         # 再出検知
         reappearances = [item for item in all_items if item["is_reappearance"]]
@@ -164,8 +161,8 @@ def evaluate(data: dict) -> None:
         if type_items:
             type_cats = Counter(item["category"] for item in type_items)
             print(f"    カテゴリ: {dict(type_cats.most_common())}")
-            type_conf = [item["confidence"] for item in type_items]
-            print(f"    平均confidence: {statistics.mean(type_conf):.2f}")
+            type_pri = Counter(item["priority"] for item in type_items)
+            print(f"    優先度分布: {dict(sorted(type_pri.items(), reverse=True))}")
 
 
 def main() -> None:

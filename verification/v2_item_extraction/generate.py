@@ -118,7 +118,6 @@ def transcribe(
 def generate_feedback(
     user_utterance: str,
     ja_prompt: str,
-    model_en: str,
     stock_items: list[dict],
     config: V2Config,
 ) -> Stage2Result:
@@ -127,7 +126,6 @@ def generate_feedback(
         cefr_level=config.cefr_level,
         english_variant=config.english_variant,
         ja_prompt=ja_prompt,
-        model_en=model_en,
         user_utterance=user_utterance,
         stock_items_section=format_stock_items(stock_items),
         reappearance_instructions=format_reappearance_instructions(stock_items),
@@ -163,7 +161,6 @@ def generate_feedback(
 def analyze(
     audio_path: Path,
     ja_prompt: str,
-    model_en: str,
     stock_items: list[dict],
     config: V2Config,
 ) -> AnalysisResult:
@@ -174,7 +171,6 @@ def analyze(
     stage2 = generate_feedback(
         user_utterance=stage1.transcription.user_utterance,
         ja_prompt=ja_prompt,
-        model_en=model_en,
         stock_items=stock_items,
         config=config,
     )

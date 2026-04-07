@@ -39,8 +39,7 @@ class LearningItem(BaseModel):
     explanation: str = Field(description="日本語での説明（パターン解説 + 1-2例文）")
     category: Literal["文法", "語彙", "コロケーション", "構文", "表現"]
     sub_tag: str = Field(default="", description="カテゴリ別の固定サブタグ")
-    confidence: float = Field(ge=0.0, le=1.0, description="信頼度")
-    default_action: Literal["auto_stock", "review_later"]
+    priority: int = Field(ge=2, le=5, description="習得優先度（5=最優先, 2=余裕があれば）")
     is_reappearance: bool = Field(default=False, description="ストック済み項目の再出か")
     matched_stock_item_id: str | None = Field(
         default=None,

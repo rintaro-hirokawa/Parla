@@ -54,7 +54,6 @@ def main() -> None:
                 result = analyze(
                     audio_path=audio_path,
                     ja_prompt=scenario.ja_prompt,
-                    model_en=scenario.model_en,
                     stock_items=STOCK_ITEMS,
                     config=config,
                 )
