@@ -5,7 +5,7 @@ priority: P3
 category: AI能力
 related_llm_calls: ["#7"]
 related_requirements: ["02-learning-cycle.md", "10-llm-calls.md"]
-status: in_progress
+status: passed
 ---
 
 # V9: オーバーラッピング遅れ検知
