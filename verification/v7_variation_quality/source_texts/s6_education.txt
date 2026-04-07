@@ -1,0 +1,11 @@
+Should Coding Be a Required Subject?
+
+The debate over whether programming should be mandatory in schools has intensified as digital technology becomes central to nearly every profession. Proponents argue that understanding code is the new literacy — as fundamental as reading and writing in the modern economy. Countries like Estonia, Finland, and the United Kingdom have already integrated coding into their national curricula starting from primary school.
+
+Supporters point to practical benefits beyond career preparation. Learning to code develops logical thinking, problem-solving skills, and the ability to break complex tasks into manageable steps. Research from MIT suggests that students who study programming show improved performance in mathematics and science, likely because all three disciplines require systematic reasoning.
+
+Critics raise several objections. First, not every student will pursue a career in technology, and mandatory coding may crowd out other valuable subjects such as art, music, or physical education. Second, there is a severe shortage of qualified teachers. Many schools lack instructors who can teach programming effectively, leading to superficial courses that frustrate both teachers and students.
+
+A middle-ground approach is gaining support. Rather than teaching specific programming languages, some educators advocate for "computational thinking" — a broader set of skills that includes pattern recognition, abstraction, and algorithmic design. This approach can be integrated into existing subjects without requiring dedicated coding classes.
+
+The question ultimately comes down to priorities. In a world where algorithms influence everything from healthcare to criminal justice, citizens need at least a basic understanding of how software works — even if they never write a single line of code themselves.

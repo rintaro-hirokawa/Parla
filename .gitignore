@@ -25,6 +25,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# Claude Code (personal settings)
+.claude/settings.local.json
+
 # Logs
 logs/
 
@@ -36,6 +39,4 @@ audio/
 *.sqlite3
 
 # Verification intermediate outputs (reproducible, large files)
-verification/*/outputs/practice/
-verification/*/outputs/result_*.json
-verification/*/outputs/charts/
+verification/*/outputs/
