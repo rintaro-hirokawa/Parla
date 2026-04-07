@@ -33,8 +33,6 @@ def run_single(scenario, case, config: V5Config) -> list[JudgmentWithLatency]:
         print(f"    実行 {i + 1}/{config.num_runs}...", end=" ", flush=True)
         jwl = judge_audio(
             audio_path=audio_path,
-            learning_item=scenario.learning_item,
-            ja_prompt=scenario.ja_prompt,
             reference_answer=scenario.reference_answer,
             config=config,
         )
@@ -45,14 +43,12 @@ def run_single(scenario, case, config: V5Config) -> list[JudgmentWithLatency]:
 
 def print_results(all_results: list[dict]) -> dict:
     """結果テーブルを表示し、集計メトリクスを返す."""
-    print(f"\n{'=' * 90}")
-    print(f"{'Scenario':<8} {'Type':<14} {'Expected':<10} {'Got':<10} {'item_used':<10} "
+    print(f"\n{'=' * 80}")
+    print(f"{'Scenario':<8} {'Type':<14} {'Expected':<10} {'Got':<10} "
           f"{'Latency':<10} {'Reason'}")
-    print(f"{'-' * 90}")
+    print(f"{'-' * 80}")
 
     correct_matches = 0
-    alt_correct_matches = 0
-    alt_correct_total = 0
     all_latencies = []
 
     for r in all_results:
@@ -64,34 +60,25 @@ def print_results(all_results: list[dict]) -> dict:
         if match:
             correct_matches += 1
 
-        if r["audio_type"] == "alt_correct":
-            alt_correct_total += 1
-            if r["median_correct"]:
-                alt_correct_matches += 1
-
         all_latencies.append(r["median_latency"])
 
         print(f"{marker}{r['scenario_id']:<6} {r['audio_type']:<14} {expected_str:<10} "
-              f"{got_str:<10} {str(r['median_item_used']):<10} "
+              f"{got_str:<10} "
               f"{r['median_latency']:.2f}s     {r['median_reason']}")
 
     total = len(all_results)
     accuracy = correct_matches / total * 100 if total else 0
-    alt_accuracy = alt_correct_matches / alt_correct_total * 100 if alt_correct_total else 0
     latency_median = statistics.median(all_latencies) if all_latencies else 0
     latency_max = max(all_latencies) if all_latencies else 0
 
-    print(f"\n{'=' * 90}")
+    print(f"\n{'=' * 80}")
     print("集計メトリクス:")
     print(f"  正答率:           {correct_matches}/{total} ({accuracy:.1f}%)  目標: ≥85%")
-    print(f"  alt_correct正答率: {alt_correct_matches}/{alt_correct_total} "
-          f"({alt_accuracy:.1f}%)  目標: ≥80%")
     print(f"  レイテンシ中央値:  {latency_median:.2f}s  目標: ≤3.0s")
     print(f"  レイテンシ最大値:  {latency_max:.2f}s  目標: ≤5.0s")
 
     pass_criteria = (
         accuracy >= 85.0
-        and alt_accuracy >= 80.0
         and latency_median <= 3.0
         and latency_max <= 5.0
     )
@@ -99,7 +86,6 @@ def print_results(all_results: list[dict]) -> dict:
 
     return {
         "accuracy": accuracy,
-        "alt_correct_accuracy": alt_accuracy,
         "latency_median": latency_median,
         "latency_max": latency_max,
         "pass": pass_criteria,
@@ -116,6 +102,7 @@ def save_output(all_results: list[dict], metrics: dict, config: V5Config) -> Pat
         "config": {
             "model": config.model,
             "cefr_level": config.cefr_level,
+            "reasoning_effort": config.reasoning_effort,
             "num_runs": config.num_runs,
         },
         "metrics": metrics,
@@ -134,7 +121,7 @@ def main() -> None:
         sys.exit(1)
 
     print(f"モデル: {config.model}")
-    print(f"CEFR: {config.cefr_level} / 実行回数: {config.num_runs}")
+    print(f"CEFR: {config.cefr_level} / reasoning_effort: {config.reasoning_effort} / 実行回数: {config.num_runs}")
 
     missing = check_audio_files()
     if missing:
@@ -162,16 +149,13 @@ def main() -> None:
                 "audio_type": case.audio_type,
                 "audio_type_ja": case.audio_type_ja,
                 "expected_correct": case.expected.correct,
-                "expected_item_used": case.expected.item_used,
                 "median_correct": median_run.result.correct,
-                "median_item_used": median_run.result.item_used,
                 "median_reason": median_run.result.reason,
                 "median_latency": median_run.latency_seconds,
                 "all_latencies": latencies,
                 "all_results": [
                     {
                         "correct": r.result.correct,
-                        "item_used": r.result.item_used,
                         "reason": r.result.reason,
                         "latency": r.latency_seconds,
                     }

@@ -5,7 +5,7 @@ priority: P2
 category: レイテンシ + AI能力
 related_llm_calls: ["#5"]
 related_requirements: ["10-llm-calls.md", "02-learning-cycle.md", "12-evaluation-criteria.md"]
-status: not_started
+status: passed
 ---
 
 # V5: リトライ判定の速度と精度

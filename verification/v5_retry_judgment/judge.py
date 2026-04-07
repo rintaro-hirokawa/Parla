@@ -45,22 +45,15 @@ def _encode_audio(audio_path: Path) -> tuple[str, str]:
 
 def judge_audio(
     audio_path: Path,
-    learning_item: str,
-    ja_prompt: str,
     reference_answer: str,
     config: V5Config,
 ) -> JudgmentWithLatency:
     """音声ファイルに対してLLM #5を実行し、判定結果とレイテンシを返す."""
     encoded_data, mime_type = _encode_audio(audio_path)
 
-    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        learning_item=learning_item,
-        cefr_level=config.cefr_level,
-    )
+    system_prompt = SYSTEM_PROMPT_TEMPLATE
     user_prompt = USER_PROMPT_TEMPLATE.format(
-        ja_prompt=ja_prompt,
         reference_answer=reference_answer,
-        learning_item=learning_item,
     )
 
     messages = [
@@ -86,6 +79,7 @@ def judge_audio(
             model=config.model,
             messages=messages,
             response_format=RetryJudgmentResult,
+            reasoning_effort=config.reasoning_effort,
         )
         elapsed = time.perf_counter() - start
 

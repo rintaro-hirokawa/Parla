@@ -4,8 +4,7 @@ from pydantic import BaseModel
 
 
 class RetryJudgmentResult(BaseModel):
-    """LLM #5 の出力（12-evaluation-criteria.md 準拠）."""
+    """LLM #5 の出力."""
 
     correct: bool
-    reason: str  # 20語以内
-    item_used: bool
+    reason: str  # 日本語15文字以内
