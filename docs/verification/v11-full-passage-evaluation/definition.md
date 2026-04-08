@@ -5,14 +5,15 @@ priority: P3
 category: AI能力 + レイテンシ
 related_llm_calls: ["#8"]
 related_requirements: ["02-learning-cycle.md", "10-llm-calls.md", "12-evaluation-criteria.md"]
-status: not_started
+status: passed_conditional
+result: result-2026-04-08.md
 ---
 
 # V11: 本番発話の内容評価
 
 ## 問い
 
-フェーズCの本番発話で、約60秒のパッセージ全体の音声をGeminiに投げて、合否判定 + 差分要約を実用的な速度で返せるか?
+フェーズCの本番発話で、約60秒のパッセージ全体の音声を評価し、合否判定 + 差分情報を実用的な速度で返せるか?
 
 ## 背景
 
