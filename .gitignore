@@ -31,8 +31,9 @@ Thumbs.db
 # Logs
 logs/
 
-# Audio files
-audio/
+# Audio files (runtime data, not source code)
+/audio/
+verification/**/audio/
 
 # SQLite
 *.db
