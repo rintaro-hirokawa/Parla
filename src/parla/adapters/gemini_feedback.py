@@ -14,6 +14,7 @@ import structlog
 from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from parla.adapters.audio_formats import MIME_TYPES as _MIME_TYPES
 from parla.ports.feedback_generation import (
     RawFeedback,
     RawLearningItem,
@@ -197,13 +198,6 @@ _STAGE2_USER_PROMPT = "Please evaluate this learner's response and provide feedb
 
 
 # --- Helpers ---
-
-_MIME_TYPES = {
-    "wav": "audio/wav",
-    "mp3": "audio/mp3",
-    "m4a": "audio/m4a",
-    "ogg": "audio/ogg",
-}
 
 
 def _format_stock_items(items: Sequence[StockedItemInfo]) -> str:

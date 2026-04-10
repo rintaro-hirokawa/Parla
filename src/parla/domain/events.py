@@ -1,5 +1,6 @@
 """Domain events. All events are defined in this single file for discoverability."""
 
+from datetime import date
 from uuid import UUID
 
 from parla.event_bus import Event
@@ -124,4 +125,4 @@ class SRSUpdated(Event, frozen=True):
     learning_item_id: UUID
     old_stage: int
     new_stage: int
-    next_review_date: str
+    next_review_date: date

@@ -11,6 +11,7 @@ import structlog
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from parla.adapters.audio_formats import MIME_TYPES as _MIME_TYPES
 from parla.domain.feedback import RetryResult
 
 logger = structlog.get_logger()
@@ -38,13 +39,6 @@ _SYSTEM_PROMPT = """\
 _USER_PROMPT_TEMPLATE = """\
 ターゲット文: {reference_answer}\
 """
-
-_MIME_TYPES = {
-    "wav": "audio/wav",
-    "mp3": "audio/mp3",
-    "m4a": "audio/m4a",
-    "ogg": "audio/ogg",
-}
 
 
 # --- Adapter ---
