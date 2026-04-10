@@ -1,7 +1,8 @@
 """Learning calendar widget with activity markers."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
+from types import MappingProxyType
 
 from PySide6.QtCore import QDate, QRect, Signal
 from PySide6.QtGui import QColor, QPainter
@@ -21,14 +22,21 @@ class CalendarWidget(QCalendarWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._markers: dict[date, int] = {}
+        self._markers_view: Mapping[date, int] = MappingProxyType(self._markers)
+        # QDate-keyed version for fast lookup in paintCell
+        self._qdate_markers: dict[QDate, int] = {}
         self.clicked.connect(self._on_clicked)
 
     @property
-    def markers(self) -> dict[date, int]:
-        return self._markers
+    def markers(self) -> Mapping[date, int]:
+        return self._markers_view
 
     def set_markers(self, markers: Sequence[CalendarMarker]) -> None:
-        self._markers = {m.date: m.session_count for m in markers}
+        self._markers.clear()
+        self._qdate_markers.clear()
+        for m in markers:
+            self._markers[m.date] = m.session_count
+            self._qdate_markers[QDate(m.date.year, m.date.month, m.date.day)] = m.session_count
         self.updateCells()
 
     def set_month(self, year: int, month: int) -> None:
@@ -36,10 +44,8 @@ class CalendarWidget(QCalendarWidget):
 
     def paintCell(self, painter: QPainter, rect: QRect, qdate: QDate) -> None:
         super().paintCell(painter, rect, qdate)
-        py_date = date(qdate.year(), qdate.month(), qdate.day())
-        session_count = self._markers.get(py_date)
+        session_count = self._qdate_markers.get(qdate)
         if session_count is not None and session_count > 0:
-            # Draw a dot at bottom-center
             alpha = min(255, 100 + session_count * 50)
             color = QColor(0, 180, 120, alpha)
             dot_radius = 3
@@ -50,5 +56,4 @@ class CalendarWidget(QCalendarWidget):
             painter.drawEllipse(cx - dot_radius, cy - dot_radius, dot_radius * 2, dot_radius * 2)
 
     def _on_clicked(self, qdate: QDate) -> None:
-        py_date = date(qdate.year(), qdate.month(), qdate.day())
-        self.date_selected.emit(py_date)
+        self.date_selected.emit(date(qdate.year(), qdate.month(), qdate.day()))

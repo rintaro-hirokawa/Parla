@@ -11,6 +11,11 @@ class LevelMeterWidget(QWidget):
     Used in E1 (mic check) and recording controls.
     """
 
+    _BG_COLOR = QColor(40, 40, 40)
+    _OK_COLOR = QColor(0, 200, 100)
+    _WARN_COLOR = QColor(220, 80, 40)
+    _BORDER_COLOR = QColor(80, 80, 80)
+
     def __init__(
         self,
         warning_threshold: float = 0.1,
@@ -30,7 +35,10 @@ class LevelMeterWidget(QWidget):
 
     def set_level(self, rms: float) -> None:
         """Set the current RMS level (clamped to 0.0-1.0) and schedule repaint."""
-        self._level = max(0.0, min(1.0, rms))
+        new_level = max(0.0, min(1.0, rms))
+        if new_level == self._level:
+            return
+        self._level = new_level
         self.update()
 
     def sizeHint(self) -> QSize:
@@ -44,17 +52,14 @@ class LevelMeterWidget(QWidget):
         w = self.width()
         h = self.height()
 
-        # Background
-        painter.fillRect(self.rect(), QColor(40, 40, 40))
+        painter.fillRect(self.rect(), self._BG_COLOR)
 
-        # Filled bar from bottom
         bar_height = int(self._level * h)
         if bar_height > 0:
-            color = QColor(220, 80, 40) if self.is_warning else QColor(0, 200, 100)
+            color = self._WARN_COLOR if self.is_warning else self._OK_COLOR
             painter.fillRect(0, h - bar_height, w, bar_height, color)
 
-        # Border
-        painter.setPen(QColor(80, 80, 80))
+        painter.setPen(self._BORDER_COLOR)
         painter.drawRect(0, 0, w - 1, h - 1)
 
         painter.end()

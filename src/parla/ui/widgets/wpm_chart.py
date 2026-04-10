@@ -22,12 +22,21 @@ class WpmChartWidget(QWidget):
     _MARGIN_TOP = 10
     _MARGIN_BOTTOM = 30
 
+    _BG_COLOR = QColor(30, 30, 30)
+    _AXIS_PEN = QPen(QColor(80, 80, 80), 1)
+    _LABEL_COLOR = QColor(150, 150, 150)
+    _NO_DATA_COLOR = QColor(120, 120, 120)
+    _BAND_COLOR = QColor(0, 150, 100, 40)
+    _LINE_PEN = QPen(QColor(80, 180, 255), 2)
+    _DOT_COLOR = QColor(80, 180, 255)
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._data_points: Sequence[WpmDataPoint] = ()
         self._cefr_level: CEFRLevel | None = None
-        self._cefr_lower: int = 0
-        self._cefr_upper: int = 0
+
+        self._label_font = QFont()
+        self._label_font.setPointSize(7)
 
     @property
     def data_points(self) -> Sequence[WpmDataPoint]:
@@ -43,16 +52,11 @@ class WpmChartWidget(QWidget):
 
     def set_cefr_target(self, level: CEFRLevel) -> None:
         self._cefr_level = level
-        targets = CEFR_WPM_TARGETS.get(level)
-        if targets:
-            self._cefr_lower, self._cefr_upper = targets
         self.update()
 
     def clear(self) -> None:
         self._data_points = ()
         self._cefr_level = None
-        self._cefr_lower = 0
-        self._cefr_upper = 0
         self.update()
 
     def sizeHint(self) -> QSize:
@@ -61,10 +65,16 @@ class WpmChartWidget(QWidget):
     def minimumSizeHint(self) -> QSize:
         return QSize(150, 80)
 
+    def _get_cefr_range(self) -> tuple[int, int] | None:
+        """Look up CEFR WPM range, returning None if level is not in targets."""
+        if self._cefr_level is None:
+            return None
+        return CEFR_WPM_TARGETS.get(self._cefr_level)
+
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.fillRect(self.rect(), QColor(30, 30, 30))
+        painter.fillRect(self.rect(), self._BG_COLOR)
 
         chart_left = self._MARGIN_LEFT
         chart_top = self._MARGIN_TOP
@@ -76,13 +86,14 @@ class WpmChartWidget(QWidget):
             return
 
         # Determine Y range
+        cefr_range = self._get_cefr_range()
         wpm_values = [p.wpm for p in self._data_points]
         all_values = list(wpm_values)
-        if self._cefr_lower > 0:
-            all_values.extend([self._cefr_lower, self._cefr_upper])
+        if cefr_range:
+            all_values.extend(cefr_range)
 
         if not all_values:
-            painter.setPen(QColor(120, 120, 120))
+            painter.setPen(self._NO_DATA_COLOR)
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "No data")
             painter.end()
             return
@@ -97,16 +108,17 @@ class WpmChartWidget(QWidget):
             return int(chart_top + chart_height - (wpm - y_min) / y_range * chart_height)
 
         # Draw CEFR target band
-        if self._cefr_lower > 0:
-            band_top = y_to_px(self._cefr_upper)
-            band_bottom = y_to_px(self._cefr_lower)
+        if cefr_range:
+            cefr_lower, cefr_upper = cefr_range
+            band_top = y_to_px(cefr_upper)
+            band_bottom = y_to_px(cefr_lower)
             painter.fillRect(
                 chart_left, band_top, chart_width, band_bottom - band_top,
-                QColor(0, 150, 100, 40),
+                self._BAND_COLOR,
             )
 
         # Draw axes
-        painter.setPen(QPen(QColor(80, 80, 80), 1))
+        painter.setPen(self._AXIS_PEN)
         painter.drawLine(chart_left, chart_top, chart_left, chart_top + chart_height)
         painter.drawLine(
             chart_left, chart_top + chart_height,
@@ -114,10 +126,8 @@ class WpmChartWidget(QWidget):
         )
 
         # Y-axis labels
-        label_font = QFont()
-        label_font.setPointSize(7)
-        painter.setFont(label_font)
-        painter.setPen(QColor(150, 150, 150))
+        painter.setFont(self._label_font)
+        painter.setPen(self._LABEL_COLOR)
         for wpm_val in [y_min, (y_min + y_max) / 2, y_max]:
             py = y_to_px(wpm_val)
             painter.drawText(0, py - 6, self._MARGIN_LEFT - 4, 12, Qt.AlignmentFlag.AlignRight, f"{int(wpm_val)}")
@@ -135,15 +145,14 @@ class WpmChartWidget(QWidget):
             point_coords.append((px, py))
 
         # Lines
-        line_pen = QPen(QColor(80, 180, 255), 2)
-        painter.setPen(line_pen)
+        painter.setPen(self._LINE_PEN)
         for i in range(len(point_coords) - 1):
             x1, y1 = point_coords[i]
             x2, y2 = point_coords[i + 1]
             painter.drawLine(x1, y1, x2, y2)
 
         # Dots
-        painter.setBrush(QColor(80, 180, 255))
+        painter.setBrush(self._DOT_COLOR)
         painter.setPen(Qt.PenStyle.NoPen)
         for px, py in point_coords:
             painter.drawEllipse(px - 3, py - 3, 6, 6)

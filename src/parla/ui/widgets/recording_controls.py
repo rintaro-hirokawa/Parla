@@ -26,7 +26,6 @@ class RecordingControlsWidget(QWidget):
     ) -> None:
         super().__init__(parent)
         self._recorder = recorder
-        self._is_recording = False
 
         self._waveform = WaveformWidget(parent=self)
         self._level_meter = LevelMeterWidget(parent=self)
@@ -51,19 +50,16 @@ class RecordingControlsWidget(QWidget):
         return self._level_meter
 
     def _toggle_recording(self) -> None:
-        if self._is_recording:
+        if self._recorder.is_recording():
             self._recorder.stop_recording()
-            self._is_recording = False
             self._record_button.setText("Record")
         else:
             self._recorder.start_recording()
-            self._is_recording = True
             self._record_button.setText("Stop")
 
     def _on_samples(self, samples: list[float]) -> None:
         self._waveform.update_samples(samples)
 
     def _on_recording_done(self, audio_data: object) -> None:
-        self._is_recording = False
         self._record_button.setText("Record")
         self.recording_finished.emit(audio_data)

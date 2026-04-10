@@ -3,7 +3,7 @@
 from collections import deque
 from collections.abc import Sequence
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QLine, QSize
 from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
 
@@ -13,6 +13,10 @@ class WaveformWidget(QWidget):
 
     Used in E1 (mic check), E2 (review), E3 (phase A), E6 (phase C).
     """
+
+    _BG_COLOR = QColor(30, 30, 30)
+    _CENTER_LINE_PEN = QPen(QColor(60, 60, 60), 1)
+    _WAVEFORM_PEN = QPen(QColor(0, 200, 100), 1)
 
     def __init__(self, buffer_size: int = 1024, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -25,9 +29,7 @@ class WaveformWidget(QWidget):
 
     def update_samples(self, samples: Sequence[float]) -> None:
         """Append samples to the ring buffer and schedule a repaint."""
-        for s in samples:
-            clamped = max(-1.0, min(1.0, s))
-            self._buffer.append(clamped)
+        self._buffer.extend(max(-1.0, min(1.0, s)) for s in samples)
         self.update()
 
     def clear(self) -> None:
@@ -49,25 +51,23 @@ class WaveformWidget(QWidget):
         h = self.height()
         center_y = h / 2.0
 
-        # Background
-        painter.fillRect(self.rect(), QColor(30, 30, 30))
+        painter.fillRect(self.rect(), self._BG_COLOR)
 
-        # Center line
-        painter.setPen(QPen(QColor(60, 60, 60), 1))
+        painter.setPen(self._CENTER_LINE_PEN)
         painter.drawLine(0, int(center_y), w, int(center_y))
 
-        # Waveform
         if self._buffer_size == 0:
             painter.end()
             return
 
-        pen = QPen(QColor(0, 200, 100), 1)
-        painter.setPen(pen)
+        painter.setPen(self._WAVEFORM_PEN)
 
         x_step = w / self._buffer_size
-        for i, sample in enumerate(self._buffer):
-            x = int(i * x_step)
-            y_offset = sample * center_y
-            painter.drawLine(x, int(center_y - y_offset), x, int(center_y))
+        center_i = int(center_y)
+        lines = [
+            QLine(int(i * x_step), int(center_y - sample * center_y), int(i * x_step), center_i)
+            for i, sample in enumerate(self._buffer)
+        ]
+        painter.drawLines(lines)
 
         painter.end()
