@@ -18,7 +18,7 @@ packages = ["src/parla"]
 [tool.ruff]
 target-version = "py312"
 src = ["src", "tests"]
-line-length = 99
+line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "TCH"]
