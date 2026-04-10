@@ -9,7 +9,6 @@ import structlog
 from PySide6.QtCore import QObject, Signal
 
 from parla.domain.events import LearningItemStocked
-from parla.ui.audio.player import AudioPlayer
 from parla.ui.audio.recorder import AudioRecorder
 from parla.ui.screens.session.session_context import SessionContext
 
@@ -43,7 +42,6 @@ class SessionCoordinator(QObject):
 
         # Shared objects — created once per session
         self._recorder = AudioRecorder()
-        self._audio_player = AudioPlayer()
         self._session_context = SessionContext()
 
         # Session state
@@ -269,13 +267,14 @@ class SessionCoordinator(QObject):
     # --- Phase C (E6) ---
 
     def _show_phase_c(self, passage_id: UUID) -> None:
+        from parla.ui.audio.player import AudioPlayer
         from parla.ui.screens.session.phase_c_view import PhaseCView
         from parla.ui.screens.session.phase_c_view_model import PhaseCViewModel
 
         vm = PhaseCViewModel(
             event_bus=self._bus,
             practice_service=self._c.practice_service,
-            audio_player=self._audio_player,
+            audio_player=AudioPlayer(),
             session_context=self._session_context,
         )
         vm.start(passage_id)
@@ -382,9 +381,10 @@ class SessionCoordinator(QObject):
             sources = self._c.session_service.get_active_sources()
             source_id = sources[0].id if sources else None
 
-        tomorrow = date.today() + timedelta(days=1)
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
         if source_id is not None:
-            new_menu = self._c.session_service.compose_menu(tomorrow, source_id, date.today())
+            new_menu = self._c.session_service.compose_menu(tomorrow, source_id, today)
             menu_id = new_menu.id
         else:
             menu_id = None
