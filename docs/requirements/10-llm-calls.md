@@ -62,13 +62,17 @@
 
 ---
 
-### #8 本番発話の内容評価（[技術検証 V11](../verification/v11-full-passage-evaluation/definition.md)）
+### ~~#8 本番発話の内容評価~~ （LLMコールから Azure Speech Service に移行）
+
+Azure Speech Service のストリーミング Pronunciation Assessment + difflib による判定に移行した（[技術検証 V11](../verification/v11-full-passage-evaluation/definition.md)）。LLMコールは不要。
 
 | 項目 | 内容 |
 |------|------|
-| タイミング | 本番発話直後 |
-| Input | 発話音声（パッセージ全体）、動的模範解答、日本語お題、CEFRレベル、ターゲットWPM |
-| Output | 合否判定、差分要約 |
+| タイミング | 本番発話中（ストリーミング）〜発話直後 |
+| 方式 | Azure Pronunciation Assessment（reference_text=動的模範解答）+ difflib で Omission/差分検出 |
+| Input | 発話音声（PushAudioInputStream でリアルタイム送信）、動的模範解答 |
+| Output | 合否判定、文ごとの一致度（similarity）、Omission 箇所 |
+| レイテンシ | 発話終了後 ~1.2秒 |
 
 ---
 
@@ -93,7 +97,8 @@ L2/L4での再学習機能とともにMVP後に検討する。
 | 分類 | コール |
 |------|--------|
 | 事前生成可能 | #1 パッセージ生成、#3 類題生成 |
-| リアルタイム必須（音声入力が必要） | #4 フィードバック生成、#5 即時リトライ判定、#7 遅れ検知、#8 内容評価 |
+| リアルタイム必須（音声入力が必要） | #4 フィードバック生成、#5 即時リトライ判定、#7 遅れ検知 |
+| Azure Speech Service（LLM不要） | ~~#8~~ 内容評価（ストリーミング Pronunciation Assessment） |
 | セッション中の状態依存 | #12 ループ・疲労管理 |
 
 ---

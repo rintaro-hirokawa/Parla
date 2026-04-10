@@ -4,18 +4,10 @@ AI駆動の英語スピーキング学習デスクトップアプリ（日本語
 
 ## アーキテクチャ
 
-ヘキサゴナルアーキテクチャ（Ports & Adapters）+ DDD。詳細は `docs/architecture/overview.md` を参照。
-
-```
-src/parla/
-├── knowledge/       BC1: 素材・学習項目・SRS
-├── session/         BC2: セッション進行・フェーズ管理
-├── ports/           Port インターフェース（LLM, TTS, Repository）
-├── adapters/        Adapter 実装（Gemini, ElevenLabs, SQLite）
-└── orchestrator/    LLMコール並列/直列制御
-```
+ヘキサゴナルアーキテクチャ（Ports & Adapters）。詳細は `docs/architecture/overview.md` を参照。
 
 - ドメインは外部に依存しない（UI, LLM, DB を知らない）
+- ディレクトリ構成は詳細設計で決定する（未確定）
 - `verification/` は技術検証用。`src/parla/` とは独立（import しない）
 
 ## コマンド
