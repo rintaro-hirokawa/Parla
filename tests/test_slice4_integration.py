@@ -34,9 +34,11 @@ from parla.domain.events import (
     ModelAudioReady,
     ModelAudioRequested,
     OverlappingCompleted,
+    OverlappingLagDetected,
     PassageAchievementRecorded,
 )
 from parla.domain.feedback import SentenceFeedback
+from parla.domain.lag_detection import DelayedPhrase, LagDetectionResult, LagPoint
 from parla.domain.passage import Hint, Passage, Sentence
 from parla.domain.source import Source
 from parla.event_bus import Event, EventBus
@@ -104,12 +106,36 @@ class FakePronunciationAssessor:
 # --- Test helpers ---
 
 
+class FakeLagDetector:
+    """Fake lag detector that returns cause estimation for any delayed phrases."""
+
+    async def detect(
+        self,
+        passage_text: str,
+        delayed_phrases: list[DelayedPhrase],
+    ) -> LagDetectionResult:
+        lag_points = tuple(
+            LagPoint(
+                phrase=dp.phrase,
+                delay_sec=dp.avg_delay_sec,
+                estimated_cause="pronunciation_difficulty",
+                suggestion="ゆっくり練習しましょう。",
+            )
+            for dp in delayed_phrases
+        )
+        return LagDetectionResult(
+            lag_points=lag_points,
+            overall_comment="練習を続けましょう。",
+        )
+
+
 class EventCollector:
     def __init__(self, bus: EventBus) -> None:
         self.events: list[Event] = []
         bus.on_sync(ModelAudioReady)(self._collect)
         bus.on_sync(ModelAudioFailed)(self._collect)
         bus.on_sync(OverlappingCompleted)(self._collect)
+        bus.on_sync(OverlappingLagDetected)(self._collect)
         bus.on_sync(LiveDeliveryCompleted)(self._collect)
         bus.on_sync(PassageAchievementRecorded)(self._collect)
 
@@ -378,3 +404,74 @@ class TestSkipCheck:
     def test_no_skip_when_items_exist(self, setup, service_and_collector) -> None:
         service, _ = service_and_collector
         assert service.should_skip(2, 120.0, "B1") is False
+
+
+class TestLagDetection:
+    @pytest.mark.asyncio
+    async def test_lag_detected_with_delays(self, setup) -> None:
+        """When user lags behind, detect_lag returns cause estimation."""
+        bus = setup["bus"]
+        collector = EventCollector(bus)
+
+        # Create assessor that simulates delays on some words
+        passage = setup["source_repo"].get_passage(setup["passage_id"])
+        model_texts = []
+        for s in passage.sentences:
+            fb = setup["feedback_repo"].get_feedback_by_sentence(s.id)
+            model_texts.append(fb.model_answer if fb else s.en)
+        all_words = " ".join(model_texts).split()
+
+        # Simulate user lagging 0.8s on words 3-5
+        assessed = []
+        for i, w in enumerate(all_words):
+            delay = 0.8 if 3 <= i <= 5 else 0.0
+            assessed.append(
+                RawAssessedWord(
+                    word=w,
+                    accuracy_score=90.0,
+                    error_type="None",
+                    offset_seconds=i * 0.5 + delay,
+                    duration_seconds=0.4,
+                )
+            )
+
+        service = PracticeService(
+            event_bus=bus,
+            source_repo=setup["source_repo"],
+            feedback_repo=setup["feedback_repo"],
+            practice_repo=setup["practice_repo"],
+            tts_generator=FakeTTSGenerator(),
+            pronunciation_assessor=FakePronunciationAssessor(assessed_words=assessed),
+            lag_detector=FakeLagDetector(),
+        )
+
+        await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
+        result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
+
+        lag_result = await service.detect_lag(setup["passage_id"], result)
+        assert lag_result is not None
+        assert len(lag_result.lag_points) > 0
+        assert len(collector.of_type(OverlappingLagDetected)) == 1
+
+    @pytest.mark.asyncio
+    async def test_no_lag_when_sync(self, setup, service_and_collector) -> None:
+        """When user is in sync, detect_lag returns None (no delayed phrases)."""
+        service, collector = service_and_collector
+        # Default FakePronunciationAssessor generates perfectly synced words
+        await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
+        result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
+
+        # No lag detector configured in default service_and_collector
+        lag_result = await service.detect_lag(setup["passage_id"], result)
+        assert lag_result is None
+        assert len(collector.of_type(OverlappingLagDetected)) == 0
+
+    @pytest.mark.asyncio
+    async def test_no_lag_without_detector(self, setup, service_and_collector) -> None:
+        """Without a lag detector configured, detect_lag returns None."""
+        service, _ = service_and_collector
+        await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
+        result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
+
+        lag_result = await service.detect_lag(setup["passage_id"], result)
+        assert lag_result is None

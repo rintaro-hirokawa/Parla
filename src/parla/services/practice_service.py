@@ -12,8 +12,10 @@ from parla.domain.events import (
     ModelAudioReady,
     ModelAudioRequested,
     OverlappingCompleted,
+    OverlappingLagDetected,
     PassageAchievementRecorded,
 )
+from parla.domain.lag_detection import LagDetectionResult, identify_delayed_phrases
 from parla.domain.practice import (
     LiveDeliveryResult,
     ModelAudio,
@@ -27,6 +29,7 @@ from parla.domain.timing import calculate_timing_deviations
 from parla.domain.wpm import calculate_wpm, should_skip_phase_c
 from parla.event_bus import EventBus
 from parla.ports.feedback_repository import FeedbackRepository
+from parla.ports.overlapping_lag_detection import OverlappingLagDetectionPort
 from parla.ports.practice_repository import PracticeRepository
 from parla.ports.pronunciation_assessment import PronunciationAssessmentPort, RawAssessedWord
 from parla.ports.source_repository import SourceRepository
@@ -46,6 +49,7 @@ class PracticeService:
         practice_repo: PracticeRepository,
         tts_generator: TTSGenerationPort,
         pronunciation_assessor: PronunciationAssessmentPort,
+        lag_detector: OverlappingLagDetectionPort | None = None,
     ) -> None:
         self._bus = event_bus
         self._source_repo = source_repo
@@ -53,6 +57,7 @@ class PracticeService:
         self._practice_repo = practice_repo
         self._tts_generator = tts_generator
         self._pronunciation_assessor = pronunciation_assessor
+        self._lag_detector = lag_detector
 
     def request_model_audio(self, passage_id: UUID) -> None:
         """Request TTS generation for a passage's dynamic model answers.
@@ -152,6 +157,43 @@ class PracticeService:
         )
 
         return result
+
+    async def detect_lag(self, passage_id: UUID, result: OverlappingResult) -> LagDetectionResult | None:
+        """Detect lag causes from overlapping result via LLM (call #7).
+
+        Returns None if no lag detector is configured or no delayed phrases found.
+        """
+        if self._lag_detector is None:
+            return None
+
+        model_audio = self._practice_repo.get_model_audio(passage_id)
+        if model_audio is None:
+            logger.warning("model_audio_not_found_for_lag", passage_id=str(passage_id))
+            return None
+
+        ref_words = [wt.word for wt in model_audio.word_timestamps]
+        delayed_phrases = identify_delayed_phrases(ref_words, list(result.timing_deviations))
+
+        if not delayed_phrases:
+            return None
+
+        reference_text = " ".join(ref_words)
+
+        try:
+            lag_result = await self._lag_detector.detect(reference_text, delayed_phrases)
+
+            self._bus.emit(
+                OverlappingLagDetected(
+                    passage_id=passage_id,
+                    lag_count=len(lag_result.lag_points),
+                )
+            )
+
+            return lag_result
+
+        except Exception:
+            logger.exception("lag_detection_failed", passage_id=str(passage_id))
+            return None
 
     # --- Live Delivery ---
 
