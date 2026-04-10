@@ -32,6 +32,7 @@ from parla.adapters.sqlite_variation_repository import SQLiteVariationRepository
 from parla.domain.events import (
     MenuConfirmed,
     ModelAudioRequested,
+    PassageGenerationCompleted,
     SentenceRecorded,
     SourceRegistered,
     VariationGenerationRequested,
@@ -152,6 +153,7 @@ class Container:
         self.event_bus.on_async(VariationGenerationRequested)(self.review_service.handle_variation_requested)
         self.event_bus.on_async(ModelAudioRequested)(self.practice_service.handle_model_audio_requested)
         self.event_bus.on_async(MenuConfirmed)(self.session_service.handle_menu_confirmed)
+        self.event_bus.on_sync(PassageGenerationCompleted)(self.session_service.handle_first_source_ready)
 
         # --- Query Services ---
         self.app_state_query = AppStateQueryService(

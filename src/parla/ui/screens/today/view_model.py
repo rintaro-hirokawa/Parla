@@ -4,7 +4,7 @@ from datetime import date
 
 from PySide6.QtCore import Signal
 
-from parla.domain.events import MenuConfirmed, SessionCompleted
+from parla.domain.events import MenuConfirmed, PassageGenerationCompleted, SessionCompleted
 from parla.event_bus import EventBus
 from parla.services.query_models import TodayDashboard
 from parla.services.session_query_service import SessionQueryService
@@ -17,6 +17,7 @@ class TodayViewModel(BaseViewModel):
     dashboard_loaded = Signal(object)  # TodayDashboard
     start_enabled_changed = Signal(bool)
     start_session_requested = Signal()
+    navigate_to_source_registration = Signal()
 
     def __init__(self, event_bus: EventBus, session_query_service: SessionQueryService) -> None:
         super().__init__(event_bus)
@@ -24,6 +25,7 @@ class TodayViewModel(BaseViewModel):
         self._dashboard: TodayDashboard | None = None
         self._register_sync(MenuConfirmed, self._on_menu_confirmed)
         self._register_sync(SessionCompleted, self._on_session_completed)
+        self._register_sync(PassageGenerationCompleted, self._on_generation_completed)
 
     @property
     def dashboard(self) -> TodayDashboard | None:
@@ -45,8 +47,15 @@ class TodayViewModel(BaseViewModel):
         if self._can_start:
             self.start_session_requested.emit()
 
+    def go_to_source_registration(self) -> None:
+        """Request navigation to source registration screen."""
+        self.navigate_to_source_registration.emit()
+
     def _on_menu_confirmed(self, _event: MenuConfirmed) -> None:
         self.load_dashboard()
 
     def _on_session_completed(self, _event: SessionCompleted) -> None:
+        self.load_dashboard()
+
+    def _on_generation_completed(self, _event: PassageGenerationCompleted) -> None:
         self.load_dashboard()

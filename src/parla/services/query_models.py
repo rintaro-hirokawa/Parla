@@ -179,6 +179,7 @@ class MenuBlockSummary(BaseModel, frozen=True):
 class TodayDashboard(BaseModel, frozen=True):
     """Today's learning tab data for C1."""
 
+    has_sources: bool = False
     has_menu: bool = False
     menu_confirmed: bool = False
     menu_id: UUID | None = None

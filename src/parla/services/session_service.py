@@ -11,6 +11,7 @@ from parla.domain.events import (
     MenuComposed,
     MenuConfirmed,
     MenuRecomposed,
+    PassageGenerationCompleted,
     SessionCompleted,
     SessionInterrupted,
     SessionResumed,
@@ -61,6 +62,22 @@ class SessionService:
         self._feedback_repo = feedback_repo
         self._config = config
         self._srs_config = srs_config
+
+    # --- Auto-compose on first source ---
+
+    def handle_first_source_ready(self, event: PassageGenerationCompleted) -> None:
+        """Auto-compose and confirm today's menu when a source completes generation."""
+        today = date.today()
+        existing = self._session_repo.get_menu_for_date(today)
+        if existing is not None:
+            return
+
+        source = self._source_repo.get_source(event.source_id)
+        if source is None or source.status != "not_started":
+            return
+
+        menu = self.compose_menu(target_date=today, source_id=source.id, today=today)
+        self.confirm_menu(menu.id)
 
     # --- Menu Composition ---
 

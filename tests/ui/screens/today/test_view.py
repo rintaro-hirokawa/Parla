@@ -28,14 +28,28 @@ def _make_view(qtbot, dashboard: TodayDashboard | None = None):
     return view, vm, bus
 
 
+class TestNoSourceDisplay:
+    def test_shows_no_source_cta(self, qtbot) -> None:
+        view, *_ = _make_view(qtbot, TodayDashboard(has_sources=False, has_menu=False))
+        assert not view._no_source_widget.isHidden()
+        assert view._no_menu_label.isHidden()
+        assert view._blocks_widget.isHidden()
+
+    def test_add_source_button_emits_signal(self, qtbot) -> None:
+        view, vm, _ = _make_view(qtbot, TodayDashboard(has_sources=False, has_menu=False))
+        with qtbot.waitSignal(vm.navigate_to_source_registration, timeout=1000):
+            view._add_source_button.click()
+
+
 class TestNoMenuDisplay:
     def test_shows_no_menu_message(self, qtbot) -> None:
-        view, *_ = _make_view(qtbot, TodayDashboard(has_menu=False))
+        view, *_ = _make_view(qtbot, TodayDashboard(has_sources=True, has_menu=False))
         assert not view._no_menu_label.isHidden()
+        assert view._no_source_widget.isHidden()
         assert view._blocks_widget.isHidden()
 
     def test_start_button_disabled(self, qtbot) -> None:
-        view, *_ = _make_view(qtbot, TodayDashboard(has_menu=False))
+        view, *_ = _make_view(qtbot, TodayDashboard(has_sources=True, has_menu=False))
         assert not view._start_button.isEnabled()
 
 

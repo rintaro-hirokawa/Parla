@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
 
         self._settings_vm.navigate_to_sources.connect(self._push_source_list)
         self._today_vm.start_session_requested.connect(self._enter_session)
+        self._today_vm.navigate_to_source_registration.connect(self._push_source_registration)
 
         self._settings_vm.activate()
         self._settings_vm.load_settings()

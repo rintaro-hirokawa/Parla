@@ -24,6 +24,17 @@ class TodayView(QWidget):
 
         layout = QVBoxLayout(self)
 
+        # --- No source CTA ---
+        self._no_source_widget = QWidget()
+        no_source_layout = QVBoxLayout(self._no_source_widget)
+        no_source_layout.setContentsMargins(0, 0, 0, 0)
+        no_source_layout.addWidget(QLabel("学習を始めるにはソースを登録してください"))
+        self._add_source_button = QPushButton("ソースを追加")
+        self._add_source_button.clicked.connect(self._vm.go_to_source_registration)
+        no_source_layout.addWidget(self._add_source_button)
+        layout.addWidget(self._no_source_widget)
+        self._no_source_widget.hide()
+
         # --- No menu message ---
         self._no_menu_label = QLabel("メニューがまだ確定されていません")
         layout.addWidget(self._no_menu_label)
@@ -65,7 +76,8 @@ class TodayView(QWidget):
     def _on_dashboard_loaded(self, dashboard: TodayDashboard) -> None:
         has_content = dashboard.has_menu and len(dashboard.blocks) > 0
 
-        self._no_menu_label.setVisible(not has_content)
+        self._no_source_widget.setVisible(not dashboard.has_sources and not has_content)
+        self._no_menu_label.setVisible(dashboard.has_sources and not has_content)
         self._blocks_widget.setVisible(has_content)
 
         self._block_list.clear()

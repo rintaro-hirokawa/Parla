@@ -43,9 +43,11 @@ class SessionQueryService:
         """Get today's learning tab data (C1 screen)."""
         menu = self._session_repo.get_menu_for_date(today)
         active_state = self._session_repo.get_active_state()
+        has_sources = len(self._source_repo.get_all_sources()) > 0
 
         if menu is None:
             return TodayDashboard(
+                has_sources=has_sources,
                 has_resumable_session=active_state is not None,
                 resumable_session_id=active_state.id if active_state else None,
             )
@@ -54,6 +56,7 @@ class SessionQueryService:
         source_title = self._resolve_source_title(menu.source_id)
 
         return TodayDashboard(
+            has_sources=has_sources,
             has_menu=True,
             menu_confirmed=menu.confirmed,
             menu_id=menu.id,
