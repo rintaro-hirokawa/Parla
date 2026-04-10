@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget
 from parla.ui.base_view_model import BaseViewModel
 from parla.ui.container import Container
 from parla.ui.navigation import NavigationController
+from parla.ui.screens.session.coordinator import SessionCoordinator
 from parla.ui.screens.settings.view import SettingsView
 from parla.ui.screens.settings.view_model import SettingsViewModel
 from parla.ui.screens.setup.view import SetupView
@@ -34,6 +35,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self._container = container
         self._pushed_vms: list[BaseViewModel] = []
+        self._coordinator: SessionCoordinator | None = None
 
         self.setWindowTitle("Parla")
         self.resize(400, 700)
@@ -116,10 +118,33 @@ class MainWindow(QMainWindow):
         self._push_screen_with_vm(view, vm)
 
     def _enter_session(self) -> None:
-        """Enter session mode (placeholder for future phases)."""
-        logger.info("session_mode_requested")
+        """Enter session mode via the SessionCoordinator."""
+        dashboard = self._today_vm.dashboard
+        if dashboard is None:
+            return
+
+        self._coordinator = SessionCoordinator(
+            nav=self._nav,
+            container=self._container,
+        )
+        self._coordinator.session_finished.connect(self._on_session_finished)
+
+        if dashboard.has_resumable_session and dashboard.resumable_session_id:
+            logger.info("session_resume", session_id=str(dashboard.resumable_session_id))
+            self._coordinator.start_resumed(dashboard.resumable_session_id)
+        elif dashboard.menu_id:
+            logger.info("session_start", menu_id=str(dashboard.menu_id))
+            self._coordinator.start(dashboard.menu_id)
+
+    def _on_session_finished(self) -> None:
+        """Clean up coordinator and refresh dashboard."""
+        self._coordinator = None
+        self._today_vm.load_dashboard()
 
     def closeEvent(self, event: QCloseEvent) -> None:
+        if self._coordinator is not None:
+            self._coordinator.interrupt()
+            self._coordinator = None
         self._today_vm.deactivate()
         self._settings_vm.deactivate()
         for vm in self._pushed_vms:
