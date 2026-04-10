@@ -7,11 +7,11 @@ import pytest
 from parla.event_bus import Event, EventBus
 
 
-class SampleEvent(Event):
+class SampleEvent(Event, frozen=True):
     value: int
 
 
-class OtherEvent(Event):
+class OtherEvent(Event, frozen=True):
     message: str
 
 
