@@ -7,11 +7,11 @@ from parla.ui.widgets.recording_controls import RecordingControlsWidget
 
 
 class MockRecorder(QObject):
-    """Mock audio recorder for testing."""
+    """Mock audio recorder matching AudioRecorder's API."""
 
-    samples_ready = Signal(list)
-    level_updated = Signal(float)
-    recording_done = Signal(object)
+    waveform_updated = Signal(list)
+    level_changed = Signal(float)
+    recording_stopped = Signal(object)
 
     def __init__(self) -> None:
         super().__init__()
@@ -19,14 +19,15 @@ class MockRecorder(QObject):
         self.start_called = False
         self.stop_called = False
 
-    def start_recording(self) -> None:
+    def start(self) -> None:
         self._recording = True
         self.start_called = True
 
-    def stop_recording(self) -> None:
+    def stop(self) -> None:
         self._recording = False
         self.stop_called = True
 
+    @property
     def is_recording(self) -> bool:
         return self._recording
 
@@ -73,22 +74,22 @@ class TestRecordingControlsWidget:
         qtbot.mouseClick(widget._record_button, Qt.MouseButton.LeftButton)
         assert widget._record_button.text() == "Record"
 
-    def test_recording_done_emits_signal(self, qtbot):
+    def test_recording_stopped_emits_signal(self, qtbot):
         recorder = MockRecorder()
         widget = RecordingControlsWidget(recorder)
         qtbot.addWidget(widget)
 
         audio = _make_audio_data()
         with qtbot.waitSignal(widget.recording_finished, timeout=1000) as blocker:
-            recorder.recording_done.emit(audio)
+            recorder.recording_stopped.emit(audio)
         assert blocker.args[0] is audio
 
-    def test_samples_forwarded_to_waveform(self, qtbot):
+    def test_waveform_forwarded(self, qtbot):
         recorder = MockRecorder()
         widget = RecordingControlsWidget(recorder)
         qtbot.addWidget(widget)
 
-        recorder.samples_ready.emit([0.5, -0.3, 0.1])
+        recorder.waveform_updated.emit([0.5, -0.3, 0.1])
         # Verify waveform received the samples
         buf = list(widget.waveform._buffer)
         assert buf[-3:] == [0.5, -0.3, 0.1]
@@ -98,10 +99,10 @@ class TestRecordingControlsWidget:
         widget = RecordingControlsWidget(recorder)
         qtbot.addWidget(widget)
 
-        recorder.level_updated.emit(0.7)
+        recorder.level_changed.emit(0.7)
         assert widget.level_meter.level == 0.7
 
-    def test_recording_done_resets_button(self, qtbot):
+    def test_recording_stopped_resets_button(self, qtbot):
         recorder = MockRecorder()
         widget = RecordingControlsWidget(recorder)
         qtbot.addWidget(widget)
@@ -110,6 +111,6 @@ class TestRecordingControlsWidget:
         qtbot.mouseClick(widget._record_button, Qt.MouseButton.LeftButton)
         assert widget._record_button.text() == "Stop"
 
-        # Simulate recording done
-        recorder.recording_done.emit(_make_audio_data())
+        # Simulate recording stopped
+        recorder.recording_stopped.emit(_make_audio_data())
         assert widget._record_button.text() == "Record"

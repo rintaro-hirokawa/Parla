@@ -13,8 +13,8 @@ class RecordingControlsWidget(QWidget):
     """Composite widget combining waveform, level meter, and record button.
 
     Used in E1, E2, E3, E6 for audio recording with visual feedback.
-    The recorder must be a QObject with signals: samples_ready, level_updated,
-    recording_done, and methods: start_recording(), stop_recording(), is_recording().
+    The recorder must be a QObject with signals: waveform_updated, level_changed,
+    recording_stopped, and methods: start(), stop(), is_recording (property).
     """
 
     recording_finished = Signal(object)  # AudioData
@@ -37,9 +37,9 @@ class RecordingControlsWidget(QWidget):
         layout.addWidget(self._record_button)
 
         self._record_button.clicked.connect(self._toggle_recording)
-        self._recorder.samples_ready.connect(self._on_samples)
-        self._recorder.level_updated.connect(self._level_meter.set_level)
-        self._recorder.recording_done.connect(self._on_recording_done)
+        self._recorder.waveform_updated.connect(self._on_samples)
+        self._recorder.level_changed.connect(self._level_meter.set_level)
+        self._recorder.recording_stopped.connect(self._on_recording_done)
 
     @property
     def waveform(self) -> WaveformWidget:
@@ -50,11 +50,11 @@ class RecordingControlsWidget(QWidget):
         return self._level_meter
 
     def _toggle_recording(self) -> None:
-        if self._recorder.is_recording():
-            self._recorder.stop_recording()
+        if self._recorder.is_recording:
+            self._recorder.stop()
             self._record_button.setText("Record")
         else:
-            self._recorder.start_recording()
+            self._recorder.start()
             self._record_button.setText("Stop")
 
     def _on_samples(self, samples: list[float]) -> None:

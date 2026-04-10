@@ -10,6 +10,16 @@ from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget
 
 from parla.ui.container import Container
 from parla.ui.navigation import NavigationController
+from parla.ui.screens.settings.view import SettingsView
+from parla.ui.screens.settings.view_model import SettingsViewModel
+from parla.ui.screens.setup.view import SetupView
+from parla.ui.screens.setup.view_model import SetupViewModel
+from parla.ui.screens.sources.list_view import SourceListView
+from parla.ui.screens.sources.list_view_model import SourceListViewModel
+from parla.ui.screens.sources.registration_view import SourceRegistrationView
+from parla.ui.screens.sources.registration_view_model import SourceRegistrationViewModel
+from parla.ui.screens.today.view import TodayView
+from parla.ui.screens.today.view_model import TodayViewModel
 
 logger = structlog.get_logger()
 
@@ -29,15 +39,81 @@ class MainWindow(QMainWindow):
         self._nav = NavigationController(TAB_TITLES)
         self.setCentralWidget(self._nav)
 
-        # Placeholder widgets — replaced by real screens in later tasks
-        for i, title in enumerate(TAB_TITLES):
-            self._nav.set_tab_widget(i, QLabel(title))
+        # --- ViewModels ---
+        self._today_vm = TodayViewModel(container.event_bus, container.session_query)
+        self._settings_vm = SettingsViewModel(container.event_bus, container.settings_service)
+
+        # --- Views ---
+        today_view = TodayView(self._today_vm)
+        settings_view = SettingsView(self._settings_vm)
+
+        # --- Tab registration ---
+        self._nav.set_tab_widget(NavigationController.TAB_TODAY, today_view)
+        self._nav.set_tab_widget(NavigationController.TAB_ITEMS, QLabel("Learning Items"))
+        self._nav.set_tab_widget(NavigationController.TAB_HISTORY, QLabel("History"))
+        self._nav.set_tab_widget(NavigationController.TAB_SETTINGS, settings_view)
+
+        # --- Navigation connections ---
+        self._settings_vm.navigate_to_sources.connect(self._push_source_list)
+        self._today_vm.start_session_requested.connect(self._enter_session)
+
+        # --- Activate ViewModels ---
+        self._settings_vm.activate()
+        self._settings_vm.load_settings()
+        self._today_vm.activate()
+        self._today_vm.load_dashboard()
 
     @property
     def navigation(self) -> NavigationController:
         return self._nav
 
+    def show_setup(self) -> None:
+        """Show the initial setup screen."""
+        setup_vm = SetupViewModel(self._container.event_bus, self._container.settings_service)
+        setup_view = SetupView(setup_vm)
+        setup_vm.setup_completed.connect(lambda: self._finish_setup(setup_view, setup_vm))
+        self._nav.set_tab_widget(NavigationController.TAB_TODAY, setup_view)
+        self._nav.switch_tab(NavigationController.TAB_TODAY)
+        self._nav._tab_bar.hide()
+
+    def _finish_setup(self, setup_view: SetupView, setup_vm: SetupViewModel) -> None:
+        """Complete setup: replace setup screen with today view, show tabs."""
+        setup_vm.deactivate()
+        today_view = TodayView(self._today_vm)
+        self._nav.set_tab_widget(NavigationController.TAB_TODAY, today_view)
+        self._nav._tab_bar.show()
+        self._nav.switch_tab(NavigationController.TAB_TODAY)
+        self._today_vm.load_dashboard()
+        setup_view.deleteLater()
+
+    def _push_source_list(self) -> None:
+        """Push source list screen onto settings tab stack."""
+        vm = SourceListViewModel(self._container.event_bus, self._container.source_query)
+        view = SourceListView(vm)
+        vm.navigate_to_registration.connect(lambda: self._push_source_registration(vm))
+        vm.activate()
+        vm.load_sources()
+        self._nav.push_screen(view)
+
+    def _push_source_registration(self, list_vm: SourceListViewModel) -> None:
+        """Push source registration screen."""
+        vm = SourceRegistrationViewModel(
+            self._container.event_bus,
+            self._container.source_service,
+            self._container.settings_service,
+        )
+        view = SourceRegistrationView(vm)
+        vm.activate()
+        vm.load_settings()
+        self._nav.push_screen(view)
+
+    def _enter_session(self) -> None:
+        """Enter session mode (placeholder for future phases)."""
+        logger.info("session_mode_requested")
+
     def closeEvent(self, event: QCloseEvent) -> None:
+        self._today_vm.deactivate()
+        self._settings_vm.deactivate()
         self._container.close()
         super().closeEvent(event)
 
@@ -69,11 +145,9 @@ def main() -> None:
 
     window = MainWindow(container)
 
-    # Initial routing (placeholder — real screen navigation in future tasks)
+    # Initial routing
     if bootstrap.needs_setup:
-        pass  # TODO: show setup screen (SCREEN-B)
-    elif bootstrap.has_resumable_session:
-        pass  # TODO: show resume dialog
+        window.show_setup()
 
     window.show()
 
