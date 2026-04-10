@@ -205,24 +205,17 @@ def _format_stock_items(items: Sequence[StockedItemInfo]) -> str:
         return ""
     lines = [
         "## Previously stocked learning items",
-        "The learner already has these items in their stock. "
-        "Check if any extracted item matches one below.",
+        "The learner already has these items in their stock. Check if any extracted item matches one below.",
         "",
     ]
     for item in items:
-        lines.append(
-            f"- [{item.item_id}] {item.pattern} "
-            f"({item.category}) — {item.example_sentence}"
-        )
+        lines.append(f"- [{item.item_id}] {item.pattern} ({item.category}) — {item.example_sentence}")
     return "\n".join(lines)
 
 
 def _format_reappearance_instructions(items: Sequence[StockedItemInfo]) -> str:
     if not items:
-        return (
-            "No stocked items provided. "
-            "Set is_reappearance=false and matched_stock_item_id=null for all items."
-        )
+        return "No stocked items provided. Set is_reappearance=false and matched_stock_item_id=null for all items."
     return (
         "Compare each extracted item against the stocked items list above. "
         "If an extracted item is semantically the same pattern as a stocked item "

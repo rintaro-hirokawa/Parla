@@ -27,9 +27,7 @@ def configure_logging(log_dir: Path = Path("data/logs")) -> None:
     jsonl_formatter = logging.Formatter("%(message)s")
 
     # events.jsonl — イベントトレース
-    events_handler = logging.FileHandler(
-        log_dir / "events.jsonl", encoding="utf-8"
-    )
+    events_handler = logging.FileHandler(log_dir / "events.jsonl", encoding="utf-8")
     events_handler.setFormatter(jsonl_formatter)
 
     events_logger = logging.getLogger("parla.events")
@@ -39,9 +37,7 @@ def configure_logging(log_dir: Path = Path("data/logs")) -> None:
     events_logger.propagate = False
 
     # llm_calls.jsonl — LLM コールログ
-    llm_handler = logging.FileHandler(
-        log_dir / "llm_calls.jsonl", encoding="utf-8"
-    )
+    llm_handler = logging.FileHandler(log_dir / "llm_calls.jsonl", encoding="utf-8")
     llm_handler.setFormatter(jsonl_formatter)
 
     llm_logger = logging.getLogger("parla.llm")
@@ -51,9 +47,7 @@ def configure_logging(log_dir: Path = Path("data/logs")) -> None:
     llm_logger.propagate = False
 
     # app.jsonl — 一般アプリケーションログ（+ stderr 出力）
-    app_file_handler = logging.FileHandler(
-        log_dir / "app.jsonl", encoding="utf-8"
-    )
+    app_file_handler = logging.FileHandler(log_dir / "app.jsonl", encoding="utf-8")
     app_file_handler.setFormatter(jsonl_formatter)
 
     stderr_handler = logging.StreamHandler(sys.stderr)

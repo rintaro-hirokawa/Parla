@@ -104,6 +104,43 @@ CREATE INDEX IF NOT EXISTS idx_sentence_feedback_sentence ON sentence_feedback(s
 CREATE INDEX IF NOT EXISTS idx_practice_attempts_sentence ON practice_attempts(sentence_id);
 CREATE INDEX IF NOT EXISTS idx_variations_item ON variations(learning_item_id);
 CREATE INDEX IF NOT EXISTS idx_review_attempts_variation ON review_attempts(variation_id);
+
+CREATE TABLE IF NOT EXISTS model_audio (
+    passage_id    TEXT PRIMARY KEY REFERENCES passages(id),
+    audio_path    TEXT NOT NULL,
+    timestamps    TEXT NOT NULL,
+    generated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS overlapping_results (
+    id                  TEXT PRIMARY KEY,
+    passage_id          TEXT NOT NULL REFERENCES passages(id),
+    words               TEXT NOT NULL,
+    timing_deviations   TEXT NOT NULL,
+    accuracy_score      REAL NOT NULL,
+    fluency_score       REAL NOT NULL,
+    prosody_score       REAL NOT NULL,
+    pronunciation_score REAL NOT NULL,
+    created_at          TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS live_delivery_results (
+    id                  TEXT PRIMARY KEY,
+    passage_id          TEXT NOT NULL REFERENCES passages(id),
+    passed              INTEGER NOT NULL,
+    sentence_statuses   TEXT NOT NULL,
+    duration_seconds    REAL NOT NULL,
+    wpm                 REAL NOT NULL,
+    created_at          TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS passage_achievements (
+    passage_id    TEXT PRIMARY KEY REFERENCES passages(id),
+    achieved_at   TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_overlapping_passage ON overlapping_results(passage_id);
+CREATE INDEX IF NOT EXISTS idx_live_delivery_passage ON live_delivery_results(passage_id);
 """
 
 
@@ -123,6 +160,10 @@ def init_schema(conn: sqlite3.Connection) -> None:
 def reset_db(conn: sqlite3.Connection) -> None:
     """Drop all tables and recreate. For prototype-phase use only."""
     conn.executescript("""\
+        DROP TABLE IF EXISTS passage_achievements;
+        DROP TABLE IF EXISTS live_delivery_results;
+        DROP TABLE IF EXISTS overlapping_results;
+        DROP TABLE IF EXISTS model_audio;
         DROP TABLE IF EXISTS review_attempts;
         DROP TABLE IF EXISTS variations;
         DROP TABLE IF EXISTS practice_attempts;

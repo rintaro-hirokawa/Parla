@@ -70,10 +70,12 @@ class ReviewService:
 
     def request_variation(self, learning_item_id: UUID, source_id: UUID) -> None:
         """Request variation generation for a learning item."""
-        self._bus.emit(VariationGenerationRequested(
-            learning_item_id=learning_item_id,
-            source_id=source_id,
-        ))
+        self._bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=learning_item_id,
+                source_id=source_id,
+            )
+        )
 
     async def handle_variation_requested(self, event: VariationGenerationRequested) -> None:
         """Async handler: generate variation via LLM, save to repository."""
@@ -89,10 +91,7 @@ class ReviewService:
 
         try:
             past_variations = self._variation_repo.get_variations_by_item(item.id)
-            past_info = [
-                PastVariationInfo(ja=v.ja, en=v.en)
-                for v in past_variations[-_MAX_HISTORY_FOR_PROMPT:]
-            ]
+            past_info = [PastVariationInfo(ja=v.ja, en=v.en) for v in past_variations[-_MAX_HISTORY_FOR_PROMPT:]]
 
             raw = await self._variation_generator.generate_variation(
                 learning_item_pattern=item.pattern,
@@ -113,20 +112,24 @@ class ReviewService:
             )
             self._variation_repo.save_variation(variation)
 
-            self._bus.emit(VariationReady(
-                variation_id=variation.id,
-                learning_item_id=item.id,
-            ))
+            self._bus.emit(
+                VariationReady(
+                    variation_id=variation.id,
+                    learning_item_id=item.id,
+                )
+            )
 
         except Exception as exc:
             logger.exception(
                 "variation_generation_failed",
                 item_id=str(event.learning_item_id),
             )
-            self._bus.emit(VariationGenerationFailed(
-                learning_item_id=event.learning_item_id,
-                error_message=str(exc),
-            ))
+            self._bus.emit(
+                VariationGenerationFailed(
+                    learning_item_id=event.learning_item_id,
+                    error_message=str(exc),
+                )
+            )
 
     def _resolve_context(self, variation_id: UUID) -> _ReviewContext:
         """Look up variation, learning item, and source. Raises ValueError if any missing."""
@@ -208,20 +211,24 @@ class ReviewService:
         )
 
         # Emit events
-        self._bus.emit(ReviewAnswered(
-            variation_id=variation_id,
-            learning_item_id=ctx.item.id,
-            correct=result.correct,
-            item_used=result.item_used,
-            hint_level=hint_level,
-            timer_ratio=timer_ratio,
-        ))
-        self._bus.emit(SRSUpdated(
-            learning_item_id=ctx.item.id,
-            old_stage=old_stage,
-            new_stage=srs_update.new_stage,
-            next_review_date=srs_update.next_review_date,
-        ))
+        self._bus.emit(
+            ReviewAnswered(
+                variation_id=variation_id,
+                learning_item_id=ctx.item.id,
+                correct=result.correct,
+                item_used=result.item_used,
+                hint_level=hint_level,
+                timer_ratio=timer_ratio,
+            )
+        )
+        self._bus.emit(
+            SRSUpdated(
+                learning_item_id=ctx.item.id,
+                old_stage=old_stage,
+                new_stage=srs_update.new_stage,
+                next_review_date=srs_update.next_review_date,
+            )
+        )
 
         return result
 
@@ -247,11 +254,13 @@ class ReviewService:
         )
         self._attempt_repo.save_attempt(attempt)
 
-        self._bus.emit(ReviewRetryJudged(
-            variation_id=variation_id,
-            attempt=attempt_number,
-            correct=result.correct,
-        ))
+        self._bus.emit(
+            ReviewRetryJudged(
+                variation_id=variation_id,
+                attempt=attempt_number,
+                correct=result.correct,
+            )
+        )
 
         return result
 

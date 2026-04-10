@@ -79,9 +79,13 @@ class TestPracticeAttemptCRUD:
     def test_multiple_attempts_ordered(self) -> None:
         repo, sid = _setup()
         for n in (1, 2, 3):
-            repo.save_practice_attempt(PracticeAttempt(
-                sentence_id=sid, attempt_number=n, correct=(n == 3),
-            ))
+            repo.save_practice_attempt(
+                PracticeAttempt(
+                    sentence_id=sid,
+                    attempt_number=n,
+                    correct=(n == 3),
+                )
+            )
 
         attempts = repo.get_attempts_by_sentence(sid)
         assert len(attempts) == 3

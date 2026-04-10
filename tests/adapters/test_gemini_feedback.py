@@ -4,7 +4,6 @@ Tests the internal LLM schema parsing and conversion to RawFeedback,
 using fixture data modeled after V2 verification outputs.
 """
 
-
 from parla.adapters.gemini_feedback import (
     LLMFeedbackResult,
     LLMTranscriptionResult,
@@ -14,8 +13,7 @@ from parla.adapters.gemini_feedback import (
 # --- Fixture data (based on V2 verification outputs) ---
 
 TRANSCRIPTION_JSON = (
-    '{"user_utterance": "I think this is [pause] very hard'
-    ' because it has （急な坂がわからない） and sharp curves."}'
+    '{"user_utterance": "I think this is [pause] very hard because it has （急な坂がわからない） and sharp curves."}'
 )
 
 FEEDBACK_JSON = """{

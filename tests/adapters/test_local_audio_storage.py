@@ -70,7 +70,9 @@ class TestWavRoundTrip:
         storage = LocalAudioStorage(tmp_path / "audio")
         sid = uuid4()
         audio = _make_audio(
-            sample_rate=44100, channels=2, sample_width=2,
+            sample_rate=44100,
+            channels=2,
+            sample_width=2,
             data=_make_pcm_data(441, 2),
         )
 

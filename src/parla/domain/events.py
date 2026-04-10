@@ -126,3 +126,46 @@ class SRSUpdated(Event, frozen=True):
     old_stage: int
     new_stage: int
     next_review_date: date
+
+
+# --- Slice 4: Phase C（通し練習）---
+
+
+class ModelAudioRequested(Event, frozen=True):
+    """TTS generation requested for a passage's dynamic model answers."""
+
+    passage_id: UUID
+
+
+class ModelAudioReady(Event, frozen=True):
+    """TTS model audio generated and cached."""
+
+    passage_id: UUID
+
+
+class ModelAudioFailed(Event, frozen=True):
+    """TTS generation failed."""
+
+    passage_id: UUID
+    error_message: str
+
+
+class OverlappingCompleted(Event, frozen=True):
+    """Overlapping practice evaluated."""
+
+    passage_id: UUID
+    pronunciation_score: float
+
+
+class LiveDeliveryCompleted(Event, frozen=True):
+    """Live delivery evaluated."""
+
+    passage_id: UUID
+    passed: bool
+    wpm: float
+
+
+class PassageAchievementRecorded(Event, frozen=True):
+    """通し発話達成 recorded for a passage."""
+
+    passage_id: UUID

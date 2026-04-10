@@ -202,8 +202,15 @@ def _setup(
     retry_result: RetryResult | None = None,
     feedback_result: RawFeedback | None = None,
 ) -> tuple[
-    FeedbackService, FakeSourceRepo, FakeFeedbackRepo, FakeItemRepo,
-    FakeAudioStorage, EventBus, EventCollector, Source, Passage,
+    FeedbackService,
+    FakeSourceRepo,
+    FakeFeedbackRepo,
+    FakeItemRepo,
+    FakeAudioStorage,
+    EventBus,
+    EventCollector,
+    Source,
+    Passage,
 ]:
     bus = EventBus()
     source_repo = FakeSourceRepo()
@@ -231,8 +238,15 @@ def _setup(
     bus.on_async(SentenceRecorded)(service.handle_sentence_recorded)
 
     return (
-        service, source_repo, feedback_repo, item_repo,
-        audio_storage, bus, collector, source, passage,
+        service,
+        source_repo,
+        feedback_repo,
+        item_repo,
+        audio_storage,
+        bus,
+        collector,
+        source,
+        passage,
     )
 
 
@@ -248,7 +262,9 @@ class TestRecordSentence:
 
 
 def _emit_and_get_handler_task(
-    bus: EventBus, audio_storage: FakeAudioStorage, passage: Passage,
+    bus: EventBus,
+    audio_storage: FakeAudioStorage,
+    passage: Passage,
 ):
     """Pre-store audio then emit SentenceRecorded, return the async task."""
     sid = passage.sentences[0].id
@@ -340,12 +356,14 @@ class TestJudgeRetry:
         sid = passage.sentences[0].id
 
         # Pre-save feedback (normally done by handle_sentence_recorded)
-        feedback_repo.save_feedback(SentenceFeedback(
-            sentence_id=sid,
-            user_utterance="test",
-            model_answer="I think this is very difficult.",
-            is_acceptable=True,
-        ))
+        feedback_repo.save_feedback(
+            SentenceFeedback(
+                sentence_id=sid,
+                user_utterance="test",
+                model_answer="I think this is very difficult.",
+                is_acceptable=True,
+            )
+        )
 
         result = await service.judge_retry(sid, 1, _make_audio())
         assert result.correct is True
@@ -356,12 +374,14 @@ class TestJudgeRetry:
         )
         sid = passage.sentences[0].id
 
-        feedback_repo.save_feedback(SentenceFeedback(
-            sentence_id=sid,
-            user_utterance="test",
-            model_answer="I think this is very difficult.",
-            is_acceptable=True,
-        ))
+        feedback_repo.save_feedback(
+            SentenceFeedback(
+                sentence_id=sid,
+                user_utterance="test",
+                model_answer="I think this is very difficult.",
+                is_acceptable=True,
+            )
+        )
 
         result = await service.judge_retry(sid, 1, _make_audio())
         assert result.correct is False
@@ -370,12 +390,14 @@ class TestJudgeRetry:
         service, _, feedback_repo, _, _, _, _, _, passage = _setup()
         sid = passage.sentences[0].id
 
-        feedback_repo.save_feedback(SentenceFeedback(
-            sentence_id=sid,
-            user_utterance="test",
-            model_answer="test",
-            is_acceptable=True,
-        ))
+        feedback_repo.save_feedback(
+            SentenceFeedback(
+                sentence_id=sid,
+                user_utterance="test",
+                model_answer="test",
+                is_acceptable=True,
+            )
+        )
 
         await service.judge_retry(sid, 1, _make_audio())
 
@@ -387,12 +409,14 @@ class TestJudgeRetry:
         service, _, feedback_repo, _, _, _, collector, _, passage = _setup()
         sid = passage.sentences[0].id
 
-        feedback_repo.save_feedback(SentenceFeedback(
-            sentence_id=sid,
-            user_utterance="test",
-            model_answer="test",
-            is_acceptable=True,
-        ))
+        feedback_repo.save_feedback(
+            SentenceFeedback(
+                sentence_id=sid,
+                user_utterance="test",
+                model_answer="test",
+                is_acceptable=True,
+            )
+        )
 
         await service.judge_retry(sid, 2, _make_audio())
 

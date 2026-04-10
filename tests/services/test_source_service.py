@@ -115,29 +115,21 @@ def collector(bus: EventBus) -> EventCollector:
 
 
 class TestRegisterSource:
-    def test_creates_source_with_registered_status(
-        self, bus: EventBus, repo: FakeSourceRepository
-    ) -> None:
+    def test_creates_source_with_registered_status(self, bus: EventBus, repo: FakeSourceRepository) -> None:
         service = SourceService(bus, repo, FakePassageGenerator())
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
         assert source.status == "registered"
 
     def test_persists_source(self, bus: EventBus, repo: FakeSourceRepository) -> None:
         service = SourceService(bus, repo, FakePassageGenerator())
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
         assert repo.get_source(source.id) is not None
 
     def test_emits_source_registered(
         self, bus: EventBus, repo: FakeSourceRepository, collector: EventCollector
     ) -> None:
         service = SourceService(bus, repo, FakePassageGenerator())
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
         assert len(collector.events) == 1
         event = collector.events[0]
         assert isinstance(event, SourceRegistered)
@@ -150,9 +142,7 @@ class TestHandleSourceRegistered:
     ) -> None:
         generator = FakePassageGenerator()
         service = SourceService(bus, repo, generator)
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
 
         await service.handle_source_registered(SourceRegistered(source_id=source.id))
 
@@ -163,9 +153,7 @@ class TestHandleSourceRegistered:
     async def test_saves_passages(self, bus: EventBus, repo: FakeSourceRepository) -> None:
         generator = FakePassageGenerator()
         service = SourceService(bus, repo, generator)
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
 
         await service.handle_source_registered(SourceRegistered(source_id=source.id))
 
@@ -176,9 +164,7 @@ class TestHandleSourceRegistered:
         self, bus: EventBus, repo: FakeSourceRepository, collector: EventCollector
     ) -> None:
         service = SourceService(bus, repo, FakePassageGenerator())
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
 
         await service.handle_source_registered(SourceRegistered(source_id=source.id))
 
@@ -189,9 +175,7 @@ class TestHandleSourceRegistered:
         self, bus: EventBus, repo: FakeSourceRepository, collector: EventCollector
     ) -> None:
         service = SourceService(bus, repo, FakePassageGenerator())
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
 
         await service.handle_source_registered(SourceRegistered(source_id=source.id))
 
@@ -204,9 +188,7 @@ class TestHandleSourceRegistered:
         self, bus: EventBus, repo: FakeSourceRepository, collector: EventCollector
     ) -> None:
         service = SourceService(bus, repo, FakePassageGenerator(fail=True))
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
 
         await service.handle_source_registered(SourceRegistered(source_id=source.id))
 
@@ -218,18 +200,14 @@ class TestHandleSourceRegistered:
         self, bus: EventBus, repo: FakeSourceRepository, collector: EventCollector
     ) -> None:
         service = SourceService(bus, repo, FakePassageGenerator(fail=True))
-        source = service.register_source(
-            text="a" * 200, cefr_level="B1", english_variant="American"
-        )
+        source = service.register_source(text="a" * 200, cefr_level="B1", english_variant="American")
 
         await service.handle_source_registered(SourceRegistered(source_id=source.id))
 
         assert PassageGenerationFailed in collector.types()
         assert PassageGenerationCompleted not in collector.types()
 
-    async def test_passes_correct_args_to_generator(
-        self, bus: EventBus, repo: FakeSourceRepository
-    ) -> None:
+    async def test_passes_correct_args_to_generator(self, bus: EventBus, repo: FakeSourceRepository) -> None:
         generator = FakePassageGenerator()
         service = SourceService(bus, repo, generator)
         text = "a" * 200

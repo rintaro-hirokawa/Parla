@@ -20,12 +20,12 @@ def _setup():
     sentence_id = uuid4()
     passage_id = uuid4()
     conn.execute(
-        "INSERT INTO passages (id, source_id, \"order\", topic, passage_type, created_at) "
+        'INSERT INTO passages (id, source_id, "order", topic, passage_type, created_at) '
         "VALUES (?, ?, 0, 'test', '説明型', '2026-04-10')",
         (str(passage_id), str(source_id)),
     )
     conn.execute(
-        "INSERT INTO sentences (id, passage_id, \"order\", ja, en, hint1, hint2) "
+        'INSERT INTO sentences (id, passage_id, "order", ja, en, hint1, hint2) '
         "VALUES (?, ?, 0, 'テスト', 'Test', 'hint1', 'hint2')",
         (str(sentence_id), str(passage_id)),
     )
@@ -33,8 +33,7 @@ def _setup():
     conn.execute(
         "INSERT INTO learning_items (id, pattern, explanation, category, priority, "
         "source_sentence_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (str(item_id), "test pattern", "test explanation", "文法", 4,
-         str(sentence_id), "auto_stocked", "2026-04-10"),
+        (str(item_id), "test pattern", "test explanation", "文法", 4, str(sentence_id), "auto_stocked", "2026-04-10"),
     )
     conn.commit()
     repo = SQLiteVariationRepository(conn)
@@ -70,12 +69,20 @@ class TestSaveAndGet:
     def test_get_variations_by_item(self) -> None:
         repo, item_id, source_id = _setup()
         v1 = Variation(
-            learning_item_id=item_id, source_id=source_id,
-            ja="問題1", en="Question 1", hint1="h1", hint2="h2",
+            learning_item_id=item_id,
+            source_id=source_id,
+            ja="問題1",
+            en="Question 1",
+            hint1="h1",
+            hint2="h2",
         )
         v2 = Variation(
-            learning_item_id=item_id, source_id=source_id,
-            ja="問題2", en="Question 2", hint1="h1", hint2="h2",
+            learning_item_id=item_id,
+            source_id=source_id,
+            ja="問題2",
+            en="Question 2",
+            hint1="h1",
+            hint2="h2",
         )
         repo.save_variation(v1)
         repo.save_variation(v2)

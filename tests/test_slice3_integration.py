@@ -169,7 +169,10 @@ def _setup(
         hints=Hint(hint1="Test...", hint2="主語 + 動詞"),
     )
     passage = Passage(
-        source_id=source.id, order=0, topic="Test", passage_type="説明型",
+        source_id=source.id,
+        order=0,
+        topic="Test",
+        passage_type="説明型",
         sentences=(sentence,),
     )
     source_repo.save_passages([passage])
@@ -195,9 +198,12 @@ class TestVariationGeneration:
     async def test_variation_saved_to_sqlite(self, tmp_path) -> None:
         service, source_repo, item_repo, variation_repo, _, bus, _, source, item = _setup(tmp_path)
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variations = variation_repo.get_variations_by_item(item.id)
@@ -209,9 +215,12 @@ class TestVariationGeneration:
     async def test_variation_ready_event(self, tmp_path) -> None:
         service, _, _, _, _, bus, collector, source, item = _setup(tmp_path)
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         assert collector.types() == [
@@ -221,12 +230,16 @@ class TestVariationGeneration:
 
     async def test_variation_failed_event(self, tmp_path) -> None:
         service, _, _, _, _, bus, collector, source, item = _setup(
-            tmp_path, fail_variation=True,
+            tmp_path,
+            fail_variation=True,
         )
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         assert VariationGenerationFailed in collector.types()
@@ -239,9 +252,12 @@ class TestReviewJudgment:
         service, _, item_repo, variation_repo, _, bus, _, source, item = _setup(tmp_path)
 
         # Generate variation
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variation = variation_repo.get_variations_by_item(item.id)[0]
@@ -264,18 +280,26 @@ class TestReviewJudgment:
 
     async def test_incorrect_review_regresses_srs(self, tmp_path) -> None:
         service, _, item_repo, variation_repo, _, bus, _, source, item = _setup(
-            tmp_path, review_correct=False, review_item_used=False,
+            tmp_path,
+            review_correct=False,
+            review_item_used=False,
         )
 
         # Set item to stage 2 first
         item_repo.update_srs_state(
-            item.id, srs_stage=2, ease_factor=1.0,
-            next_review_date=date(2026, 4, 10), correct_context_count=0,
+            item.id,
+            srs_stage=2,
+            ease_factor=1.0,
+            next_review_date=date(2026, 4, 10),
+            correct_context_count=0,
         )
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variation = variation_repo.get_variations_by_item(item.id)[0]
@@ -296,9 +320,12 @@ class TestReviewJudgment:
     async def test_review_events_emitted(self, tmp_path) -> None:
         service, _, _, variation_repo, _, bus, collector, source, item = _setup(tmp_path)
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variation = variation_repo.get_variations_by_item(item.id)[0]
@@ -320,9 +347,12 @@ class TestReviewJudgment:
     async def test_attempt_persisted(self, tmp_path) -> None:
         service, _, _, variation_repo, attempt_repo, bus, _, source, item = _setup(tmp_path)
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variation = variation_repo.get_variations_by_item(item.id)[0]
@@ -347,9 +377,12 @@ class TestReviewRetry:
     async def test_retry_does_not_change_srs(self, tmp_path) -> None:
         service, _, item_repo, variation_repo, _, bus, _, source, item = _setup(tmp_path)
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variation = variation_repo.get_variations_by_item(item.id)[0]
@@ -370,9 +403,12 @@ class TestReviewRetry:
     async def test_retry_emits_event(self, tmp_path) -> None:
         service, _, _, variation_repo, _, bus, collector, source, item = _setup(tmp_path)
 
-        tasks = bus.emit(VariationGenerationRequested(
-            learning_item_id=item.id, source_id=source.id,
-        ))
+        tasks = bus.emit(
+            VariationGenerationRequested(
+                learning_item_id=item.id,
+                source_id=source.id,
+            )
+        )
         await tasks[0]
 
         variation = variation_repo.get_variations_by_item(item.id)[0]
@@ -403,8 +439,11 @@ class TestGetDueItems:
 
         # Move review date to future
         item_repo.update_srs_state(
-            item.id, srs_stage=1, ease_factor=1.0,
-            next_review_date=date(2026, 4, 20), correct_context_count=0,
+            item.id,
+            srs_stage=1,
+            ease_factor=1.0,
+            next_review_date=date(2026, 4, 20),
+            correct_context_count=0,
         )
 
         due = service.get_due_items(as_of=date(2026, 4, 10))

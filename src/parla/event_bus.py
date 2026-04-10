@@ -43,9 +43,7 @@ class EventBus:
         self._sync_handlers: dict[type[Event], list[_SyncHandler]] = defaultdict(list)
         self._async_handlers: dict[type[Event], list[_AsyncHandler]] = defaultdict(list)
 
-    def on_sync[E: Event](
-        self, event_type: type[E]
-    ) -> Callable[[Callable[[E], None]], Callable[[E], None]]:
+    def on_sync[E: Event](self, event_type: type[E]) -> Callable[[Callable[[E], None]], Callable[[E], None]]:
         """Register a synchronous handler. Runs immediately on emit."""
 
         def decorator(fn: Callable[[E], None]) -> Callable[[E], None]:
@@ -97,14 +95,8 @@ class EventBus:
         registrations: list[EventRegistration] = []
         for et in sorted(all_types, key=lambda t: t.__name__):
             entries = tuple(
-                [
-                    HandlerEntry(name=h.__qualname__, kind="sync")
-                    for h in self._sync_handlers.get(et, [])
-                ]
-                + [
-                    HandlerEntry(name=h.__qualname__, kind="async")
-                    for h in self._async_handlers.get(et, [])
-                ]
+                [HandlerEntry(name=h.__qualname__, kind="sync") for h in self._sync_handlers.get(et, [])]
+                + [HandlerEntry(name=h.__qualname__, kind="async") for h in self._async_handlers.get(et, [])]
             )
             registrations.append(EventRegistration(event_name=et.__name__, handlers=entries))
         return registrations

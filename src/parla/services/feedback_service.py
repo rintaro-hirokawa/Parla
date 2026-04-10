@@ -69,9 +69,7 @@ class FeedbackService:
             logger.error("passage_not_found", passage_id=str(event.passage_id))
             return
 
-        sentence = next(
-            (s for s in passage.sentences if s.id == event.sentence_id), None
-        )
+        sentence = next((s for s in passage.sentences if s.id == event.sentence_id), None)
         if sentence is None:
             logger.error("sentence_not_found", sentence_id=str(event.sentence_id))
             return
@@ -116,33 +114,40 @@ class FeedbackService:
             self._feedback_repo.save_feedback(feedback)
 
             learning_items = self._convert_learning_items(
-                raw_feedback, event.sentence_id,
+                raw_feedback,
+                event.sentence_id,
             )
             if learning_items:
                 self._item_repo.save_items(learning_items)
                 for item in learning_items:
                     if item.status == "auto_stocked":
-                        self._bus.emit(LearningItemStocked(
-                            item_id=item.id,
-                            pattern=item.pattern,
-                            is_reappearance=item.is_reappearance,
-                        ))
+                        self._bus.emit(
+                            LearningItemStocked(
+                                item_id=item.id,
+                                pattern=item.pattern,
+                                is_reappearance=item.is_reappearance,
+                            )
+                        )
 
-            self._bus.emit(FeedbackReady(
-                passage_id=event.passage_id,
-                sentence_id=event.sentence_id,
-            ))
+            self._bus.emit(
+                FeedbackReady(
+                    passage_id=event.passage_id,
+                    sentence_id=event.sentence_id,
+                )
+            )
 
         except Exception as exc:
             logger.exception(
                 "feedback_generation_failed",
                 sentence_id=str(event.sentence_id),
             )
-            self._bus.emit(FeedbackFailed(
-                passage_id=event.passage_id,
-                sentence_id=event.sentence_id,
-                error_message=str(exc),
-            ))
+            self._bus.emit(
+                FeedbackFailed(
+                    passage_id=event.passage_id,
+                    sentence_id=event.sentence_id,
+                    error_message=str(exc),
+                )
+            )
 
     async def judge_retry(
         self,
@@ -172,17 +177,20 @@ class FeedbackService:
         )
         self._feedback_repo.save_practice_attempt(practice)
 
-        self._bus.emit(RetryJudged(
-            sentence_id=sentence_id,
-            attempt=attempt,
-            correct=result.correct,
-        ))
+        self._bus.emit(
+            RetryJudged(
+                sentence_id=sentence_id,
+                attempt=attempt,
+                correct=result.correct,
+            )
+        )
 
         return result
 
     @staticmethod
     def _convert_learning_items(
-        raw: RawFeedback, sentence_id: UUID,
+        raw: RawFeedback,
+        sentence_id: UUID,
     ) -> list[LearningItem]:
         items: list[LearningItem] = []
         for raw_item in raw.items:
@@ -191,15 +199,17 @@ class FeedbackService:
                 with contextlib.suppress(ValueError):
                     matched_id = UUID(raw_item.matched_stock_item_id)
 
-            items.append(LearningItem(
-                pattern=raw_item.pattern,
-                explanation=raw_item.explanation,
-                category=cast(LearningItemCategory, raw_item.category),
-                sub_tag=raw_item.sub_tag,
-                priority=raw_item.priority,
-                source_sentence_id=sentence_id,
-                is_reappearance=raw_item.is_reappearance,
-                matched_item_id=matched_id,
-                status=status_from_priority(raw_item.priority),
-            ))
+            items.append(
+                LearningItem(
+                    pattern=raw_item.pattern,
+                    explanation=raw_item.explanation,
+                    category=cast("LearningItemCategory", raw_item.category),
+                    sub_tag=raw_item.sub_tag,
+                    priority=raw_item.priority,
+                    source_sentence_id=sentence_id,
+                    is_reappearance=raw_item.is_reappearance,
+                    matched_item_id=matched_id,
+                    status=status_from_priority(raw_item.priority),
+                )
+            )
         return items

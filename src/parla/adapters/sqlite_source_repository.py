@@ -33,9 +33,7 @@ class SQLiteSourceRepository:
         self._conn.commit()
 
     def get_source(self, source_id: UUID) -> Source | None:
-        row = self._conn.execute(
-            "SELECT * FROM sources WHERE id = ?", (str(source_id),)
-        ).fetchone()
+        row = self._conn.execute("SELECT * FROM sources WHERE id = ?", (str(source_id),)).fetchone()
         if row is None:
             return None
         return Source(
@@ -98,9 +96,7 @@ class SQLiteSourceRepository:
         self._conn.commit()
 
     def get_passage(self, passage_id: UUID) -> Passage | None:
-        p_row = self._conn.execute(
-            "SELECT * FROM passages WHERE id = ?", (str(passage_id),)
-        ).fetchone()
+        p_row = self._conn.execute("SELECT * FROM passages WHERE id = ?", (str(passage_id),)).fetchone()
         if p_row is None:
             return None
 

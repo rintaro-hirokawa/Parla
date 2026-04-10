@@ -34,9 +34,7 @@ class TestSourceValidation:
         assert source.title == ""
 
     def test_title_can_be_set(self) -> None:
-        source = Source(
-            text="a" * 100, cefr_level="B1", english_variant="American", title="My Source"
-        )
+        source = Source(text="a" * 100, cefr_level="B1", english_variant="American", title="My Source")
         assert source.title == "My Source"
 
     def test_id_is_auto_generated(self) -> None:

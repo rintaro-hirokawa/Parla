@@ -55,20 +55,26 @@ class TestPracticeAttempt:
     def test_attempt_number_range(self) -> None:
         for n in (1, 2, 3):
             a = PracticeAttempt(
-                sentence_id=uuid4(), attempt_number=n, correct=True,
+                sentence_id=uuid4(),
+                attempt_number=n,
+                correct=True,
             )
             assert a.attempt_number == n
 
     def test_attempt_below_1_rejected(self) -> None:
         with pytest.raises(ValidationError):
             PracticeAttempt(
-                sentence_id=uuid4(), attempt_number=0, correct=True,
+                sentence_id=uuid4(),
+                attempt_number=0,
+                correct=True,
             )
 
     def test_attempt_above_3_rejected(self) -> None:
         with pytest.raises(ValidationError):
             PracticeAttempt(
-                sentence_id=uuid4(), attempt_number=4, correct=True,
+                sentence_id=uuid4(),
+                attempt_number=4,
+                correct=True,
             )
 
 

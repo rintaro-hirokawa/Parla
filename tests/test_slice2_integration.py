@@ -58,13 +58,9 @@ class FakeFeedbackGenerator:
             raise RuntimeError(msg)
         return RawFeedback(
             user_utterance=(
-                "I think this is [pause] very hard"
-                " because it has （急な坂がわからない） and sharp curves."
+                "I think this is [pause] very hard because it has （急な坂がわからない） and sharp curves."
             ),
-            model_answer=(
-                "I think this is very tough because it has"
-                " steep slopes and sharp curves."
-            ),
+            model_answer=("I think this is very tough because it has steep slopes and sharp curves."),
             is_acceptable=False,
             items=(
                 RawLearningItem(
@@ -284,7 +280,8 @@ class TestSlice2RetryFlow:
 
     async def test_incorrect_retry(self, tmp_path) -> None:
         service, _, feedback_repo, _, audio_storage, bus, _, passage = _setup(
-            tmp_path, retry_correct=False,
+            tmp_path,
+            retry_correct=False,
         )
         sid = passage.sentences[0].id
 
@@ -332,7 +329,8 @@ class TestSlice2ErrorPath:
 
     async def test_feedback_failed_event(self, tmp_path) -> None:
         service, _, _, _, audio_storage, bus, collector, passage = _setup(
-            tmp_path, fail_feedback=True,
+            tmp_path,
+            fail_feedback=True,
         )
         sid = passage.sentences[0].id
 
@@ -344,7 +342,8 @@ class TestSlice2ErrorPath:
 
     async def test_no_feedback_saved_on_failure(self, tmp_path) -> None:
         service, _, feedback_repo, _, audio_storage, bus, _, passage = _setup(
-            tmp_path, fail_feedback=True,
+            tmp_path,
+            fail_feedback=True,
         )
         sid = passage.sentences[0].id
 
@@ -356,7 +355,8 @@ class TestSlice2ErrorPath:
 
     async def test_no_items_saved_on_failure(self, tmp_path) -> None:
         service, _, _, item_repo, audio_storage, bus, _, passage = _setup(
-            tmp_path, fail_feedback=True,
+            tmp_path,
+            fail_feedback=True,
         )
         sid = passage.sentences[0].id
 

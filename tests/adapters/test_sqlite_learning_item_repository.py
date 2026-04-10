@@ -77,10 +77,12 @@ class TestSaveAndRetrieve:
 
     def test_get_stocked_items(self) -> None:
         repo, sid = _setup()
-        repo.save_items([
-            _make_item(sid, pattern="by ~ing", status="auto_stocked"),
-            _make_item(sid, pattern="unless ~", status="review_later"),
-        ])
+        repo.save_items(
+            [
+                _make_item(sid, pattern="by ~ing", status="auto_stocked"),
+                _make_item(sid, pattern="unless ~", status="review_later"),
+            ]
+        )
 
         stocked = repo.get_stocked_items()
         assert len(stocked) == 1
@@ -182,8 +184,11 @@ class TestSRSState:
         item = _make_item(sid)
         repo.save_items([item])
         repo.update_srs_state(
-            item.id, srs_stage=1, ease_factor=1.0,
-            next_review_date=date(2026, 4, 8), correct_context_count=0,
+            item.id,
+            srs_stage=1,
+            ease_factor=1.0,
+            next_review_date=date(2026, 4, 8),
+            correct_context_count=0,
         )
 
         due = repo.get_due_items(as_of=date(2026, 4, 10))
@@ -194,8 +199,11 @@ class TestSRSState:
         item = _make_item(sid)
         repo.save_items([item])
         repo.update_srs_state(
-            item.id, srs_stage=3, ease_factor=1.0,
-            next_review_date=date(2026, 4, 20), correct_context_count=0,
+            item.id,
+            srs_stage=3,
+            ease_factor=1.0,
+            next_review_date=date(2026, 4, 20),
+            correct_context_count=0,
         )
 
         due = repo.get_due_items(as_of=date(2026, 4, 10))
@@ -223,12 +231,18 @@ class TestSRSState:
         item2 = _make_item(sid, pattern="newer")
         repo.save_items([item1, item2])
         repo.update_srs_state(
-            item1.id, srs_stage=1, ease_factor=1.0,
-            next_review_date=date(2026, 4, 5), correct_context_count=0,
+            item1.id,
+            srs_stage=1,
+            ease_factor=1.0,
+            next_review_date=date(2026, 4, 5),
+            correct_context_count=0,
         )
         repo.update_srs_state(
-            item2.id, srs_stage=1, ease_factor=1.0,
-            next_review_date=date(2026, 4, 8), correct_context_count=0,
+            item2.id,
+            srs_stage=1,
+            ease_factor=1.0,
+            next_review_date=date(2026, 4, 8),
+            correct_context_count=0,
         )
 
         due = repo.get_due_items(as_of=date(2026, 4, 10))

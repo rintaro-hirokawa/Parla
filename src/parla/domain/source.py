@@ -54,14 +54,10 @@ class Source(BaseModel):
     @model_validator(mode="after")
     def _validate_text_length(self) -> "Source":
         if len(self.text) < _MIN_TEXT_LENGTH:
-            msg = (
-                f"Source text must be at least {_MIN_TEXT_LENGTH} characters, got {len(self.text)}"
-            )
+            msg = f"Source text must be at least {_MIN_TEXT_LENGTH} characters, got {len(self.text)}"
             raise SourceTextTooShort(msg)
         if len(self.text) > _MAX_TEXT_LENGTH:
-            msg = (
-                f"Source text must be at most {_MAX_TEXT_LENGTH} characters, got {len(self.text)}"
-            )
+            msg = f"Source text must be at most {_MAX_TEXT_LENGTH} characters, got {len(self.text)}"
             raise SourceTextTooLong(msg)
         return self
 

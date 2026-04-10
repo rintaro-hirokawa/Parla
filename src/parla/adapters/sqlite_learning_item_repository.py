@@ -44,9 +44,7 @@ class SQLiteLearningItemRepository:
         self._conn.commit()
 
     def get_stocked_items(self) -> list[LearningItem]:
-        rows = self._conn.execute(
-            "SELECT * FROM learning_items WHERE status = 'auto_stocked'"
-        ).fetchall()
+        rows = self._conn.execute("SELECT * FROM learning_items WHERE status = 'auto_stocked'").fetchall()
         return [self._row_to_item(r) for r in rows]
 
     def get_items_by_sentence(self, sentence_id: UUID) -> list[LearningItem]:
@@ -95,8 +93,7 @@ class SQLiteLearningItemRepository:
                SET srs_stage = ?, ease_factor = ?, next_review_date = ?,
                    correct_context_count = ?
                WHERE id = ?""",
-            (srs_stage, ease_factor, next_review_date.isoformat(),
-             correct_context_count, str(item_id)),
+            (srs_stage, ease_factor, next_review_date.isoformat(), correct_context_count, str(item_id)),
         )
         self._conn.commit()
 
