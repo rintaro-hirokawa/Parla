@@ -53,6 +53,8 @@ from parla.services.source_service import SourceService
 
 logger = structlog.get_logger()
 
+_DEFAULT_DATA_DIR = Path.home() / "AppData" / "Local" / "Parla"
+
 
 class Container:
     """Wires all infrastructure, services, and query services."""
@@ -187,18 +189,14 @@ class Container:
 
     @staticmethod
     def _default_db_path() -> Path:
-        base = Path(os.environ.get("PARLA_DATA_DIR", ""))
-        if not base or not base.is_absolute():
-            base = Path.home() / "AppData" / "Local" / "Parla"
+        env = os.environ.get("PARLA_DATA_DIR", "")
+        base = Path(env) if env and Path(env).is_absolute() else _DEFAULT_DATA_DIR
         base.mkdir(parents=True, exist_ok=True)
         return base / "parla.db"
 
     @staticmethod
     def _audio_dir(db_path: str | Path) -> Path:
         db_path = Path(db_path)
-        if str(db_path) == ":memory:":
-            audio = Path.home() / "AppData" / "Local" / "Parla" / "audio"
-        else:
-            audio = db_path.parent / "audio"
+        audio = (_DEFAULT_DATA_DIR / "audio") if str(db_path) == ":memory:" else (db_path.parent / "audio")
         audio.mkdir(parents=True, exist_ok=True)
         return audio

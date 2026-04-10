@@ -6,31 +6,31 @@ from datetime import date
 import structlog
 from PySide6 import QtAsyncio
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication, QLabel, QMainWindow
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget
 
 from parla.ui.container import Container
 from parla.ui.navigation import NavigationController
 
 logger = structlog.get_logger()
 
-_TAB_TITLES = ("Today's Learning", "Learning Items", "History", "Settings")
+TAB_TITLES = ("Today's Learning", "Learning Items", "History", "Settings")
 
 
 class MainWindow(QMainWindow):
     """Main application window with navigation controller."""
 
-    def __init__(self, container: Container, parent: None = None) -> None:
+    def __init__(self, container: Container, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._container = container
 
         self.setWindowTitle("Parla")
         self.resize(400, 700)
 
-        self._nav = NavigationController()
+        self._nav = NavigationController(TAB_TITLES)
         self.setCentralWidget(self._nav)
 
-        # Placeholder widgets for each tab (replaced by real screens later)
-        for i, title in enumerate(_TAB_TITLES):
+        # Placeholder widgets — replaced by real screens in later tasks
+        for i, title in enumerate(TAB_TITLES):
             self._nav.set_tab_widget(i, QLabel(title))
 
     @property

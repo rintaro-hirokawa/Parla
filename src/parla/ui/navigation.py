@@ -1,5 +1,7 @@
 """Navigation controller for tab switching, push/pop, and session mode."""
 
+from collections.abc import Sequence
+
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QStackedWidget, QTabBar, QVBoxLayout, QWidget
 
@@ -20,24 +22,19 @@ class NavigationController(QWidget):
     TAB_HISTORY = 2
     TAB_SETTINGS = 3
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, tab_titles: Sequence[str], parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
         self._tab_bar = QTabBar()
         self._main_stack = QStackedWidget()
         self._session_stack = QStackedWidget()
 
-        self._tab_bar.addTab("Today's Learning")
-        self._tab_bar.addTab("Learning Items")
-        self._tab_bar.addTab("History")
-        self._tab_bar.addTab("Settings")
+        for title in tab_titles:
+            self._tab_bar.addTab(title)
         self._tab_bar.currentChanged.connect(self._on_tab_changed)
 
-        # Per-tab root widgets (indexed by tab index)
         self._tab_roots: dict[int, QWidget] = {}
-        # Per-tab sub-screen stacks
         self._nav_stacks: dict[int, list[QWidget]] = {}
-        # Session sub-screen stack
         self._session_nav_stack: list[QWidget] = []
         self._in_session = False
 
@@ -52,7 +49,6 @@ class NavigationController(QWidget):
         """Set the root widget for a tab. Called during app init."""
         self._tab_roots[tab_index] = widget
         self._main_stack.addWidget(widget)
-        # Show the first tab's widget by default
         if tab_index == 0:
             self._main_stack.setCurrentWidget(widget)
 
@@ -66,7 +62,7 @@ class NavigationController(QWidget):
             return self._session_stack.currentWidget()
         return self._main_stack.currentWidget()
 
-    def push_screen(self, widget: QWidget, name: str = "") -> None:
+    def push_screen(self, widget: QWidget) -> None:
         """Push a sub-screen onto the current context's stack."""
         if self._in_session:
             self._session_nav_stack.append(widget)
@@ -86,6 +82,7 @@ class NavigationController(QWidget):
                 return None
             widget = self._session_nav_stack.pop()
             self._session_stack.removeWidget(widget)
+            widget.deleteLater()
             return widget
 
         tab = self._tab_bar.currentIndex()
@@ -94,11 +91,11 @@ class NavigationController(QWidget):
             return None
         widget = stack.pop()
         self._main_stack.removeWidget(widget)
-        # Restore: show top of stack or tab root
         if stack:
             self._main_stack.setCurrentWidget(stack[-1])
         elif tab in self._tab_roots:
             self._main_stack.setCurrentWidget(self._tab_roots[tab])
+        widget.deleteLater()
         return widget
 
     def enter_session(self) -> None:
@@ -115,12 +112,17 @@ class NavigationController(QWidget):
         while self._session_nav_stack:
             w = self._session_nav_stack.pop()
             self._session_stack.removeWidget(w)
+            w.deleteLater()
         self._session_stack.hide()
         self._tab_bar.show()
         self._main_stack.show()
-        # Restore correct widget for current tab
         self._show_current_tab_widget()
         self.session_exited.emit()
+
+    @property
+    def tabs_visible(self) -> bool:
+        """Whether the tab bar is currently shown."""
+        return not self._tab_bar.isHidden()
 
     @property
     def in_session(self) -> bool:
