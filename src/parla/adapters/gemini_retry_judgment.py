@@ -4,6 +4,7 @@ Ultra-simple prompt with reasoning_effort=minimal.
 Design from verification/v5_retry_judgment.
 """
 
+import asyncio
 import base64
 
 import litellm
@@ -99,7 +100,7 @@ class GeminiRetryJudgmentAdapter:
             model=self._model,
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._model,
             messages=messages,
             response_format=_LLMRetryJudgment,

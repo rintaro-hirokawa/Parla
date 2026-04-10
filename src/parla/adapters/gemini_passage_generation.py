@@ -1,5 +1,6 @@
 """Gemini-based passage generation adapter using LiteLLM."""
 
+import asyncio
 from uuid import UUID
 
 import litellm
@@ -206,7 +207,7 @@ class GeminiPassageGenerationAdapter:
             source_text_length=len(source_text),
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._model,
             messages=messages,
             response_format=LLMPassageResult,

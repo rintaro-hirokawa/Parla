@@ -3,6 +3,7 @@
 Prompt design from verification/v9_overlapping_detection.
 """
 
+import asyncio
 import json
 
 import litellm
@@ -127,7 +128,7 @@ class GeminiOverlappingLagAdapter:
             delayed_count=len(delayed_phrases),
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._model,
             messages=messages,
             response_format=_LLMFeedback,

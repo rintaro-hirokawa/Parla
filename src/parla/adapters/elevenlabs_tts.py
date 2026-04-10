@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import os
 from typing import Any
@@ -100,7 +101,8 @@ class ElevenLabsTTSAdapter:
             voice_id=voice_id,
         )
 
-        response = self._client.text_to_speech.convert_with_timestamps(
+        response = await asyncio.to_thread(
+            self._client.text_to_speech.convert_with_timestamps,
             voice_id=voice_id,
             text=text,
             model_id="eleven_multilingual_v2",

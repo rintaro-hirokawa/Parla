@@ -6,6 +6,7 @@ Stage 2: Transcription + Context → Feedback (Flash)
 Prompts and pipeline design from verification/v2_item_extraction.
 """
 
+import asyncio
 import base64
 from collections.abc import Sequence
 
@@ -309,7 +310,7 @@ class GeminiFeedbackAdapter:
             model=self._stage1_model,
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._stage1_model,
             messages=messages,
             response_format=_LLMTranscription,
@@ -362,7 +363,7 @@ class GeminiFeedbackAdapter:
             cefr_level=cefr_level,
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._stage2_model,
             messages=messages,
             response_format=_LLMFeedback,

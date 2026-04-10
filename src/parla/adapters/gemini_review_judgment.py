@@ -7,6 +7,7 @@ Judges whether the target learning item pattern was used correctly.
 Based on 12-evaluation-criteria.md Block 1/3 template.
 """
 
+import asyncio
 import base64
 
 import litellm
@@ -148,7 +149,7 @@ class GeminiReviewJudgmentAdapter:
             model=self._transcription_model,
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._transcription_model,
             messages=messages,
             response_format=_LLMTranscription,
@@ -198,7 +199,7 @@ class GeminiReviewJudgmentAdapter:
             target_pattern=target_pattern,
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._judgment_model,
             messages=messages,
             response_format=_LLMReviewJudgment,

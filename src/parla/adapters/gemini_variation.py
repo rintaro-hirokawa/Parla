@@ -3,6 +3,7 @@
 Implements the history-based method (V7 Phase C) for grammatical diversity.
 """
 
+import asyncio
 from collections.abc import Sequence
 
 import litellm
@@ -208,7 +209,7 @@ class GeminiVariationAdapter:
             history_count=len(past_variations),
         )
 
-        response = await litellm.acompletion(
+        response = await asyncio.to_thread(litellm.completion,
             model=self._model,
             messages=messages,
             response_format=LLMVariationResult,
