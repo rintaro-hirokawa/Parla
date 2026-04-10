@@ -4,7 +4,19 @@ from datetime import date
 from uuid import UUID
 
 from parla.domain.session import SessionPattern
+from parla.domain.source import CEFRLevel, EnglishVariant
 from parla.event_bus import Event
+
+# --- Slice 7: User Settings ---
+
+
+class SettingsChanged(Event, frozen=True):
+    """User settings have been updated."""
+
+    cefr_level: CEFRLevel
+    english_variant: EnglishVariant
+    phonetic_display: bool
+
 
 # --- Slice 1: Source registration & passage generation ---
 

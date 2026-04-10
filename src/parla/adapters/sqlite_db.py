@@ -146,6 +146,13 @@ CREATE TABLE IF NOT EXISTS passage_achievements (
 CREATE INDEX IF NOT EXISTS idx_overlapping_passage ON overlapping_results(passage_id);
 CREATE INDEX IF NOT EXISTS idx_live_delivery_passage ON live_delivery_results(passage_id);
 
+CREATE TABLE IF NOT EXISTS user_settings (
+    id                INTEGER PRIMARY KEY CHECK (id = 1),
+    cefr_level        TEXT NOT NULL DEFAULT 'B1',
+    english_variant   TEXT NOT NULL DEFAULT 'American',
+    phonetic_display  INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS session_menus (
     id                   TEXT PRIMARY KEY,
     target_date          TEXT NOT NULL,
@@ -190,6 +197,7 @@ def reset_db(conn: sqlite3.Connection) -> None:
     conn.executescript("""\
         DROP TABLE IF EXISTS session_states;
         DROP TABLE IF EXISTS session_menus;
+        DROP TABLE IF EXISTS user_settings;
         DROP TABLE IF EXISTS passage_achievements;
         DROP TABLE IF EXISTS live_delivery_results;
         DROP TABLE IF EXISTS overlapping_results;
