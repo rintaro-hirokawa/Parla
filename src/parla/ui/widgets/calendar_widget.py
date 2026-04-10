@@ -48,12 +48,8 @@ class CalendarWidget(QCalendarWidget):
         session_count = self._qdate_markers.get(qdate)
         if session_count is not None and session_count > 0:
             alpha = min(255, 100 + session_count * 50)
-            color = QColor(
-                theme.ACCENT_TEAL.red(),
-                theme.ACCENT_TEAL.green(),
-                theme.ACCENT_TEAL.blue(),
-                alpha,
-            )
+            color = QColor(theme.ACCENT_TEAL)
+            color.setAlpha(alpha)
             dot_radius = 3
             cx = rect.center().x()
             cy = rect.bottom() - dot_radius - 2

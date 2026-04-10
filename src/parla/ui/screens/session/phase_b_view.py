@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 class FeedbackCard(QWidget):
     """Single sentence feedback display."""
 
+    _ERROR_STYLE = f"color: {theme.rgb(theme.ERROR)}; background: transparent;"
+
     def __init__(self, index: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._index = index
@@ -41,8 +43,7 @@ class FeedbackCard(QWidget):
         self._status_label.setText("正解" if is_acceptable else "要復習")
 
     def set_error(self, message: str) -> None:
-        color = f"rgb({theme.ERROR.red()}, {theme.ERROR.green()}, {theme.ERROR.blue()})"
-        self._status_label.setStyleSheet(f"color: {color}; background: transparent;")
+        self._status_label.setStyleSheet(self._ERROR_STYLE)
         self._status_label.setText(f"エラー: {message}")
 
     def set_retry_status(self, attempt: int, correct: bool) -> None:

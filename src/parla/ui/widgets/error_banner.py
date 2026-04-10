@@ -20,7 +20,7 @@ class ErrorBanner(QWidget):
 
         self._message_label = QLabel()
         self._message_label.setWordWrap(True)
-        self._message_label.setStyleSheet(f"color: {_rgb(theme.ERROR)}; background: transparent;")
+        self._message_label.setStyleSheet(f"color: {theme.rgb(theme.ERROR)}; background: transparent;")
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, theme.SPACING_SM, 0, theme.SPACING_SM)
@@ -52,7 +52,3 @@ class ErrorBanner(QWidget):
         """Hide the banner and clear the message."""
         self._message_label.setText("")
         self.hide()
-
-
-def _rgb(color: theme.QColor) -> str:  # noqa: F811
-    return f"rgb({color.red()}, {color.green()}, {color.blue()})"
