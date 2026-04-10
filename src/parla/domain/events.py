@@ -1,9 +1,9 @@
 """Domain events. All events are defined in this single file for discoverability."""
 
 from datetime import date
-from typing import Literal
 from uuid import UUID
 
+from parla.domain.session import SessionPattern
 from parla.event_bus import Event
 
 # --- Slice 1: Source registration & passage generation ---
@@ -180,7 +180,7 @@ class MenuComposed(Event, frozen=True):
 
     menu_id: UUID
     target_date: date
-    pattern: Literal["a", "b", "c"]
+    pattern: SessionPattern
     block_count: int
 
 

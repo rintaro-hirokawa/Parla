@@ -24,18 +24,17 @@ from parla.domain.session import (
     select_pattern,
 )
 from parla.domain.source import Source
-from parla.domain.variation import Variation
+from parla.domain.srs import SRSConfig
 from parla.event_bus import EventBus
 from parla.ports.feedback_repository import FeedbackRepository
 from parla.ports.learning_item_repository import LearningItemRepository
 from parla.ports.session_repository import SessionRepository
 from parla.ports.source_repository import SourceRepository
-from parla.ports.variation_generation import PastVariationInfo, VariationGenerationPort
+from parla.ports.variation_generation import VariationGenerationPort
 from parla.ports.variation_repository import VariationRepository
+from parla.services.variation_helper import generate_and_save_variation
 
 logger = structlog.get_logger()
-
-_MAX_HISTORY_FOR_PROMPT = 10
 
 
 class SessionService:
@@ -51,6 +50,7 @@ class SessionService:
         variation_generator: VariationGenerationPort,
         feedback_repo: FeedbackRepository,
         config: SessionConfig,
+        srs_config: SRSConfig,
     ) -> None:
         self._bus = event_bus
         self._session_repo = session_repo
@@ -60,6 +60,7 @@ class SessionService:
         self._variation_generator = variation_generator
         self._feedback_repo = feedback_repo
         self._config = config
+        self._srs_config = srs_config
 
     # --- Menu Composition ---
 
@@ -75,7 +76,7 @@ class SessionService:
 
         review_item_ids: list[UUID] = []
         if pattern in ("a", "b"):
-            due_items = self._item_repo.get_due_items(today, limit=self._config.review_limit)
+            due_items = self._item_repo.get_due_items(today, limit=self._srs_config.review_limit)
             review_item_ids = [item.id for item in due_items]
 
         passage_ids: list[UUID] = []
@@ -144,7 +145,6 @@ class SessionService:
             )
             if not has_feedback:
                 return [passage.id]
-        # All passages learned — return the first one as fallback
         if passages:
             return [passages[0].id]
         return []
@@ -205,35 +205,19 @@ class SessionService:
                 failure += 1
                 continue
 
-            # Find the source for context via sentence → passage → source
-            source = self._find_source_for_item(item.source_sentence_id)
+            source = self._source_repo.get_source_by_sentence_id(item.source_sentence_id)
             if source is None:
                 logger.error("source_not_found_for_item", item_id=str(item_id))
                 failure += 1
                 continue
 
             try:
-                past_variations = self._variation_repo.get_variations_by_item(item_id)
-                past_info = [PastVariationInfo(ja=v.ja, en=v.en) for v in past_variations[-_MAX_HISTORY_FOR_PROMPT:]]
-
-                raw = await self._variation_generator.generate_variation(
-                    learning_item_pattern=item.pattern,
-                    learning_item_explanation=item.explanation,
-                    cefr_level=source.cefr_level,
-                    english_variant=source.english_variant,
-                    source_text=source.text,
-                    past_variations=past_info,
+                await generate_and_save_variation(
+                    item=item,
+                    source=source,
+                    variation_repo=self._variation_repo,
+                    variation_generator=self._variation_generator,
                 )
-
-                variation = Variation(
-                    learning_item_id=item.id,
-                    source_id=source.id,
-                    ja=raw.ja,
-                    en=raw.en,
-                    hint1=raw.hint1,
-                    hint2=raw.hint2,
-                )
-                self._variation_repo.save_variation(variation)
                 success += 1
 
             except Exception:
@@ -247,18 +231,6 @@ class SessionService:
                 failure_count=failure,
             )
         )
-
-    def _find_source_for_item(self, source_sentence_id: UUID) -> Source | None:
-        """Trace source_sentence_id → passage → source."""
-        # Look through all sources to find the one containing the sentence
-        sources = self._source_repo.get_active_sources()
-        for source in sources:
-            passages = self._source_repo.get_passages_by_source(source.id)
-            for passage in passages:
-                for sentence in passage.sentences:
-                    if sentence.id == source_sentence_id:
-                        return source
-        return None
 
     # --- Session Lifecycle ---
 
@@ -290,51 +262,39 @@ class SessionService:
 
     def interrupt_session(self, session_id: UUID) -> None:
         """Record interruption at current block."""
-        state = self._session_repo.get_state(session_id)
-        if state is None:
-            msg = f"Session not found: {session_id}"
-            raise ValueError(msg)
-
-        state.status = "interrupted"
-        state.interrupted_at = datetime.now()
-        self._session_repo.update_state(state)
+        state = self._get_state(session_id)
+        updated = state.model_copy(update={"status": "interrupted", "interrupted_at": datetime.now()})
+        self._session_repo.update_state(updated)
 
         self._bus.emit(
             SessionInterrupted(
                 session_id=session_id,
-                block_index=state.current_block_index,
+                block_index=updated.current_block_index,
             )
         )
 
     def resume_session(self, session_id: UUID) -> SessionState:
         """Resume an interrupted session at the same block."""
-        state = self._session_repo.get_state(session_id)
-        if state is None:
-            msg = f"Session not found: {session_id}"
-            raise ValueError(msg)
+        state = self._get_state(session_id)
         if state.status != "interrupted":
             msg = f"Session is not interrupted: {session_id}"
             raise ValueError(msg)
 
-        state.status = "in_progress"
-        state.interrupted_at = None
-        self._session_repo.update_state(state)
+        updated = state.model_copy(update={"status": "in_progress", "interrupted_at": None})
+        self._session_repo.update_state(updated)
 
         self._bus.emit(
             SessionResumed(
                 session_id=session_id,
-                block_index=state.current_block_index,
+                block_index=updated.current_block_index,
             )
         )
 
-        return state
+        return updated
 
     def advance_block(self, session_id: UUID) -> SessionState:
         """Move to the next block. If last block, complete the session."""
-        state = self._session_repo.get_state(session_id)
-        if state is None:
-            msg = f"Session not found: {session_id}"
-            raise ValueError(msg)
+        state = self._get_state(session_id)
 
         menu = self._session_repo.get_menu(state.menu_id)
         if menu is None:
@@ -344,14 +304,20 @@ class SessionService:
         next_index = state.current_block_index + 1
 
         if next_index >= len(menu.blocks):
-            state.status = "completed"
-            state.completed_at = datetime.now()
-            self._session_repo.update_state(state)
+            updated = state.model_copy(update={"status": "completed", "completed_at": datetime.now()})
+            self._session_repo.update_state(updated)
             self._bus.emit(SessionCompleted(session_id=session_id))
         else:
-            state.current_block_index = next_index
-            self._session_repo.update_state(state)
+            updated = state.model_copy(update={"current_block_index": next_index})
+            self._session_repo.update_state(updated)
 
+        return updated
+
+    def _get_state(self, session_id: UUID) -> SessionState:
+        state = self._session_repo.get_state(session_id)
+        if state is None:
+            msg = f"Session not found: {session_id}"
+            raise ValueError(msg)
         return state
 
     # --- Menu Freshness ---

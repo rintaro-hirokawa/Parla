@@ -36,16 +36,7 @@ class SQLiteSourceRepository:
         row = self._conn.execute("SELECT * FROM sources WHERE id = ?", (str(source_id),)).fetchone()
         if row is None:
             return None
-        return Source(
-            id=UUID(row["id"]),
-            title=row["title"],
-            text=row["text"],
-            cefr_level=row["cefr_level"],
-            english_variant=row["english_variant"],
-            status=row["status"],
-            created_at=row["created_at"],
-            updated_at=row["updated_at"],
-        )
+        return self._row_to_source(row)
 
     def update_source(self, source: Source) -> None:
         self._conn.execute(
@@ -166,16 +157,29 @@ class SQLiteSourceRepository:
         rows = self._conn.execute(
             "SELECT * FROM sources WHERE status IN ('not_started', 'in_progress') ORDER BY created_at",
         ).fetchall()
-        return [
-            Source(
-                id=UUID(r["id"]),
-                title=r["title"],
-                text=r["text"],
-                cefr_level=r["cefr_level"],
-                english_variant=r["english_variant"],
-                status=r["status"],
-                created_at=r["created_at"],
-                updated_at=r["updated_at"],
-            )
-            for r in rows
-        ]
+        return [self._row_to_source(r) for r in rows]
+
+    def get_source_by_sentence_id(self, sentence_id: UUID) -> Source | None:
+        row = self._conn.execute(
+            """SELECT src.* FROM sources src
+               JOIN passages p ON p.source_id = src.id
+               JOIN sentences s ON s.passage_id = p.id
+               WHERE s.id = ?""",
+            (str(sentence_id),),
+        ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_source(row)
+
+    @staticmethod
+    def _row_to_source(row: sqlite3.Row) -> Source:
+        return Source(
+            id=UUID(row["id"]),
+            title=row["title"],
+            text=row["text"],
+            cefr_level=row["cefr_level"],
+            english_variant=row["english_variant"],
+            status=row["status"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )

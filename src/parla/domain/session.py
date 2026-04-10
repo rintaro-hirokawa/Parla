@@ -19,7 +19,6 @@ type SessionStatus = Literal["not_started", "in_progress", "completed", "interru
 class SessionConfig(BaseModel, frozen=True):
     """Session composition parameters — loaded from config, immutable at runtime."""
 
-    review_limit: int = 20
     review_overflow_threshold: int = 30
     estimated_minutes_per_review: float = 2.0
     estimated_minutes_per_passage: float = 10.0

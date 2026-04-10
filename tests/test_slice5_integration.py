@@ -31,6 +31,7 @@ from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
 from parla.domain.session import SessionConfig
 from parla.domain.source import Source
+from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
 from parla.ports.variation_generation import PastVariationInfo, RawVariation
 from parla.services.session_service import SessionService
@@ -122,6 +123,7 @@ def _setup(*, item_count: int = 5, fail_variation: bool = False):
     variation_generator = FakeVariationGenerator(fail=fail_variation)
     feedback_repo = FakeFeedbackRepo()
     config = SessionConfig()
+    srs_config = SRSConfig()
 
     # Set up test data
     source = Source(text="a" * 200, cefr_level="B1", english_variant="American")
@@ -174,6 +176,7 @@ def _setup(*, item_count: int = 5, fail_variation: bool = False):
         variation_generator=variation_generator,
         feedback_repo=feedback_repo,
         config=config,
+        srs_config=srs_config,
     )
 
     bus.on_async(MenuConfirmed)(service.handle_menu_confirmed)

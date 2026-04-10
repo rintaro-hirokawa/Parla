@@ -26,3 +26,7 @@ class SourceRepository(Protocol):
     def get_active_sources(self) -> Sequence[Source]:
         """Get sources with status not_started or in_progress."""
         ...
+
+    def get_source_by_sentence_id(self, sentence_id: UUID) -> Source | None:
+        """Get the source that contains the given sentence (via JOIN)."""
+        ...

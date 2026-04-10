@@ -26,12 +26,11 @@ from parla.ports.learning_item_repository import LearningItemRepository
 from parla.ports.review_attempt_repository import ReviewAttemptRepository
 from parla.ports.review_judgment import ReviewJudgmentPort
 from parla.ports.source_repository import SourceRepository
-from parla.ports.variation_generation import PastVariationInfo, VariationGenerationPort
+from parla.ports.variation_generation import VariationGenerationPort
 from parla.ports.variation_repository import VariationRepository
+from parla.services.variation_helper import generate_and_save_variation
 
 logger = structlog.get_logger()
-
-_MAX_HISTORY_FOR_PROMPT = 10
 
 
 @dataclass(frozen=True)
@@ -90,27 +89,12 @@ class ReviewService:
             return
 
         try:
-            past_variations = self._variation_repo.get_variations_by_item(item.id)
-            past_info = [PastVariationInfo(ja=v.ja, en=v.en) for v in past_variations[-_MAX_HISTORY_FOR_PROMPT:]]
-
-            raw = await self._variation_generator.generate_variation(
-                learning_item_pattern=item.pattern,
-                learning_item_explanation=item.explanation,
-                cefr_level=source.cefr_level,
-                english_variant=source.english_variant,
-                source_text=source.text,
-                past_variations=past_info,
+            variation = await generate_and_save_variation(
+                item=item,
+                source=source,
+                variation_repo=self._variation_repo,
+                variation_generator=self._variation_generator,
             )
-
-            variation = Variation(
-                learning_item_id=item.id,
-                source_id=source.id,
-                ja=raw.ja,
-                en=raw.en,
-                hint1=raw.hint1,
-                hint2=raw.hint2,
-            )
-            self._variation_repo.save_variation(variation)
 
             self._bus.emit(
                 VariationReady(

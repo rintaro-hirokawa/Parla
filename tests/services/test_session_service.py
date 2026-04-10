@@ -21,6 +21,7 @@ from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
 from parla.domain.session import SessionConfig, SessionMenu, SessionState
 from parla.domain.source import Source
+from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
 from parla.ports.variation_generation import PastVariationInfo, RawVariation
 from parla.services.session_service import SessionService
@@ -90,6 +91,13 @@ class FakeSourceRepo:
 
     def get_active_sources(self) -> list[Source]:
         return [s for s in self._sources.values() if s.status in ("not_started", "in_progress")]
+
+    def get_source_by_sentence_id(self, sentence_id: UUID) -> Source | None:
+        for passage in self._passages.values():
+            for sentence in passage.sentences:
+                if sentence.id == sentence_id:
+                    return self._sources.get(passage.source_id)
+        return None
 
 
 class FakeItemRepo:
@@ -250,6 +258,7 @@ def _setup(
     variation_generator = FakeVariationGenerator(fail=fail_variation)
     feedback_repo = FakeFeedbackRepo()
     config = SessionConfig()
+    srs_config = SRSConfig()
 
     source = _make_source()
     source_repo.save_source(source)
@@ -275,6 +284,7 @@ def _setup(
         variation_generator=variation_generator,
         feedback_repo=feedback_repo,
         config=config,
+        srs_config=srs_config,
     )
 
     collector = EventCollector(bus)
