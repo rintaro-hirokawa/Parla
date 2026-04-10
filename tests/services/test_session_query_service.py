@@ -187,6 +187,32 @@ class TestGetTodayDashboard:
         assert dash.menu_confirmed is False
         assert dash.blocks == ()
 
+    def test_has_sources_false_when_no_sources(self) -> None:
+        service = SessionQueryService(
+            session_repo=FakeSessionRepository(),
+            source_repo=FakeSourceRepository(),
+            practice_repo=FakePracticeRepository(),
+            item_repo=FakeLearningItemRepository(),
+            review_attempt_repo=FakeReviewAttemptRepository(),
+        )
+        dash = service.get_today_dashboard(today=date(2026, 4, 10))
+        assert dash.has_sources is False
+
+    def test_has_sources_true_when_source_exists(self) -> None:
+        source_repo = FakeSourceRepository()
+        source = _make_source(title="Some Source")
+        source_repo.save_source(source)
+
+        service = SessionQueryService(
+            session_repo=FakeSessionRepository(),
+            source_repo=source_repo,
+            practice_repo=FakePracticeRepository(),
+            item_repo=FakeLearningItemRepository(),
+            review_attempt_repo=FakeReviewAttemptRepository(),
+        )
+        dash = service.get_today_dashboard(today=date(2026, 4, 10))
+        assert dash.has_sources is True
+
     def test_confirmed_menu(self) -> None:
         session_repo = FakeSessionRepository()
         source_repo = FakeSourceRepository()

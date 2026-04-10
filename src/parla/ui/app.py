@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
             self._container.settings_service,
         )
         view = SourceRegistrationView(vm)
+        vm.navigate_back.connect(lambda: self._nav.pop_screen())
         vm.load_settings()
         self._push_screen_with_vm(view, vm)
 

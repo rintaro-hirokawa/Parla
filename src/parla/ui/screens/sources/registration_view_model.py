@@ -24,6 +24,7 @@ class SourceRegistrationViewModel(BaseViewModel):
     generation_progress = Signal(str)
     generation_completed = Signal(int, int)  # passage_count, sentence_count
     generation_failed = Signal(str)
+    navigate_back = Signal()
     cefr_level_loaded = Signal(str)
 
     def __init__(
@@ -90,6 +91,7 @@ class SourceRegistrationViewModel(BaseViewModel):
     def _on_generation_completed(self, event: PassageGenerationCompleted) -> None:
         if event.source_id == self._pending_source_id:
             self.generation_completed.emit(event.passage_count, event.total_sentences)
+            self.navigate_back.emit()
 
     def _on_generation_failed(self, event: PassageGenerationFailed) -> None:
         if event.source_id == self._pending_source_id:

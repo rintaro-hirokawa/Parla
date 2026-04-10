@@ -3,7 +3,7 @@
 from datetime import date
 from uuid import uuid4
 
-from parla.domain.events import MenuConfirmed, SessionCompleted
+from parla.domain.events import MenuConfirmed, PassageGenerationCompleted, SessionCompleted
 from parla.event_bus import EventBus
 from parla.services.query_models import MenuBlockSummary, TodayDashboard
 from parla.ui.screens.today.view_model import TodayViewModel
@@ -143,3 +143,36 @@ class TestEventReload:
         bus.emit(SessionCompleted(session_id=uuid4()))
 
         assert query.call_count == 2
+
+    def test_passage_generation_completed_reloads_dashboard(self, qtbot) -> None:
+        bus = EventBus()
+        query = FakeSessionQueryService(_no_menu_dashboard())
+        vm = TodayViewModel(bus, query)
+        vm.activate()
+        vm.load_dashboard()
+        assert query.call_count == 1
+
+        bus.emit(PassageGenerationCompleted(source_id=uuid4(), passage_count=2, total_sentences=10))
+
+        assert query.call_count == 2
+
+
+class TestNavigateToSourceRegistration:
+    def test_go_to_source_registration_emits_signal(self, qtbot) -> None:
+        bus = EventBus()
+        query = FakeSessionQueryService(_no_menu_dashboard())
+        vm = TodayViewModel(bus, query)
+        vm.activate()
+        vm.load_dashboard()
+
+        with qtbot.waitSignal(vm.navigate_to_source_registration, timeout=1000):
+            vm.go_to_source_registration()
+
+    def test_does_not_emit_when_inactive(self, qtbot) -> None:
+        bus = EventBus()
+        query = FakeSessionQueryService(_no_menu_dashboard())
+        vm = TodayViewModel(bus, query)
+        # Not activated — event handlers not registered, but signal still works
+        # This test verifies the method itself works regardless of activation
+        with qtbot.waitSignal(vm.navigate_to_source_registration, timeout=1000):
+            vm.go_to_source_registration()

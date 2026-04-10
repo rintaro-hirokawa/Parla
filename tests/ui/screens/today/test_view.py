@@ -100,6 +100,58 @@ class TestUnconfirmedMenuDisplay:
         assert not view._start_button.isEnabled()
 
 
+class TestResumableSession:
+    def test_shows_resume_label(self, qtbot) -> None:
+        dash = TodayDashboard(
+            has_sources=True,
+            has_menu=False,
+            has_resumable_session=True,
+            resumable_session_id=uuid4(),
+        )
+        view, *_ = _make_view(qtbot, dash)
+        assert not view._resume_label.isHidden()
+
+    def test_hides_resume_label_when_no_session(self, qtbot) -> None:
+        dash = TodayDashboard(has_sources=True, has_menu=False)
+        view, *_ = _make_view(qtbot, dash)
+        assert view._resume_label.isHidden()
+
+
+class TestDashboardStateTransition:
+    def test_transitions_from_no_source_to_has_menu(self, qtbot) -> None:
+        """ダッシュボード再読み込みで表示が切り替わることを検証。"""
+        bus = EventBus()
+        # Start with no sources
+        dash1 = TodayDashboard(has_sources=False, has_menu=False)
+        query = FakeSessionQueryService(dash1)
+        vm = TodayViewModel(bus, query)
+        view = TodayView(vm)
+        qtbot.addWidget(view)
+        vm.activate()
+        vm.load_dashboard()
+
+        assert not view._no_source_widget.isHidden()
+        assert view._blocks_widget.isHidden()
+
+        # Simulate: sources added and menu composed
+        dash2 = TodayDashboard(
+            has_sources=True,
+            has_menu=True,
+            menu_confirmed=True,
+            menu_id=uuid4(),
+            pattern="c",
+            blocks=(MenuBlockSummary(block_type="new_material", item_count=2, estimated_minutes=15.0),),
+            total_estimated_minutes=15.0,
+        )
+        query._dashboard = dash2
+        vm.load_dashboard()
+
+        assert view._no_source_widget.isHidden()
+        assert view._no_menu_label.isHidden()
+        assert not view._blocks_widget.isHidden()
+        assert view._start_button.isEnabled()
+
+
 class TestStartButton:
     def test_click_emits_signal(self, qtbot) -> None:
         dash = TodayDashboard(

@@ -173,3 +173,15 @@ class TestGenerationEvents:
 
         with qtbot.assertNotEmitted(vm.generation_progress):
             bus.emit(PassageGenerationStarted(source_id=other_id))
+
+    def test_generation_completed_emits_navigate_back(self, qtbot) -> None:
+        vm, bus, source_id = self._make_vm_with_source(qtbot)
+
+        with qtbot.waitSignal(vm.navigate_back, timeout=1000):
+            bus.emit(PassageGenerationCompleted(source_id=source_id, passage_count=2, total_sentences=10))
+
+    def test_generation_failed_does_not_navigate_back(self, qtbot) -> None:
+        vm, bus, source_id = self._make_vm_with_source(qtbot)
+
+        with qtbot.assertNotEmitted(vm.navigate_back):
+            bus.emit(PassageGenerationFailed(source_id=source_id, error_message="error"))
