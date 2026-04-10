@@ -1,61 +1,17 @@
 """Tests for DetailViewModel (SCREEN-C3)."""
 
-from datetime import date, datetime
+from datetime import date
 from uuid import uuid4
 
 from parla.domain.events import SRSUpdated
 from parla.event_bus import EventBus
-from parla.services.query_models import LearningItemDetail, ReviewHistoryEntry, WpmDataPoint
 from parla.ui.screens.items.detail_view_model import DetailViewModel
-
-
-def _make_detail(**overrides) -> LearningItemDetail:
-    defaults = {
-        "id": uuid4(),
-        "pattern": "present perfect",
-        "explanation": "現在完了形",
-        "category": "文法",
-        "status": "auto_stocked",
-        "srs_stage": 2,
-        "ease_factor": 1.3,
-        "correct_context_count": 3,
-        "source_title": "Test Source",
-        "source_sentence_ja": "テスト文",
-        "source_sentence_en": "Test sentence",
-        "first_utterance": "I have been there",
-        "review_history": (
-            ReviewHistoryEntry(
-                attempt_date=datetime(2026, 3, 1),
-                variation_ja="テスト問題",
-                variation_en="test variation",
-                correct=True,
-                item_used=True,
-                hint_level=0,
-                attempt_number=1,
-            ),
-        ),
-        "wpm_trend": (
-            WpmDataPoint(recorded_at=datetime(2026, 3, 1), wpm=120.0),
-        ),
-        "created_at": datetime(2026, 1, 1),
-    }
-    defaults.update(overrides)
-    return LearningItemDetail(**defaults)
-
-
-class FakeItemQueryService:
-    def __init__(self, detail=None):
-        self._detail = detail
-        self.detail_calls: list = []
-
-    def get_item_detail(self, item_id):
-        self.detail_calls.append(item_id)
-        return self._detail
+from tests.ui.screens.items.conftest import FakeItemQueryService, make_detail
 
 
 class TestLoadDetail:
     def test_load_detail_emits_detail_loaded(self, qtbot) -> None:
-        detail = _make_detail()
+        detail = make_detail()
         service = FakeItemQueryService(detail=detail)
         vm = DetailViewModel(EventBus(), service)
 
@@ -87,7 +43,7 @@ class TestNavigation:
 class TestEventHandling:
     def test_srs_updated_reloads_matching_item(self, qtbot) -> None:
         item_id = uuid4()
-        detail = _make_detail(id=item_id)
+        detail = make_detail(id=item_id)
         service = FakeItemQueryService(detail=detail)
         bus = EventBus()
         vm = DetailViewModel(bus, service)
@@ -106,7 +62,7 @@ class TestEventHandling:
 
     def test_srs_updated_ignores_different_item(self, qtbot) -> None:
         item_id = uuid4()
-        detail = _make_detail(id=item_id)
+        detail = make_detail(id=item_id)
         service = FakeItemQueryService(detail=detail)
         bus = EventBus()
         vm = DetailViewModel(bus, service)
@@ -115,7 +71,7 @@ class TestEventHandling:
 
         service.detail_calls.clear()
         bus.emit(SRSUpdated(
-            learning_item_id=uuid4(),  # different item
+            learning_item_id=uuid4(),
             old_stage=0, new_stage=1,
             next_review_date=date(2026, 5, 1),
         ))

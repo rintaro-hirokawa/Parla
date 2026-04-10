@@ -1,53 +1,12 @@
 """Tests for HistoryView (SCREEN-C4)."""
 
-from datetime import date, datetime
+from datetime import date
 
 from parla.event_bus import EventBus
-from parla.services.query_models import (
-    CalendarMarker,
-    DailySummary,
-    HistoryOverview,
-    WpmDataPoint,
-)
+from parla.services.query_models import DailySummary
 from parla.ui.screens.history.view import HistoryView
 from parla.ui.screens.history.view_model import HistoryViewModel
-
-
-def _make_overview() -> HistoryOverview:
-    return HistoryOverview(
-        calendar_markers=(
-            CalendarMarker(date=date(2026, 4, 1), session_count=1),
-            CalendarMarker(date=date(2026, 4, 5), session_count=2),
-        ),
-        wpm_trend=(
-            WpmDataPoint(recorded_at=datetime(2026, 4, 1), wpm=110.0),
-            WpmDataPoint(recorded_at=datetime(2026, 4, 5), wpm=125.0),
-        ),
-    )
-
-
-def _make_summary() -> DailySummary:
-    return DailySummary(
-        date=date(2026, 4, 5),
-        session_count=2,
-        passage_count=3,
-        new_item_count=5,
-        review_count=10,
-        review_correct_count=8,
-        average_wpm=130.0,
-    )
-
-
-class FakeHistoryQueryService:
-    def __init__(self, overview=None, summary=None):
-        self._overview = overview or HistoryOverview()
-        self._summary = summary or DailySummary(date=date(2026, 1, 1))
-
-    def get_history_overview(self):
-        return self._overview
-
-    def get_daily_summary(self, target_date):
-        return self._summary
+from tests.ui.screens.history.conftest import FakeHistoryQueryService, make_overview, make_summary
 
 
 def _make_view(qtbot, overview=None, summary=None):
@@ -62,7 +21,7 @@ def _make_view(qtbot, overview=None, summary=None):
 
 class TestOverviewDisplay:
     def test_calendar_markers_set(self, qtbot) -> None:
-        overview = _make_overview()
+        overview = make_overview()
         view, vm, _bus = _make_view(qtbot, overview=overview)
         vm.load_overview()
 
@@ -72,7 +31,7 @@ class TestOverviewDisplay:
         assert markers[date(2026, 4, 5)] == 2
 
     def test_wpm_chart_populated(self, qtbot) -> None:
-        overview = _make_overview()
+        overview = make_overview()
         view, vm, _bus = _make_view(qtbot, overview=overview)
         vm.load_overview()
 
@@ -81,7 +40,7 @@ class TestOverviewDisplay:
 
 class TestDailySummary:
     def test_summary_labels_populated(self, qtbot) -> None:
-        summary = _make_summary()
+        summary = make_summary()
         view, vm, _bus = _make_view(qtbot, summary=summary)
         vm.select_date(date(2026, 4, 5))
 
@@ -89,7 +48,7 @@ class TestDailySummary:
         assert "3" in view._passage_count_label.text()
         assert "5" in view._new_item_label.text()
         assert "10" in view._review_count_label.text()
-        assert "80" in view._review_accuracy_label.text()  # 8/10 = 80%
+        assert "80" in view._review_accuracy_label.text()
         assert "130" in view._avg_wpm_label.text()
 
     def test_summary_zero_reviews_shows_placeholder(self, qtbot) -> None:
@@ -99,10 +58,7 @@ class TestDailySummary:
             review_count=0,
             review_correct_count=0,
         )
-        view, vm, _bus = _make_view(
-            qtbot,
-            summary=summary,
-        )
+        view, vm, _bus = _make_view(qtbot, summary=summary)
         vm.select_date(date(2026, 4, 1))
 
         assert "---" in view._review_accuracy_label.text()
@@ -110,7 +66,7 @@ class TestDailySummary:
 
 class TestCalendarInteraction:
     def test_date_click_loads_summary(self, qtbot) -> None:
-        summary = _make_summary()
+        summary = make_summary()
         view, vm, _bus = _make_view(qtbot, summary=summary)
 
         with qtbot.waitSignal(vm.daily_summary_loaded, timeout=1000):

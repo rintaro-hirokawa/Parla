@@ -1,7 +1,5 @@
 """View for learning item list screen (SCREEN-C2)."""
 
-from typing import cast
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
@@ -17,9 +15,26 @@ from parla.domain.learning_item import LearningItemCategory, LearningItemStatus
 from parla.services.query_models import LearningItemRow
 from parla.ui.screens.items.list_view_model import ListViewModel
 
-_CATEGORIES = ("全て", "文法", "語彙", "コロケーション", "構文", "表現")
-_STATUSES = ("全て", "auto_stocked", "review_later", "dismissed")
-_SRS_STAGES = ("全て", "0", "1", "2", "3", "4", "5", "6", "7", "8")
+CATEGORY_OPTIONS: list[tuple[LearningItemCategory | None, str]] = [
+    (None, "全て"),
+    ("文法", "文法"),
+    ("語彙", "語彙"),
+    ("コロケーション", "コロケーション"),
+    ("構文", "構文"),
+    ("表現", "表現"),
+]
+
+STATUS_OPTIONS: list[tuple[LearningItemStatus | None, str]] = [
+    (None, "全て"),
+    ("auto_stocked", "auto_stocked"),
+    ("review_later", "review_later"),
+    ("dismissed", "dismissed"),
+]
+
+SRS_OPTIONS: list[tuple[int | None, str]] = [
+    (None, "全て"),
+    *((i, str(i)) for i in range(9)),
+]
 
 
 class ListView(QWidget):
@@ -38,15 +53,18 @@ class ListView(QWidget):
         filter_bar = QHBoxLayout()
 
         self._category_combo = QComboBox()
-        self._category_combo.addItems(_CATEGORIES)
+        for _, label in CATEGORY_OPTIONS:
+            self._category_combo.addItem(label)
         filter_bar.addWidget(self._category_combo)
 
         self._status_combo = QComboBox()
-        self._status_combo.addItems(_STATUSES)
+        for _, label in STATUS_OPTIONS:
+            self._status_combo.addItem(label)
         filter_bar.addWidget(self._status_combo)
 
         self._srs_combo = QComboBox()
-        self._srs_combo.addItems(_SRS_STAGES)
+        for _, label in SRS_OPTIONS:
+            self._srs_combo.addItem(label)
         filter_bar.addWidget(self._srs_combo)
 
         self._clear_btn = QPushButton("リセット")
@@ -65,7 +83,7 @@ class ListView(QWidget):
         self._srs_combo.currentIndexChanged.connect(self._on_filter_changed)
         self._clear_btn.clicked.connect(self._on_clear_filter)
 
-    def _on_items_loaded(self, items: list[LearningItemRow]) -> None:
+    def _on_items_loaded(self, items: tuple[LearningItemRow, ...]) -> None:
         self._item_list.clear()
         for row in items:
             item = QListWidgetItem(f"{row.pattern} ({row.category}) - SRS {row.srs_stage}")
@@ -81,13 +99,9 @@ class ListView(QWidget):
         if self._updating:
             return
 
-        cat_idx = self._category_combo.currentIndex()
-        status_idx = self._status_combo.currentIndex()
-        srs_idx = self._srs_combo.currentIndex()
-
-        category = cast(LearningItemCategory, _CATEGORIES[cat_idx]) if cat_idx > 0 else None
-        status = cast(LearningItemStatus, _STATUSES[status_idx]) if status_idx > 0 else None
-        srs_stage = int(_SRS_STAGES[srs_idx]) if srs_idx > 0 else None
+        category = CATEGORY_OPTIONS[self._category_combo.currentIndex()][0]
+        status = STATUS_OPTIONS[self._status_combo.currentIndex()][0]
+        srs_stage = SRS_OPTIONS[self._srs_combo.currentIndex()][0]
 
         self._vm.apply_filter(category=category, status=status, srs_stage=srs_stage)
 
@@ -97,4 +111,4 @@ class ListView(QWidget):
         self._status_combo.setCurrentIndex(0)
         self._srs_combo.setCurrentIndex(0)
         self._updating = False
-        self._vm.clear_filter()
+        self._vm.apply_filter()

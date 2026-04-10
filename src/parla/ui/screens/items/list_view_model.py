@@ -15,7 +15,7 @@ from parla.ui.base_view_model import BaseViewModel
 class ListViewModel(BaseViewModel):
     """ViewModel for the learning item list (C2) screen."""
 
-    items_loaded = Signal(list)
+    items_loaded = Signal(tuple)
     navigate_to_detail = Signal(object)
 
     def __init__(
@@ -32,7 +32,7 @@ class ListViewModel(BaseViewModel):
 
     def load_items(self) -> None:
         self._items = self._item_query.list_items(filter=self._current_filter)
-        self.items_loaded.emit(list(self._items))
+        self.items_loaded.emit(self._items)
 
     def apply_filter(
         self,
@@ -47,10 +47,6 @@ class ListViewModel(BaseViewModel):
             self._current_filter = LearningItemFilter(
                 category=category, status=status, srs_stage=srs_stage, source_id=source_id,
             )
-        self.load_items()
-
-    def clear_filter(self) -> None:
-        self._current_filter = None
         self.load_items()
 
     def select_item(self, item_id: UUID) -> None:

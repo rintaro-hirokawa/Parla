@@ -1,50 +1,24 @@
 """Tests for ListViewModel (SCREEN-C2)."""
 
-from datetime import date, datetime
+from datetime import date
 from uuid import uuid4
 
 from parla.domain.events import LearningItemStocked, SRSUpdated
 from parla.event_bus import EventBus
-from parla.services.query_models import LearningItemFilter, LearningItemRow
 from parla.ui.screens.items.list_view_model import ListViewModel
-
-
-def _make_row(**overrides) -> LearningItemRow:
-    defaults = {
-        "id": uuid4(),
-        "pattern": "test pattern",
-        "explanation": "test explanation",
-        "category": "文法",
-        "status": "auto_stocked",
-        "srs_stage": 0,
-        "source_title": "Test Source",
-        "source_sentence_ja": "テスト文",
-        "created_at": datetime(2026, 1, 1),
-    }
-    defaults.update(overrides)
-    return LearningItemRow(**defaults)
-
-
-class FakeItemQueryService:
-    def __init__(self, items=()):
-        self._items = items
-        self.list_calls: list[LearningItemFilter | None] = []
-
-    def list_items(self, *, filter=None):
-        self.list_calls.append(filter)
-        return self._items
+from tests.ui.screens.items.conftest import FakeItemQueryService, make_row
 
 
 class TestLoadItems:
     def test_load_items_emits_signal(self, qtbot) -> None:
-        row = _make_row()
+        row = make_row()
         service = FakeItemQueryService(items=(row,))
         vm = ListViewModel(EventBus(), service)
 
         with qtbot.waitSignal(vm.items_loaded, timeout=1000) as blocker:
             vm.load_items()
 
-        assert blocker.args == [[row]]
+        assert blocker.args == [(row,)]
         assert vm.items == (row,)
 
     def test_load_items_empty(self, qtbot) -> None:
@@ -54,7 +28,7 @@ class TestLoadItems:
         with qtbot.waitSignal(vm.items_loaded, timeout=1000) as blocker:
             vm.load_items()
 
-        assert blocker.args == [[]]
+        assert blocker.args == [()]
         assert vm.items == ()
 
 
@@ -82,12 +56,12 @@ class TestFilter:
         assert service.list_calls == [None]
         assert vm.current_filter is None
 
-    def test_clear_filter_resets(self, qtbot) -> None:
+    def test_clear_filter_via_apply(self, qtbot) -> None:
         service = FakeItemQueryService()
         vm = ListViewModel(EventBus(), service)
 
         vm.apply_filter(category="語彙")
-        vm.clear_filter()
+        vm.apply_filter()
 
         assert vm.current_filter is None
         assert service.list_calls[-1] is None
@@ -107,7 +81,7 @@ class TestNavigation:
 
 class TestEventHandling:
     def test_item_stocked_event_triggers_reload(self, qtbot) -> None:
-        row = _make_row()
+        row = make_row()
         service = FakeItemQueryService(items=(row,))
         bus = EventBus()
         vm = ListViewModel(bus, service)
