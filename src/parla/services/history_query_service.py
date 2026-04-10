@@ -43,10 +43,19 @@ class HistoryQueryService:
     def get_daily_summary(self, target_date: date) -> DailySummary:
         """Get learning summary for a specific date."""
         completed_states = self._session_repo.get_completed_states()
-        session_count = sum(
-            1 for s in completed_states
+        day_states = [
+            s for s in completed_states
             if s.completed_at is not None and s.completed_at.date() == target_date
-        )
+        ]
+        session_count = len(day_states)
+
+        passage_count = 0
+        for state in day_states:
+            menu = self._session_repo.get_menu(state.menu_id)
+            if menu is not None:
+                passage_count += sum(
+                    len(b.items) for b in menu.blocks if b.block_type == "new_material"
+                )
 
         all_items = self._item_repo.get_stocked_items()
         new_item_count = sum(
@@ -74,6 +83,7 @@ class HistoryQueryService:
         return DailySummary(
             date=target_date,
             session_count=session_count,
+            passage_count=passage_count,
             new_item_count=new_item_count,
             review_count=review_count,
             review_correct_count=review_correct_count,

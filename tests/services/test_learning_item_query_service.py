@@ -190,12 +190,26 @@ class FakeFeedbackRepository:
         return []
 
 
+def _make_service(
+    *,
+    item_repo: FakeLearningItemRepository | None = None,
+    source_repo: FakeSourceRepository | None = None,
+    variation_repo: FakeVariationRepository | None = None,
+    review_attempt_repo: FakeReviewAttemptRepository | None = None,
+    feedback_repo: FakeFeedbackRepository | None = None,
+) -> LearningItemQueryService:
+    return LearningItemQueryService(
+        item_repo=item_repo or FakeLearningItemRepository(),
+        source_repo=source_repo or FakeSourceRepository(),
+        variation_repo=variation_repo or FakeVariationRepository(),
+        review_attempt_repo=review_attempt_repo or FakeReviewAttemptRepository(),
+        feedback_repo=feedback_repo or FakeFeedbackRepository(),
+    )
+
+
 class TestListItems:
     def test_empty(self) -> None:
-        service = LearningItemQueryService(
-            item_repo=FakeLearningItemRepository(),
-            source_repo=FakeSourceRepository(),
-        )
+        service = _make_service()
         result = service.list_items()
         assert result == ()
 
@@ -212,7 +226,7 @@ class TestListItems:
         item = _make_item(sentence.id)
         item_repo.save_items([item])
 
-        service = LearningItemQueryService(item_repo=item_repo, source_repo=source_repo)
+        service = _make_service(item_repo=item_repo, source_repo=source_repo)
         result = service.list_items()
         assert len(result) == 1
         row = result[0]
@@ -235,7 +249,7 @@ class TestListItems:
         item2 = _make_item(sentence.id, category="語彙")
         item_repo.save_items([item1, item2])
 
-        service = LearningItemQueryService(item_repo=item_repo, source_repo=source_repo)
+        service = _make_service(item_repo=item_repo, source_repo=source_repo)
         result = service.list_items(filter=LearningItemFilter(category="語彙"))
         assert len(result) == 1
         assert result[0].category == "語彙"
@@ -254,7 +268,7 @@ class TestListItems:
         item2 = _make_item(sentence.id, srs_stage=3)
         item_repo.save_items([item1, item2])
 
-        service = LearningItemQueryService(item_repo=item_repo, source_repo=source_repo)
+        service = _make_service(item_repo=item_repo, source_repo=source_repo)
         result = service.list_items(filter=LearningItemFilter(srs_stage=3))
         assert len(result) == 1
         assert result[0].srs_stage == 3
@@ -275,7 +289,7 @@ class TestListItems:
         item2 = _make_item(passage2.sentences[0].id)
         item_repo.save_items([item1, item2])
 
-        service = LearningItemQueryService(item_repo=item_repo, source_repo=source_repo)
+        service = _make_service(item_repo=item_repo, source_repo=source_repo)
         result = service.list_items(filter=LearningItemFilter(source_id=source1.id))
         assert len(result) == 1
         assert result[0].source_title == "Source 1"
@@ -295,17 +309,14 @@ class TestGetSentenceItems:
         item = _make_item(sentence.id)
         item_repo.save_items([item])
 
-        service = LearningItemQueryService(item_repo=item_repo, source_repo=source_repo)
+        service = _make_service(item_repo=item_repo, source_repo=source_repo)
         result = service.get_sentence_items(sentence.id)
         assert len(result) == 1
         assert result[0].id == item.id
         assert result[0].pattern == "present perfect"
 
     def test_empty_for_unknown_sentence(self) -> None:
-        service = LearningItemQueryService(
-            item_repo=FakeLearningItemRepository(),
-            source_repo=FakeSourceRepository(),
-        )
+        service = _make_service()
         result = service.get_sentence_items(uuid4())
         assert result == ()
 

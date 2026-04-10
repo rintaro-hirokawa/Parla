@@ -25,9 +25,9 @@ class LearningItemQueryService:
         *,
         item_repo: LearningItemRepository,
         source_repo: SourceRepository,
-        variation_repo: VariationRepository | None = None,
-        review_attempt_repo: ReviewAttemptRepository | None = None,
-        feedback_repo: FeedbackRepository | None = None,
+        variation_repo: VariationRepository,
+        review_attempt_repo: ReviewAttemptRepository,
+        feedback_repo: FeedbackRepository,
     ) -> None:
         self._item_repo = item_repo
         self._source_repo = source_repo
@@ -109,17 +109,12 @@ class LearningItemQueryService:
         return source_title, sentence_ja, sentence_en
 
     def _get_first_utterance(self, item: LearningItem) -> str:
-        if self._feedback_repo is None:
-            return ""
         feedback = self._feedback_repo.get_feedback_by_sentence(item.source_sentence_id)
         if feedback is None:
             return ""
         return feedback.user_utterance
 
     def _build_review_history(self, item: LearningItem) -> list[ReviewHistoryEntry]:
-        if self._variation_repo is None or self._review_attempt_repo is None:
-            return []
-
         variations = self._variation_repo.get_variations_by_item(item.id)
 
         entries: list[ReviewHistoryEntry] = []

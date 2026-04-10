@@ -1,8 +1,10 @@
 """Session, menu, and passage summary query service."""
 
+from collections.abc import Sequence
 from datetime import date
 from uuid import UUID
 
+from parla.domain.session import SessionBlock
 from parla.ports.learning_item_repository import LearningItemRepository
 from parla.ports.practice_repository import PracticeRepository
 from parla.ports.review_attempt_repository import ReviewAttemptRepository
@@ -48,21 +50,8 @@ class SessionQueryService:
                 resumable_session_id=active_state.id if active_state else None,
             )
 
-        blocks = tuple(
-            MenuBlockSummary(
-                block_type=b.block_type,
-                item_count=len(b.items),
-                estimated_minutes=b.estimated_minutes,
-            )
-            for b in menu.blocks
-        )
-        total = sum(b.estimated_minutes for b in blocks)
-
-        source_title = ""
-        if menu.source_id:
-            source = self._source_repo.get_source(menu.source_id)
-            if source:
-                source_title = source.title
+        blocks, total = self._summarize_blocks(menu.blocks)
+        source_title = self._resolve_source_title(menu.source_id)
 
         return TodayDashboard(
             has_menu=True,
@@ -82,10 +71,10 @@ class SessionQueryService:
         if passage is None:
             return None
 
-        new_items: list[object] = []
-        for sentence in passage.sentences:
-            items = self._item_repo.get_items_by_sentence(sentence.id)
-            new_items.extend(items)
+        new_item_count = sum(
+            len(self._item_repo.get_items_by_sentence(s.id))
+            for s in passage.sentences
+        )
 
         has_achievement = self._practice_repo.has_achievement(passage_id)
 
@@ -96,7 +85,7 @@ class SessionQueryService:
             passage_id=passage.id,
             topic=passage.topic,
             sentence_count=len(passage.sentences),
-            new_item_count=len(new_items),
+            new_item_count=new_item_count,
             has_achievement=has_achievement,
             live_delivery_wpm=last_result.wpm if last_result else None,
             live_delivery_passed=last_result.passed if last_result else None,
@@ -138,21 +127,8 @@ class SessionQueryService:
         if menu is None:
             return None
 
-        blocks = tuple(
-            MenuBlockSummary(
-                block_type=b.block_type,
-                item_count=len(b.items),
-                estimated_minutes=b.estimated_minutes,
-            )
-            for b in menu.blocks
-        )
-        total = sum(b.estimated_minutes for b in blocks)
-
-        source_title = ""
-        if menu.source_id:
-            source = self._source_repo.get_source(menu.source_id)
-            if source:
-                source_title = source.title
+        blocks, total = self._summarize_blocks(menu.blocks)
+        source_title = self._resolve_source_title(menu.source_id)
 
         active_sources = self._source_repo.get_active_sources()
         active_options = tuple(
@@ -176,6 +152,26 @@ class SessionQueryService:
             pending_review_count=menu.pending_review_count,
             active_sources=active_options,
         )
+
+    def _summarize_blocks(
+        self, blocks: Sequence[SessionBlock]
+    ) -> tuple[tuple[MenuBlockSummary, ...], float]:
+        summaries = tuple(
+            MenuBlockSummary(
+                block_type=b.block_type,
+                item_count=len(b.items),
+                estimated_minutes=b.estimated_minutes,
+            )
+            for b in blocks
+        )
+        total = sum(b.estimated_minutes for b in summaries)
+        return summaries, total
+
+    def _resolve_source_title(self, source_id: UUID | None) -> str:
+        if source_id is None:
+            return ""
+        source = self._source_repo.get_source(source_id)
+        return source.title if source else ""
 
     def _count_remaining_passages(self, source_id: UUID) -> int:
         passages = self._source_repo.get_passages_by_source(source_id)
