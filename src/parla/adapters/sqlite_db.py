@@ -145,6 +145,30 @@ CREATE TABLE IF NOT EXISTS passage_achievements (
 
 CREATE INDEX IF NOT EXISTS idx_overlapping_passage ON overlapping_results(passage_id);
 CREATE INDEX IF NOT EXISTS idx_live_delivery_passage ON live_delivery_results(passage_id);
+
+CREATE TABLE IF NOT EXISTS session_menus (
+    id                   TEXT PRIMARY KEY,
+    target_date          TEXT NOT NULL,
+    pattern              TEXT NOT NULL,
+    blocks               TEXT NOT NULL,
+    source_id            TEXT,
+    confirmed            INTEGER NOT NULL DEFAULT 0,
+    pending_review_count INTEGER NOT NULL DEFAULT 0,
+    created_at           TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS session_states (
+    id                  TEXT PRIMARY KEY,
+    menu_id             TEXT NOT NULL REFERENCES session_menus(id),
+    status              TEXT NOT NULL,
+    current_block_index INTEGER NOT NULL DEFAULT 0,
+    started_at          TEXT,
+    completed_at        TEXT,
+    interrupted_at      TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_menus_date ON session_menus(target_date);
+CREATE INDEX IF NOT EXISTS idx_session_states_status ON session_states(status);
 """
 
 
@@ -164,6 +188,8 @@ def init_schema(conn: sqlite3.Connection) -> None:
 def reset_db(conn: sqlite3.Connection) -> None:
     """Drop all tables and recreate. For prototype-phase use only."""
     conn.executescript("""\
+        DROP TABLE IF EXISTS session_states;
+        DROP TABLE IF EXISTS session_menus;
         DROP TABLE IF EXISTS passage_achievements;
         DROP TABLE IF EXISTS live_delivery_results;
         DROP TABLE IF EXISTS overlapping_results;

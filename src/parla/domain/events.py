@@ -1,6 +1,7 @@
 """Domain events. All events are defined in this single file for discoverability."""
 
 from datetime import date
+from typing import Literal
 from uuid import UUID
 
 from parla.event_bus import Event
@@ -169,3 +170,71 @@ class PassageAchievementRecorded(Event, frozen=True):
     """通し発話達成 recorded for a passage."""
 
     passage_id: UUID
+
+
+# --- Slice 5: Session Composition & Menu ---
+
+
+class MenuComposed(Event, frozen=True):
+    """A session menu has been auto-composed."""
+
+    menu_id: UUID
+    target_date: date
+    pattern: Literal["a", "b", "c"]
+    block_count: int
+
+
+class MenuConfirmed(Event, frozen=True):
+    """User confirmed tomorrow's menu. Triggers background generation."""
+
+    menu_id: UUID
+    target_date: date
+
+
+class MenuRecomposed(Event, frozen=True):
+    """Menu was recomposed after source change."""
+
+    menu_id: UUID
+    new_source_id: UUID
+
+
+class BackgroundGenerationStarted(Event, frozen=True):
+    """Background variation generation started for confirmed menu."""
+
+    menu_id: UUID
+    item_count: int
+
+
+class BackgroundGenerationCompleted(Event, frozen=True):
+    """All background variations generated for the menu."""
+
+    menu_id: UUID
+    success_count: int
+    failure_count: int
+
+
+class SessionStarted(Event, frozen=True):
+    """A session has been started."""
+
+    session_id: UUID
+    menu_id: UUID
+
+
+class SessionInterrupted(Event, frozen=True):
+    """Session was interrupted mid-way."""
+
+    session_id: UUID
+    block_index: int
+
+
+class SessionResumed(Event, frozen=True):
+    """Session resumed from interruption point."""
+
+    session_id: UUID
+    block_index: int
+
+
+class SessionCompleted(Event, frozen=True):
+    """Session fully completed."""
+
+    session_id: UUID

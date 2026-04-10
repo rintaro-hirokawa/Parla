@@ -266,3 +266,28 @@ class TestSRSState:
         assert loaded.ease_factor == 1.2
         assert loaded.next_review_date == date(2026, 5, 1)
         assert loaded.correct_context_count == 2
+
+
+class TestCountDueItems:
+    def test_counts_due_items(self) -> None:
+        repo, sid = _setup()
+        i1 = _make_item(sid, next_review_date=date(2026, 4, 10))
+        i2 = _make_item(sid, next_review_date=date(2026, 4, 9))
+        i3 = _make_item(sid, next_review_date=date(2026, 4, 15))
+        repo.save_items([i1, i2, i3])
+
+        assert repo.count_due_items(date(2026, 4, 10)) == 2
+
+    def test_counts_zero_when_none_due(self) -> None:
+        repo, sid = _setup()
+        i = _make_item(sid, next_review_date=date(2026, 4, 15))
+        repo.save_items([i])
+
+        assert repo.count_due_items(date(2026, 4, 10)) == 0
+
+    def test_counts_items_with_null_review_date(self) -> None:
+        repo, sid = _setup()
+        i = _make_item(sid, next_review_date=None)
+        repo.save_items([i])
+
+        assert repo.count_due_items(date(2026, 4, 10)) == 1

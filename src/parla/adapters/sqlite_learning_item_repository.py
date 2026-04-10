@@ -68,6 +68,16 @@ class SQLiteLearningItemRepository:
         ).fetchone()
         return self._row_to_item(row) if row else None
 
+    def count_due_items(self, as_of: date) -> int:
+        """Count total pending review items without loading them."""
+        row = self._conn.execute(
+            """SELECT COUNT(*) as cnt FROM learning_items
+               WHERE status = 'auto_stocked'
+                 AND (next_review_date IS NULL OR next_review_date <= ?)""",
+            (as_of.isoformat(),),
+        ).fetchone()
+        return int(row["cnt"])
+
     def get_due_items(self, as_of: date, limit: int = 20) -> list[LearningItem]:
         """Get auto_stocked items due for review, ordered by most overdue first."""
         rows = self._conn.execute(

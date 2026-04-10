@@ -154,3 +154,34 @@ class TestPassagePersistence:
         passages = repo.get_passages_by_source(source.id)
         orders = [p.order for p in passages]
         assert orders == [0, 1, 2]
+
+
+class TestGetActiveSources:
+    def test_returns_not_started_and_in_progress(self, repo: SQLiteSourceRepository, conn: sqlite3.Connection) -> None:
+        s1 = _make_source()
+        repo.save_source(s1)
+        s1 = s1.start_generating().complete_generation()
+        repo.update_source(s1)
+
+        s2 = _make_source()
+        repo.save_source(s2)
+        s2 = s2.start_generating().complete_generation()
+        repo.update_source(s2)
+        # Manually set to in_progress via SQL (no domain transition method yet)
+        conn.execute("UPDATE sources SET status = 'in_progress' WHERE id = ?", (str(s2.id),))
+        conn.commit()
+
+        s3 = _make_source()
+        repo.save_source(s3)
+        # Keep s3 as registered
+
+        active = repo.get_active_sources()
+        active_ids = {s.id for s in active}
+        assert s1.id in active_ids
+        assert s2.id in active_ids
+        assert s3.id not in active_ids
+
+    def test_returns_empty_when_none_active(self, repo: SQLiteSourceRepository) -> None:
+        s = _make_source()
+        repo.save_source(s)
+        assert repo.get_active_sources() == []

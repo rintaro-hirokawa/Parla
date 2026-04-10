@@ -25,6 +25,10 @@ class LearningItemRepository(Protocol):
         """Get auto_stocked items due for review, ordered by most overdue first."""
         ...
 
+    def count_due_items(self, as_of: date) -> int:
+        """Count total pending review items (without loading them all)."""
+        ...
+
     def update_srs_state(
         self,
         item_id: UUID,

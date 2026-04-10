@@ -161,3 +161,21 @@ class SQLiteSourceRepository:
             )
 
         return passages
+
+    def get_active_sources(self) -> list[Source]:
+        rows = self._conn.execute(
+            "SELECT * FROM sources WHERE status IN ('not_started', 'in_progress') ORDER BY created_at",
+        ).fetchall()
+        return [
+            Source(
+                id=UUID(r["id"]),
+                title=r["title"],
+                text=r["text"],
+                cefr_level=r["cefr_level"],
+                english_variant=r["english_variant"],
+                status=r["status"],
+                created_at=r["created_at"],
+                updated_at=r["updated_at"],
+            )
+            for r in rows
+        ]
