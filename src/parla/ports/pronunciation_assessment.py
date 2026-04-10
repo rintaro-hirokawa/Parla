@@ -5,11 +5,13 @@ The adapter handles streaming, difflib miscue correction, and Azure-specific det
 The domain receives clean, corrected word data.
 """
 
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel
 
 from parla.domain.audio import AudioData
+
+ErrorType = Literal["None", "Mispronunciation", "Omission", "Insertion"]
 
 
 class RawAssessedWord(BaseModel, frozen=True):
@@ -17,7 +19,7 @@ class RawAssessedWord(BaseModel, frozen=True):
 
     word: str
     accuracy_score: float
-    error_type: str  # None / Mispronunciation / Omission / Insertion
+    error_type: ErrorType
     offset_seconds: float
     duration_seconds: float
 

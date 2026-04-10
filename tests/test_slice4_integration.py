@@ -1,7 +1,7 @@
 """Slice 4 integration tests: Phase C (通し練習).
 
 Verifies the full flow with real SQLite (:memory:), real EventBus wiring,
-real AudioStorage (tmp_path), and Fake external adapters.
+and Fake external adapters.
 
 Model audio generation:
   request_model_audio → emit(ModelAudioRequested) → handler → Fake TTS
@@ -32,6 +32,7 @@ from parla.domain.events import (
     LiveDeliveryCompleted,
     ModelAudioFailed,
     ModelAudioReady,
+    ModelAudioRequested,
     OverlappingCompleted,
     PassageAchievementRecorded,
 )
@@ -47,8 +48,6 @@ from parla.services.practice_service import PracticeService
 
 
 class FakeTTSGenerator:
-    """Returns canned audio bytes + synthetic timestamps."""
-
     def __init__(self, *, fail: bool = False) -> None:
         self._fail = fail
 
@@ -73,8 +72,6 @@ class FakeTTSGenerator:
 
 
 class FakePronunciationAssessor:
-    """Returns pre-configured assessment results based on scenario."""
-
     def __init__(self, assessed_words: Sequence[RawAssessedWord] | None = None) -> None:
         self._words = tuple(assessed_words) if assessed_words else ()
 
@@ -82,7 +79,6 @@ class FakePronunciationAssessor:
         if self._words:
             words = self._words
         else:
-            # Default: perfect recognition of all reference words
             words = tuple(
                 RawAssessedWord(
                     word=w,
@@ -109,8 +105,6 @@ class FakePronunciationAssessor:
 
 
 class EventCollector:
-    """Collects emitted events for assertions."""
-
     def __init__(self, bus: EventBus) -> None:
         self.events: list[Event] = []
         bus.on_sync(ModelAudioReady)(self._collect)
@@ -132,9 +126,11 @@ def _make_audio() -> AudioData:
     )
 
 
+# --- Fixtures ---
+
+
 @pytest.fixture
 def setup(tmp_path: Path):
-    """Create all dependencies for PracticeService integration tests."""
     conn = create_connection()
     init_schema(conn)
     bus = EventBus()
@@ -143,7 +139,6 @@ def setup(tmp_path: Path):
     feedback_repo = SQLiteFeedbackRepository(conn)
     practice_repo = SQLitePracticeRepository(conn, tmp_path / "audio")
 
-    # Insert test source + passage + sentences
     source_id = uuid4()
     passage_id = uuid4()
     sentence_ids = [uuid4(), uuid4(), uuid4()]
@@ -177,15 +172,15 @@ def setup(tmp_path: Path):
     )
     source_repo.save_passages([passage])
 
-    # Insert feedback (model answers) for each sentence
     for i, sid in enumerate(sentence_ids):
-        feedback = SentenceFeedback(
-            sentence_id=sid,
-            user_utterance=f"user said something {i + 1}",
-            model_answer=f"Dynamic model answer for sentence {i + 1}",
-            is_acceptable=True,
+        feedback_repo.save_feedback(
+            SentenceFeedback(
+                sentence_id=sid,
+                user_utterance=f"user said something {i + 1}",
+                model_answer=f"Dynamic model answer for sentence {i + 1}",
+                is_acceptable=True,
+            )
         )
-        feedback_repo.save_feedback(feedback)
 
     return {
         "conn": conn,
@@ -196,27 +191,22 @@ def setup(tmp_path: Path):
         "source_id": source_id,
         "passage_id": passage_id,
         "sentence_ids": sentence_ids,
-        "tmp_path": tmp_path,
     }
 
 
-def _make_service(setup_data, *, tts=None, assessor=None) -> tuple[PracticeService, EventCollector]:
-    bus = setup_data["bus"]
+@pytest.fixture
+def service_and_collector(setup):
+    """Default PracticeService + EventCollector with perfect fake adapters."""
+    bus = setup["bus"]
     collector = EventCollector(bus)
-
     service = PracticeService(
         event_bus=bus,
-        source_repo=setup_data["source_repo"],
-        feedback_repo=setup_data["feedback_repo"],
-        practice_repo=setup_data["practice_repo"],
-        tts_generator=tts or FakeTTSGenerator(),
-        pronunciation_assessor=assessor or FakePronunciationAssessor(),
+        source_repo=setup["source_repo"],
+        feedback_repo=setup["feedback_repo"],
+        practice_repo=setup["practice_repo"],
+        tts_generator=FakeTTSGenerator(),
+        pronunciation_assessor=FakePronunciationAssessor(),
     )
-
-    bus.on_async(service.handle_model_audio_requested.__func__.__qualname__)(  # type: ignore[union-attr]
-        service.handle_model_audio_requested
-    ) if False else None  # noqa: E501 — handler registered below
-
     return service, collector
 
 
@@ -225,191 +215,101 @@ def _make_service(setup_data, *, tts=None, assessor=None) -> tuple[PracticeServi
 
 class TestModelAudioGeneration:
     @pytest.mark.asyncio
-    async def test_model_audio_saved(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-        collector = EventCollector(setup["bus"])
-
-        from parla.domain.events import ModelAudioRequested
-
+    async def test_model_audio_saved(self, setup, service_and_collector) -> None:
+        service, collector = service_and_collector
         event = ModelAudioRequested(passage_id=setup["passage_id"])
         await service.handle_model_audio_requested(event)
 
-        # Verify model audio saved
         model_audio = setup["practice_repo"].get_model_audio(setup["passage_id"])
         assert model_audio is not None
         assert len(model_audio.word_timestamps) > 0
 
-        # Verify event emitted
         ready_events = collector.of_type(ModelAudioReady)
         assert len(ready_events) == 1
         assert ready_events[0].passage_id == setup["passage_id"]
 
     @pytest.mark.asyncio
     async def test_model_audio_failed_event(self, setup) -> None:
+        bus = setup["bus"]
+        collector = EventCollector(bus)
         service = PracticeService(
-            event_bus=setup["bus"],
+            event_bus=bus,
             source_repo=setup["source_repo"],
             feedback_repo=setup["feedback_repo"],
             practice_repo=setup["practice_repo"],
             tts_generator=FakeTTSGenerator(fail=True),
             pronunciation_assessor=FakePronunciationAssessor(),
         )
-        collector = EventCollector(setup["bus"])
 
-        from parla.domain.events import ModelAudioRequested
-
-        event = ModelAudioRequested(passage_id=setup["passage_id"])
-        await service.handle_model_audio_requested(event)
-
-        failed_events = collector.of_type(ModelAudioFailed)
-        assert len(failed_events) == 1
+        await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
+        assert len(collector.of_type(ModelAudioFailed)) == 1
 
     @pytest.mark.asyncio
-    async def test_missing_feedback_falls_back_to_en(self, setup) -> None:
+    async def test_missing_feedback_falls_back_to_en(self, setup, service_and_collector) -> None:
         """When feedback is missing for a sentence, use the pre-generated en text."""
-        # Delete all feedback
         setup["conn"].execute("DELETE FROM sentence_feedback")
         setup["conn"].commit()
 
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
+        service, _ = service_and_collector
+        await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
 
-        from parla.domain.events import ModelAudioRequested
-
-        event = ModelAudioRequested(passage_id=setup["passage_id"])
-        await service.handle_model_audio_requested(event)
-
-        model_audio = setup["practice_repo"].get_model_audio(setup["passage_id"])
-        assert model_audio is not None
-
-
-# --- Overlapping Tests ---
+        assert setup["practice_repo"].get_model_audio(setup["passage_id"]) is not None
 
 
 class TestOverlapping:
     @pytest.mark.asyncio
-    async def test_result_saved_and_event(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-        collector = EventCollector(setup["bus"])
-
-        # First generate model audio
-        from parla.domain.events import ModelAudioRequested
-
+    async def test_result_saved_and_event(self, setup, service_and_collector) -> None:
+        service, collector = service_and_collector
         await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
 
-        # Evaluate overlapping
         result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
 
         assert result.passage_id == setup["passage_id"]
         assert len(result.words) > 0
         assert len(result.timing_deviations) > 0
-
-        events = collector.of_type(OverlappingCompleted)
-        assert len(events) == 1
+        assert len(collector.of_type(OverlappingCompleted)) == 1
 
     @pytest.mark.asyncio
-    async def test_timing_deviations_calculated(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-
-        from parla.domain.events import ModelAudioRequested
-
+    async def test_timing_deviations_calculated(self, setup, service_and_collector) -> None:
+        service, _ = service_and_collector
         await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
 
         result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
-        # With FakePronunciationAssessor returning same offsets as FakeTTS,
-        # deviations should be approximately 0
         for dev in result.timing_deviations:
             assert abs(dev) < 1.0
 
     @pytest.mark.asyncio
-    async def test_no_model_audio_raises(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-
+    async def test_no_model_audio_raises(self, setup, service_and_collector) -> None:
+        service, _ = service_and_collector
         with pytest.raises(ValueError, match="Model audio not found"):
             await service.evaluate_overlapping(setup["passage_id"], _make_audio())
 
 
-# --- Live Delivery Tests ---
-
-
 class TestLiveDelivery:
     @pytest.mark.asyncio
-    async def test_pass_all_correct(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-        collector = EventCollector(setup["bus"])
-
+    async def test_pass_all_correct(self, setup, service_and_collector) -> None:
+        service, collector = service_and_collector
         result = await service.evaluate_live_delivery(setup["passage_id"], _make_audio(), 30.0)
 
         assert result.passed is True
         assert all(s.status == "correct" for s in result.sentence_statuses)
-
-        # Achievement recorded
         assert setup["practice_repo"].has_achievement(setup["passage_id"])
-
-        # Events
-        achievement_events = collector.of_type(PassageAchievementRecorded)
-        assert len(achievement_events) == 1
-
-        delivery_events = collector.of_type(LiveDeliveryCompleted)
-        assert len(delivery_events) == 1
-        assert delivery_events[0].passed is True
+        assert len(collector.of_type(PassageAchievementRecorded)) == 1
+        assert collector.of_type(LiveDeliveryCompleted)[0].passed is True
 
     @pytest.mark.asyncio
     async def test_fail_with_omission(self, setup) -> None:
-        """Simulate sentence 2 being completely omitted (no speech)."""
+        """Simulate sentence 2 being completely omitted."""
         passage = setup["source_repo"].get_passage(setup["passage_id"])
         model_texts = []
         for s in passage.sentences:
             fb = setup["feedback_repo"].get_feedback_by_sentence(s.id)
             model_texts.append(fb.model_answer if fb else s.en)
 
-        # Build assessed words: sentences 1 and 3 perfect, sentence 2 all Omission
         assessed: list[RawAssessedWord] = []
         offset = 0.0
         for i, text in enumerate(model_texts):
-            words = text.split()
-            for w in words:
+            for w in text.split():
                 if i == 1:
                     assessed.append(
                         RawAssessedWord(
@@ -432,16 +332,16 @@ class TestLiveDelivery:
                     )
                     offset += 0.5
 
-        assessor = FakePronunciationAssessor(assessed_words=assessed)
+        bus = setup["bus"]
+        collector = EventCollector(bus)
         service = PracticeService(
-            event_bus=setup["bus"],
+            event_bus=bus,
             source_repo=setup["source_repo"],
             feedback_repo=setup["feedback_repo"],
             practice_repo=setup["practice_repo"],
             tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=assessor,
+            pronunciation_assessor=FakePronunciationAssessor(assessed_words=assessed),
         )
-        collector = EventCollector(setup["bus"])
 
         result = await service.evaluate_live_delivery(setup["passage_id"], _make_audio(), 30.0)
 
@@ -449,39 +349,20 @@ class TestLiveDelivery:
         assert result.sentence_statuses[1].status == "error"
         assert result.sentence_statuses[0].status == "correct"
         assert result.sentence_statuses[2].status == "correct"
-
-        # No achievement
         assert not setup["practice_repo"].has_achievement(setup["passage_id"])
         assert len(collector.of_type(PassageAchievementRecorded)) == 0
 
     @pytest.mark.asyncio
-    async def test_wpm_calculated(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-
+    async def test_wpm_calculated(self, setup, service_and_collector) -> None:
+        service, _ = service_and_collector
         result = await service.evaluate_live_delivery(setup["passage_id"], _make_audio(), 60.0)
 
-        # 3 sentences × 6 words each = 18 words in 60 seconds = 18 WPM
         assert result.wpm > 0
         assert result.duration_seconds == 60.0
 
     @pytest.mark.asyncio
-    async def test_result_persisted(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
-
+    async def test_result_persisted(self, setup, service_and_collector) -> None:
+        service, _ = service_and_collector
         await service.evaluate_live_delivery(setup["passage_id"], _make_audio(), 30.0)
 
         results = setup["practice_repo"].get_live_delivery_results(setup["passage_id"])
@@ -489,28 +370,11 @@ class TestLiveDelivery:
         assert results[0].passed is True
 
 
-# --- Skip Check Tests ---
-
-
 class TestSkipCheck:
-    def test_skip_when_no_items_and_wpm_ok(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
+    def test_skip_when_no_items_and_wpm_ok(self, setup, service_and_collector) -> None:
+        service, _ = service_and_collector
         assert service.should_skip(0, 120.0, "B1") is True
 
-    def test_no_skip_when_items_exist(self, setup) -> None:
-        service = PracticeService(
-            event_bus=setup["bus"],
-            source_repo=setup["source_repo"],
-            feedback_repo=setup["feedback_repo"],
-            practice_repo=setup["practice_repo"],
-            tts_generator=FakeTTSGenerator(),
-            pronunciation_assessor=FakePronunciationAssessor(),
-        )
+    def test_no_skip_when_items_exist(self, setup, service_and_collector) -> None:
+        service, _ = service_and_collector
         assert service.should_skip(2, 120.0, "B1") is False

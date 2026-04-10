@@ -39,12 +39,17 @@ class SQLitePracticeRepository:
 
         self._conn.execute(
             """INSERT OR REPLACE INTO model_audio
-               (passage_id, audio_path, timestamps, generated_at)
-               VALUES (?, ?, ?, ?)""",
+               (passage_id, audio_path, timestamps, sample_rate, channels,
+                sample_width, duration_seconds, generated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 str(model_audio.passage_id),
                 str(audio_path),
                 timestamps_json,
+                model_audio.audio.sample_rate,
+                model_audio.audio.channels,
+                model_audio.audio.sample_width,
+                model_audio.audio.duration_seconds,
                 model_audio.generated_at.isoformat(),
             ),
         )
@@ -75,10 +80,10 @@ class SQLitePracticeRepository:
             audio=AudioData(
                 data=audio_data,
                 format=fmt,
-                sample_rate=16000,
-                channels=1,
-                sample_width=2,
-                duration_seconds=0.0,
+                sample_rate=row["sample_rate"],
+                channels=row["channels"],
+                sample_width=row["sample_width"],
+                duration_seconds=row["duration_seconds"],
             ),
             word_timestamps=timestamps,
             generated_at=datetime.fromisoformat(row["generated_at"]),

@@ -106,10 +106,14 @@ CREATE INDEX IF NOT EXISTS idx_variations_item ON variations(learning_item_id);
 CREATE INDEX IF NOT EXISTS idx_review_attempts_variation ON review_attempts(variation_id);
 
 CREATE TABLE IF NOT EXISTS model_audio (
-    passage_id    TEXT PRIMARY KEY REFERENCES passages(id),
-    audio_path    TEXT NOT NULL,
-    timestamps    TEXT NOT NULL,
-    generated_at  TEXT NOT NULL
+    passage_id       TEXT PRIMARY KEY REFERENCES passages(id),
+    audio_path       TEXT NOT NULL,
+    timestamps       TEXT NOT NULL,
+    sample_rate      INTEGER NOT NULL DEFAULT 16000,
+    channels         INTEGER NOT NULL DEFAULT 1,
+    sample_width     INTEGER NOT NULL DEFAULT 2,
+    duration_seconds REAL NOT NULL DEFAULT 0.0,
+    generated_at     TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS overlapping_results (

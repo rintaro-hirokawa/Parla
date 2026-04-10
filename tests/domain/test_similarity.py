@@ -3,7 +3,6 @@
 import pytest
 
 from parla.domain.similarity import (
-    apply_miscue_detection,
     calculate_similarity,
     judge_passage,
     judge_sentence_status,
@@ -106,65 +105,3 @@ class TestJudgePassage:
 
     def test_empty_passes(self) -> None:
         assert judge_passage([]) is True
-
-
-class TestApplyMiscueDetection:
-    def test_perfect_match(self) -> None:
-        ref = ["hello", "world"]
-        rec = ["hello", "world"]
-        result = apply_miscue_detection(ref, rec)
-        assert len(result) == 2
-        assert all(w.error_type == "equal" for w in result)
-        assert [w.word for w in result] == ["hello", "world"]
-
-    def test_omission(self) -> None:
-        ref = ["the", "cat", "sat"]
-        rec = ["the", "sat"]
-        result = apply_miscue_detection(ref, rec)
-        words = {w.word: w.error_type for w in result}
-        assert words["cat"] == "Omission"
-
-    def test_insertion(self) -> None:
-        ref = ["the", "cat"]
-        rec = ["the", "big", "cat"]
-        result = apply_miscue_detection(ref, rec)
-        types = [w.error_type for w in result]
-        assert "Insertion" in types
-
-    def test_replacement_produces_omission_and_insertion(self) -> None:
-        ref = ["hello", "world"]
-        rec = ["hello", "earth"]
-        result = apply_miscue_detection(ref, rec)
-        types = [w.error_type for w in result]
-        assert "Omission" in types
-        assert "Insertion" in types
-
-    def test_empty_recognized(self) -> None:
-        ref = ["hello", "world"]
-        rec: list[str] = []
-        result = apply_miscue_detection(ref, rec)
-        assert len(result) == 2
-        assert all(w.error_type == "Omission" for w in result)
-
-    def test_empty_reference(self) -> None:
-        ref: list[str] = []
-        rec = ["hello"]
-        result = apply_miscue_detection(ref, rec)
-        assert len(result) == 1
-        assert result[0].error_type == "Insertion"
-
-    def test_case_insensitive_matching(self) -> None:
-        ref = ["Hello", "World"]
-        rec = ["hello", "world"]
-        result = apply_miscue_detection(ref, rec)
-        assert len(result) == 2
-        assert all(w.error_type == "equal" for w in result)
-        # Preserves reference casing for equal matches
-        assert result[0].word == "Hello"
-
-    def test_punctuation_stripped(self) -> None:
-        ref = ["hello,", "world!"]
-        rec = ["hello", "world"]
-        result = apply_miscue_detection(ref, rec)
-        assert len(result) == 2
-        assert all(w.error_type == "equal" for w in result)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 from typing import Any
 
@@ -12,7 +13,6 @@ from parla.ports.tts_generation import RawTTSResult, RawWordTimestamp
 
 logger = structlog.get_logger()
 
-# Voice mapping by English variant
 _DEFAULT_VOICES: dict[str, str] = {
     "American": "21m00Tcm4TlvDq8ikWAM",  # Rachel
     "British": "pNInz6obpgDQGcFmaJgB",  # Adam
@@ -45,7 +45,6 @@ def _chars_to_word_timestamps(
     char_idx = 0
 
     for word in words:
-        # Skip whitespace characters
         while char_idx < len(characters) and characters[char_idx].get("character", "") in (" ", ""):
             char_idx += 1
 
@@ -81,6 +80,9 @@ class ElevenLabsTTSAdapter:
 
     def __init__(self, voice_map: dict[str, str] | None = None) -> None:
         self._voice_map = voice_map or _DEFAULT_VOICES
+        from elevenlabs import ElevenLabs
+
+        self._client = ElevenLabs(api_key=_get_api_key())
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=2, min=2, max=30))
     async def generate_with_timestamps(
@@ -88,14 +90,7 @@ class ElevenLabsTTSAdapter:
         text: str,
         english_variant: str,
     ) -> RawTTSResult:
-        """Generate TTS audio with word-level timestamps.
-
-        Uses ElevenLabs convert_with_timestamps for character-level timestamps,
-        then aggregates to word-level.
-        """
-        from elevenlabs import ElevenLabs
-
-        client = ElevenLabs(api_key=_get_api_key())
+        """Generate TTS audio with word-level timestamps."""
         voice_id = self._voice_map.get(english_variant, list(self._voice_map.values())[0])
 
         logger.info(
@@ -105,21 +100,18 @@ class ElevenLabsTTSAdapter:
             voice_id=voice_id,
         )
 
-        response = client.text_to_speech.convert_with_timestamps(
+        response = self._client.text_to_speech.convert_with_timestamps(
             voice_id=voice_id,
             text=text,
             model_id="eleven_multilingual_v2",
             output_format="mp3_44100_128",
         )
 
-        # Collect audio chunks and character alignment data
         audio_chunks: list[bytes] = []
         all_characters: list[dict[str, Any]] = []
 
         for item in response:
             if item.get("audio_base64"):
-                import base64
-
                 audio_chunks.append(base64.b64decode(item["audio_base64"]))
             if item.get("alignment"):
                 alignment = item["alignment"]
@@ -137,7 +129,6 @@ class ElevenLabsTTSAdapter:
 
         audio_data = b"".join(audio_chunks)
         word_timestamps = _chars_to_word_timestamps(all_characters, text)
-
         duration = word_timestamps[-1].end_seconds if word_timestamps else 0.0
 
         logger.info(

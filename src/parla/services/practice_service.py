@@ -54,8 +54,6 @@ class PracticeService:
         self._tts_generator = tts_generator
         self._pronunciation_assessor = pronunciation_assessor
 
-    # --- TTS Pre-generation ---
-
     def request_model_audio(self, passage_id: UUID) -> None:
         """Request TTS generation for a passage's dynamic model answers.
 
@@ -112,13 +110,9 @@ class PracticeService:
             logger.exception("model_audio_generation_failed", passage_id=str(event.passage_id))
             self._bus.emit(ModelAudioFailed(passage_id=event.passage_id, error_message=str(exc)))
 
-    # --- Skip Check ---
-
     def should_skip(self, new_item_count: int, wpm: float, cefr_level: str) -> bool:
         """Check if Phase C should be skipped (0 new items AND WPM in target)."""
         return should_skip_phase_c(new_item_count, wpm, cefr_level)
-
-    # --- Overlapping ---
 
     async def evaluate_overlapping(self, passage_id: UUID, user_audio: AudioData) -> OverlappingResult:
         """Evaluate overlapping practice against model audio."""
@@ -221,14 +215,12 @@ class PracticeService:
 
         return result
 
-    # --- Internal helpers ---
-
     @staticmethod
     def _to_pronunciation_word(raw: RawAssessedWord) -> PronunciationWord:
         return PronunciationWord(
             word=raw.word,
             accuracy_score=raw.accuracy_score,
-            error_type=raw.error_type,  # type: ignore[arg-type]
+            error_type=raw.error_type,
             offset_seconds=raw.offset_seconds,
             duration_seconds=raw.duration_seconds,
         )
@@ -271,7 +263,7 @@ class PracticeService:
                     recognized_text=user_text,
                     model_text=text,
                     similarity=similarity,
-                    status=status,  # type: ignore[arg-type]
+                    status=status,
                 )
             )
 
