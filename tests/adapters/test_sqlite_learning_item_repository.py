@@ -1,5 +1,6 @@
 """Tests for SQLiteLearningItemRepository."""
 
+from datetime import date
 from uuid import uuid4
 
 from parla.adapters.sqlite_db import create_connection, init_schema
@@ -116,3 +117,138 @@ class TestReappearance:
         reapp = [i for i in items if i.is_reappearance]
         assert len(reapp) == 1
         assert reapp[0].matched_item_id == original.id
+
+
+class TestSRSState:
+    """Slice 3: SRS state persistence and due item queries."""
+
+    def test_srs_defaults_on_save(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(sid)
+        repo.save_items([item])
+
+        loaded = repo.get_item(item.id)
+        assert loaded is not None
+        assert loaded.srs_stage == 0
+        assert loaded.ease_factor == 1.0
+        assert loaded.next_review_date is None
+        assert loaded.correct_context_count == 0
+
+    def test_get_item_by_id(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(sid)
+        repo.save_items([item])
+
+        loaded = repo.get_item(item.id)
+        assert loaded is not None
+        assert loaded.pattern == item.pattern
+
+    def test_get_item_nonexistent(self) -> None:
+        repo, _ = _setup()
+        assert repo.get_item(uuid4()) is None
+
+    def test_update_srs_state(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(sid)
+        repo.save_items([item])
+
+        repo.update_srs_state(
+            item_id=item.id,
+            srs_stage=2,
+            ease_factor=1.3,
+            next_review_date=date(2026, 4, 15),
+            correct_context_count=1,
+        )
+
+        loaded = repo.get_item(item.id)
+        assert loaded is not None
+        assert loaded.srs_stage == 2
+        assert loaded.ease_factor == 1.3
+        assert loaded.next_review_date == date(2026, 4, 15)
+        assert loaded.correct_context_count == 1
+
+    def test_get_due_items_with_null_date(self) -> None:
+        """Items with next_review_date=None are immediately due."""
+        repo, sid = _setup()
+        item = _make_item(sid)
+        repo.save_items([item])
+
+        due = repo.get_due_items(as_of=date(2026, 4, 10))
+        assert len(due) == 1
+        assert due[0].id == item.id
+
+    def test_get_due_items_overdue(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(sid)
+        repo.save_items([item])
+        repo.update_srs_state(
+            item.id, srs_stage=1, ease_factor=1.0,
+            next_review_date=date(2026, 4, 8), correct_context_count=0,
+        )
+
+        due = repo.get_due_items(as_of=date(2026, 4, 10))
+        assert len(due) == 1
+
+    def test_get_due_items_not_yet_due(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(sid)
+        repo.save_items([item])
+        repo.update_srs_state(
+            item.id, srs_stage=3, ease_factor=1.0,
+            next_review_date=date(2026, 4, 20), correct_context_count=0,
+        )
+
+        due = repo.get_due_items(as_of=date(2026, 4, 10))
+        assert len(due) == 0
+
+    def test_get_due_items_excludes_review_later(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(sid, status="review_later")
+        repo.save_items([item])
+
+        due = repo.get_due_items(as_of=date(2026, 4, 10))
+        assert len(due) == 0
+
+    def test_get_due_items_respects_limit(self) -> None:
+        repo, sid = _setup()
+        for _ in range(5):
+            repo.save_items([_make_item(sid)])
+
+        due = repo.get_due_items(as_of=date(2026, 4, 10), limit=3)
+        assert len(due) == 3
+
+    def test_get_due_items_ordered_by_most_overdue(self) -> None:
+        repo, sid = _setup()
+        item1 = _make_item(sid, pattern="old")
+        item2 = _make_item(sid, pattern="newer")
+        repo.save_items([item1, item2])
+        repo.update_srs_state(
+            item1.id, srs_stage=1, ease_factor=1.0,
+            next_review_date=date(2026, 4, 5), correct_context_count=0,
+        )
+        repo.update_srs_state(
+            item2.id, srs_stage=1, ease_factor=1.0,
+            next_review_date=date(2026, 4, 8), correct_context_count=0,
+        )
+
+        due = repo.get_due_items(as_of=date(2026, 4, 10))
+        assert due[0].pattern == "old"
+        assert due[1].pattern == "newer"
+
+    def test_save_item_with_srs_fields(self) -> None:
+        repo, sid = _setup()
+        item = _make_item(
+            sid,
+            srs_stage=3,
+            ease_factor=1.2,
+            next_review_date=date(2026, 5, 1),
+            correct_context_count=2,
+        )
+        repo.save_items([item])
+
+        loaded = repo.get_item(item.id)
+        assert loaded is not None
+        assert loaded.srs_stage == 3
+        assert loaded.ease_factor == 1.2
+        assert loaded.next_review_date == date(2026, 5, 1)
+        assert loaded.correct_context_count == 2

@@ -39,17 +39,21 @@ CREATE INDEX IF NOT EXISTS idx_sentences_passage_id ON sentences(passage_id);
 CREATE INDEX IF NOT EXISTS idx_sources_status ON sources(status);
 
 CREATE TABLE IF NOT EXISTS learning_items (
-    id                  TEXT PRIMARY KEY,
-    pattern             TEXT NOT NULL,
-    explanation         TEXT NOT NULL,
-    category            TEXT NOT NULL,
-    sub_tag             TEXT NOT NULL DEFAULT '',
-    priority            INTEGER NOT NULL,
-    source_sentence_id  TEXT NOT NULL REFERENCES sentences(id),
-    is_reappearance     INTEGER NOT NULL DEFAULT 0,
-    matched_item_id     TEXT,
-    status              TEXT NOT NULL,
-    created_at          TEXT NOT NULL
+    id                    TEXT PRIMARY KEY,
+    pattern               TEXT NOT NULL,
+    explanation           TEXT NOT NULL,
+    category              TEXT NOT NULL,
+    sub_tag               TEXT NOT NULL DEFAULT '',
+    priority              INTEGER NOT NULL,
+    source_sentence_id    TEXT NOT NULL REFERENCES sentences(id),
+    is_reappearance       INTEGER NOT NULL DEFAULT 0,
+    matched_item_id       TEXT,
+    status                TEXT NOT NULL,
+    created_at            TEXT NOT NULL,
+    srs_stage             INTEGER NOT NULL DEFAULT 0,
+    ease_factor           REAL NOT NULL DEFAULT 1.0,
+    next_review_date      TEXT,
+    correct_context_count INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS sentence_feedback (
@@ -70,10 +74,36 @@ CREATE TABLE IF NOT EXISTS practice_attempts (
     created_at      TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS variations (
+    id                TEXT PRIMARY KEY,
+    learning_item_id  TEXT NOT NULL REFERENCES learning_items(id),
+    source_id         TEXT NOT NULL REFERENCES sources(id),
+    ja                TEXT NOT NULL,
+    en                TEXT NOT NULL,
+    hint1             TEXT NOT NULL,
+    hint2             TEXT NOT NULL,
+    created_at        TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS review_attempts (
+    id                TEXT PRIMARY KEY,
+    variation_id      TEXT NOT NULL REFERENCES variations(id),
+    learning_item_id  TEXT NOT NULL REFERENCES learning_items(id),
+    attempt_number    INTEGER NOT NULL,
+    correct           INTEGER NOT NULL,
+    item_used         INTEGER NOT NULL,
+    hint_level        INTEGER NOT NULL DEFAULT 0,
+    timer_ratio       REAL NOT NULL DEFAULT 0.0,
+    created_at        TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_learning_items_status ON learning_items(status);
 CREATE INDEX IF NOT EXISTS idx_learning_items_sentence ON learning_items(source_sentence_id);
+CREATE INDEX IF NOT EXISTS idx_learning_items_review ON learning_items(next_review_date);
 CREATE INDEX IF NOT EXISTS idx_sentence_feedback_sentence ON sentence_feedback(sentence_id);
 CREATE INDEX IF NOT EXISTS idx_practice_attempts_sentence ON practice_attempts(sentence_id);
+CREATE INDEX IF NOT EXISTS idx_variations_item ON variations(learning_item_id);
+CREATE INDEX IF NOT EXISTS idx_review_attempts_variation ON review_attempts(variation_id);
 """
 
 
@@ -93,6 +123,8 @@ def init_schema(conn: sqlite3.Connection) -> None:
 def reset_db(conn: sqlite3.Connection) -> None:
     """Drop all tables and recreate. For prototype-phase use only."""
     conn.executescript("""\
+        DROP TABLE IF EXISTS review_attempts;
+        DROP TABLE IF EXISTS variations;
         DROP TABLE IF EXISTS practice_attempts;
         DROP TABLE IF EXISTS sentence_feedback;
         DROP TABLE IF EXISTS learning_items;

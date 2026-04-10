@@ -1,6 +1,6 @@
 """LearningItem entity — a specific weakness extracted from feedback."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -36,3 +36,9 @@ class LearningItem(BaseModel):
     matched_item_id: UUID | None = None
     status: LearningItemStatus
     created_at: datetime = Field(default_factory=datetime.now)
+
+    # SRS state (slice 3)
+    srs_stage: int = Field(default=0, ge=0)
+    ease_factor: float = Field(default=1.0, gt=0.0)
+    next_review_date: date | None = None
+    correct_context_count: int = Field(default=0, ge=0)

@@ -73,3 +73,55 @@ class RetryJudged(Event, frozen=True):
     sentence_id: UUID
     attempt: int
     correct: bool
+
+
+# --- Slice 3: Block 1 Review (SRS) ---
+
+
+class VariationGenerationRequested(Event, frozen=True):
+    """Request to generate a variation for a learning item."""
+
+    learning_item_id: UUID
+    source_id: UUID
+
+
+class VariationReady(Event, frozen=True):
+    """A variation has been generated and is ready for review."""
+
+    variation_id: UUID
+    learning_item_id: UUID
+
+
+class VariationGenerationFailed(Event, frozen=True):
+    """Variation generation failed for a learning item."""
+
+    learning_item_id: UUID
+    error_message: str
+
+
+class ReviewAnswered(Event, frozen=True):
+    """Initial review attempt judged. Triggers SRS update."""
+
+    variation_id: UUID
+    learning_item_id: UUID
+    correct: bool
+    item_used: bool
+    hint_level: int
+    timer_ratio: float
+
+
+class ReviewRetryJudged(Event, frozen=True):
+    """Review retry judged. Does NOT affect SRS (initial attempt only)."""
+
+    variation_id: UUID
+    attempt: int
+    correct: bool
+
+
+class SRSUpdated(Event, frozen=True):
+    """SRS state updated after review."""
+
+    learning_item_id: UUID
+    old_stage: int
+    new_stage: int
+    next_review_date: str

@@ -1,0 +1,272 @@
+"""Block 1/3 review orchestration service."""
+
+from datetime import date
+from uuid import UUID
+
+import structlog
+
+from parla.domain.audio import AudioData
+from parla.domain.events import (
+    ReviewAnswered,
+    ReviewRetryJudged,
+    SRSUpdated,
+    VariationGenerationFailed,
+    VariationGenerationRequested,
+    VariationReady,
+)
+from parla.domain.learning_item import LearningItem
+from parla.domain.review import ReviewAttempt, ReviewResult
+from parla.domain.srs import SRSConfig, calculate_next_review
+from parla.domain.variation import Variation
+from parla.event_bus import EventBus
+from parla.ports.audio_storage import AudioStorage
+from parla.ports.learning_item_repository import LearningItemRepository
+from parla.ports.review_attempt_repository import ReviewAttemptRepository
+from parla.ports.review_judgment import ReviewJudgmentPort
+from parla.ports.source_repository import SourceRepository
+from parla.ports.variation_generation import PastVariationInfo, VariationGenerationPort
+from parla.ports.variation_repository import VariationRepository
+
+logger = structlog.get_logger()
+
+
+class ReviewService:
+    """Orchestrates Block 1/3 review: variation generation, judgment, SRS update."""
+
+    def __init__(
+        self,
+        event_bus: EventBus,
+        source_repo: SourceRepository,
+        item_repo: LearningItemRepository,
+        variation_repo: VariationRepository,
+        attempt_repo: ReviewAttemptRepository,
+        audio_storage: AudioStorage,
+        variation_generator: VariationGenerationPort,
+        review_judge: ReviewJudgmentPort,
+        srs_config: SRSConfig,
+    ) -> None:
+        self._bus = event_bus
+        self._source_repo = source_repo
+        self._item_repo = item_repo
+        self._variation_repo = variation_repo
+        self._attempt_repo = attempt_repo
+        self._audio_storage = audio_storage
+        self._variation_generator = variation_generator
+        self._review_judge = review_judge
+        self._srs_config = srs_config
+
+    def request_variation(self, learning_item_id: UUID, source_id: UUID) -> None:
+        """Request variation generation for a learning item."""
+        self._bus.emit(VariationGenerationRequested(
+            learning_item_id=learning_item_id,
+            source_id=source_id,
+        ))
+
+    async def handle_variation_requested(self, event: VariationGenerationRequested) -> None:
+        """Async handler: generate variation via LLM, save to repository."""
+        item = self._item_repo.get_item(event.learning_item_id)
+        if item is None:
+            logger.error("learning_item_not_found", item_id=str(event.learning_item_id))
+            return
+
+        source = self._source_repo.get_source(event.source_id)
+        if source is None:
+            logger.error("source_not_found", source_id=str(event.source_id))
+            return
+
+        try:
+            # Build history from past variations for diversity
+            past_variations = self._variation_repo.get_variations_by_item(item.id)
+            past_info = [
+                PastVariationInfo(ja=v.ja, en=v.en)
+                for v in past_variations
+            ]
+
+            raw = await self._variation_generator.generate_variation(
+                learning_item_pattern=item.pattern,
+                learning_item_explanation=item.explanation,
+                cefr_level=source.cefr_level,
+                english_variant=source.english_variant,
+                source_text=source.text,
+                past_variations=past_info,
+            )
+
+            variation = Variation(
+                learning_item_id=item.id,
+                source_id=source.id,
+                ja=raw.ja,
+                en=raw.en,
+                hint1=raw.hint1,
+                hint2=raw.hint2,
+            )
+            self._variation_repo.save_variation(variation)
+
+            self._bus.emit(VariationReady(
+                variation_id=variation.id,
+                learning_item_id=item.id,
+            ))
+
+        except Exception as exc:
+            logger.exception(
+                "variation_generation_failed",
+                item_id=str(event.learning_item_id),
+            )
+            self._bus.emit(VariationGenerationFailed(
+                learning_item_id=event.learning_item_id,
+                error_message=str(exc),
+            ))
+
+    async def judge_review(
+        self,
+        variation_id: UUID,
+        audio: AudioData,
+        hint_level: int,
+        timer_ratio: float,
+        today: date,
+    ) -> ReviewResult:
+        """Judge initial review attempt and update SRS.
+
+        This is the initial attempt (attempt_number=1).
+        SRS state is updated based on this result only.
+        """
+        variation = self._variation_repo.get_variation(variation_id)
+        if variation is None:
+            msg = f"Variation not found: {variation_id}"
+            raise ValueError(msg)
+
+        item = self._item_repo.get_item(variation.learning_item_id)
+        if item is None:
+            msg = f"Learning item not found: {variation.learning_item_id}"
+            raise ValueError(msg)
+
+        source = self._source_repo.get_source(variation.source_id)
+        if source is None:
+            msg = f"Source not found: {variation.source_id}"
+            raise ValueError(msg)
+
+        # Save audio
+        self._audio_storage.save(variation.id, audio)
+
+        # Judge via LLM
+        result = await self._review_judge.judge(
+            audio_data=audio.data,
+            audio_format=audio.format,
+            target_pattern=item.pattern,
+            reference_answer=variation.en,
+            ja_prompt=variation.ja,
+            cefr_level=source.cefr_level,
+        )
+
+        # Record attempt
+        attempt = ReviewAttempt(
+            variation_id=variation_id,
+            learning_item_id=item.id,
+            attempt_number=1,
+            correct=result.correct,
+            item_used=result.item_used,
+            hint_level=hint_level,
+            timer_ratio=timer_ratio,
+        )
+        self._attempt_repo.save_attempt(attempt)
+
+        # Update SRS
+        old_stage = item.srs_stage
+        srs_update = calculate_next_review(
+            current_stage=item.srs_stage,
+            correct=result.correct,
+            hint_level=hint_level,
+            timer_ratio=timer_ratio,
+            ease_factor=item.ease_factor,
+            today=today,
+            config=self._srs_config,
+        )
+
+        # Track context mastery: increment if correct with a different source
+        new_context_count = item.correct_context_count
+        if result.correct and variation.source_id != item.source_sentence_id:
+            new_context_count += 1
+
+        self._item_repo.update_srs_state(
+            item_id=item.id,
+            srs_stage=srs_update.new_stage,
+            ease_factor=srs_update.new_ease_factor,
+            next_review_date=srs_update.next_review_date,
+            correct_context_count=new_context_count,
+        )
+
+        # Emit events
+        self._bus.emit(ReviewAnswered(
+            variation_id=variation_id,
+            learning_item_id=item.id,
+            correct=result.correct,
+            item_used=result.item_used,
+            hint_level=hint_level,
+            timer_ratio=timer_ratio,
+        ))
+        self._bus.emit(SRSUpdated(
+            learning_item_id=item.id,
+            old_stage=old_stage,
+            new_stage=srs_update.new_stage,
+            next_review_date=srs_update.next_review_date.isoformat(),
+        ))
+
+        return result
+
+    async def judge_review_retry(
+        self,
+        variation_id: UUID,
+        attempt_number: int,
+        audio: AudioData,
+    ) -> ReviewResult:
+        """Judge a retry attempt. Does NOT update SRS (initial attempt only)."""
+        variation = self._variation_repo.get_variation(variation_id)
+        if variation is None:
+            msg = f"Variation not found: {variation_id}"
+            raise ValueError(msg)
+
+        item = self._item_repo.get_item(variation.learning_item_id)
+        if item is None:
+            msg = f"Learning item not found: {variation.learning_item_id}"
+            raise ValueError(msg)
+
+        source = self._source_repo.get_source(variation.source_id)
+        if source is None:
+            msg = f"Source not found: {variation.source_id}"
+            raise ValueError(msg)
+
+        # Save audio
+        self._audio_storage.save(variation.id, audio)
+
+        # Judge via LLM
+        result = await self._review_judge.judge(
+            audio_data=audio.data,
+            audio_format=audio.format,
+            target_pattern=item.pattern,
+            reference_answer=variation.en,
+            ja_prompt=variation.ja,
+            cefr_level=source.cefr_level,
+        )
+
+        # Record attempt (no SRS update)
+        attempt = ReviewAttempt(
+            variation_id=variation_id,
+            learning_item_id=item.id,
+            attempt_number=attempt_number,
+            correct=result.correct,
+            item_used=result.item_used,
+            hint_level=0,
+            timer_ratio=0.0,
+        )
+        self._attempt_repo.save_attempt(attempt)
+
+        self._bus.emit(ReviewRetryJudged(
+            variation_id=variation_id,
+            attempt=attempt_number,
+            correct=result.correct,
+        ))
+
+        return result
+
+    def get_due_items(self, as_of: date) -> list[LearningItem]:
+        """Get learning items due for review."""
+        return list(self._item_repo.get_due_items(as_of, limit=self._srs_config.review_limit))
