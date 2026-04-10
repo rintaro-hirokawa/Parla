@@ -18,7 +18,6 @@ class SourceRegistrationView(QWidget):
     def __init__(self, view_model: SourceRegistrationViewModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._vm = view_model
-        self._is_valid = False
 
         layout = QVBoxLayout(self)
 
@@ -75,7 +74,6 @@ class SourceRegistrationView(QWidget):
         self._vm.validate(text, self._title_edit.text())
 
     def _on_validation_changed(self, is_valid: bool, error_message: str) -> None:
-        self._is_valid = is_valid
         self._register_button.setEnabled(is_valid)
         self._error_label.setText(error_message)
 

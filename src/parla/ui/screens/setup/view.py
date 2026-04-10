@@ -10,18 +10,17 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.domain.source import CEFRLevel, EnglishVariant
 from parla.ui.screens.setup.view_model import SetupViewModel
 
-CEFR_DESCRIPTIONS: list[tuple[str, str]] = [
-    ("A1", "簡単な自己紹介や日常のやりとりができるレベル"),
-    ("A2", "身近な話題について簡単な文でやりとりできるレベル"),
-    ("B1", "日常的な話題について意見を述べられるレベル"),
-    ("B2", "幅広い話題について明確に意見を述べられるレベル"),
-    ("C1", "複雑な話題でも流暢に自然なやりとりができるレベル"),
-    ("C2", "ネイティブに近い正確さと流暢さで表現できるレベル"),
+CEFR_DESCRIPTIONS: list[tuple[CEFRLevel, str]] = [
+    (CEFRLevel.A1, "簡単な自己紹介や日常のやりとりができるレベル"),
+    (CEFRLevel.A2, "身近な話題について簡単な文でやりとりできるレベル"),
+    (CEFRLevel.B1, "日常的な話題について意見を述べられるレベル"),
+    (CEFRLevel.B2, "幅広い話題について明確に意見を述べられるレベル"),
+    (CEFRLevel.C1, "複雑な話題でも流暢に自然なやりとりができるレベル"),
+    (CEFRLevel.C2, "ネイティブに近い正確さと流暢さで表現できるレベル"),
 ]
-
-ENGLISH_VARIANTS = ("American", "British", "Australian", "Canadian", "Indian")
 
 
 class SetupView(QWidget):
@@ -33,7 +32,6 @@ class SetupView(QWidget):
 
         layout = QVBoxLayout(self)
 
-        # --- CEFR selection ---
         layout.addWidget(QLabel("英語レベルを選択してください"))
 
         self._cefr_group = QButtonGroup(self)
@@ -48,14 +46,12 @@ class SetupView(QWidget):
         self._cefr_radios[2].setChecked(True)
         self._cefr_group.idClicked.connect(self._on_cefr_selected)
 
-        # --- English variant ---
         layout.addWidget(QLabel("英語バリエーション"))
         self._variant_combo = QComboBox()
-        self._variant_combo.addItems(ENGLISH_VARIANTS)
+        self._variant_combo.addItems(list(EnglishVariant))
         self._variant_combo.currentTextChanged.connect(self._on_variant_changed)
         layout.addWidget(self._variant_combo)
 
-        # --- Confirm button ---
         self._confirm_button = QPushButton("始める")
         self._confirm_button.clicked.connect(self._vm.confirm)
         layout.addWidget(self._confirm_button)

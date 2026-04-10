@@ -42,7 +42,7 @@ class TestLoadSettings:
         vm = SettingsViewModel(bus, service)
         vm.activate()
 
-        with qtbot.waitSignal(vm.settings_loaded, timeout=1000) as blocker:
+        with qtbot.waitSignal(vm.settings_changed, timeout=1000) as blocker:
             vm.load_settings()
 
         assert blocker.args == ["B2", "British", True]
@@ -103,7 +103,7 @@ class TestSettingsChangedEvent:
         vm.activate()
         vm.load_settings()
 
-        with qtbot.waitSignal(vm.settings_updated, timeout=1000) as blocker:
+        with qtbot.waitSignal(vm.settings_changed, timeout=1000) as blocker:
             bus.emit(SettingsChanged(cefr_level="C2", english_variant="Canadian", phonetic_display=True))
 
         assert blocker.args == ["C2", "Canadian", True]
@@ -117,7 +117,7 @@ class TestSettingsChangedEvent:
         vm = SettingsViewModel(bus, service)
         # not activated
 
-        with qtbot.assertNotEmitted(vm.settings_updated):
+        with qtbot.assertNotEmitted(vm.settings_changed):
             bus.emit(SettingsChanged(cefr_level="C2", english_variant="Canadian", phonetic_display=True))
 
 

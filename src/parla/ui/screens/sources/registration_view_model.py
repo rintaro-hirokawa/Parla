@@ -9,14 +9,11 @@ from parla.domain.events import (
     PassageGenerationFailed,
     PassageGenerationStarted,
 )
-from parla.domain.source import CEFRLevel, EnglishVariant
+from parla.domain.source import MAX_TEXT_LENGTH, MIN_TEXT_LENGTH, CEFRLevel, EnglishVariant
 from parla.event_bus import EventBus
 from parla.services.settings_service import SettingsService
 from parla.services.source_service import SourceService
 from parla.ui.base_view_model import BaseViewModel
-
-_MIN_TEXT_LENGTH = 100
-_MAX_TEXT_LENGTH = 50_000
 
 
 class SourceRegistrationViewModel(BaseViewModel):
@@ -38,8 +35,8 @@ class SourceRegistrationViewModel(BaseViewModel):
         super().__init__(event_bus)
         self._source_service = source_service
         self._settings_service = settings_service
-        self._cefr_level: CEFRLevel = "B1"
-        self._english_variant: EnglishVariant = "American"
+        self._cefr_level: CEFRLevel = CEFRLevel.B1
+        self._english_variant: EnglishVariant = EnglishVariant.AMERICAN
         self._pending_source_id: uuid.UUID | None = None
         self._register_sync(PassageGenerationStarted, self._on_generation_started)
         self._register_sync(PassageGenerationCompleted, self._on_generation_completed)
@@ -63,11 +60,11 @@ class SourceRegistrationViewModel(BaseViewModel):
     def validate(self, text: str, title: str) -> None:
         """Validate registration form and emit validation_changed."""
         text_len = len(text)
-        if text_len < _MIN_TEXT_LENGTH:
-            self.validation_changed.emit(False, f"テキストは{_MIN_TEXT_LENGTH}文字以上必要です（現在{text_len}文字）")
+        if text_len < MIN_TEXT_LENGTH:
+            self.validation_changed.emit(False, f"テキストは{MIN_TEXT_LENGTH}文字以上必要です（現在{text_len}文字）")
             return
-        if text_len > _MAX_TEXT_LENGTH:
-            msg = f"テキストは{_MAX_TEXT_LENGTH}文字以下にしてください（現在{text_len}文字）"
+        if text_len > MAX_TEXT_LENGTH:
+            msg = f"テキストは{MAX_TEXT_LENGTH}文字以下にしてください（現在{text_len}文字）"
             self.validation_changed.emit(False, msg)
             return
         if not title.strip():

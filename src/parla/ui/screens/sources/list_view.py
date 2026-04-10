@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.domain.source import CEFRLevel
 from parla.services.query_models import SourceSummary
 from parla.ui.screens.sources.list_view_model import SourceListViewModel
 
@@ -26,15 +27,7 @@ STATUS_OPTIONS: list[tuple[str | None, str]] = [
     ("completed", "完了"),
 ]
 
-CEFR_OPTIONS: list[tuple[str | None, str]] = [
-    (None, "すべて"),
-    ("A1", "A1"),
-    ("A2", "A2"),
-    ("B1", "B1"),
-    ("B2", "B2"),
-    ("C1", "C1"),
-    ("C2", "C2"),
-]
+CEFR_OPTIONS: list[tuple[str | None, str]] = [(None, "すべて"), *((lv, lv) for lv in CEFRLevel)]
 
 STATUS_LABELS = {
     "registered": "登録済み",
@@ -53,11 +46,9 @@ class SourceListView(QWidget):
     def __init__(self, view_model: SourceListViewModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._vm = view_model
-        self._updating_filters = False
 
         layout = QVBoxLayout(self)
 
-        # --- Filters ---
         filter_layout = QHBoxLayout()
 
         filter_layout.addWidget(QLabel("ステータス"))
@@ -76,16 +67,13 @@ class SourceListView(QWidget):
 
         layout.addLayout(filter_layout)
 
-        # --- Source list ---
         self._source_list = QListWidget()
         layout.addWidget(self._source_list)
 
-        # --- Add button ---
         self._add_button = QPushButton("ソースを追加")
         self._add_button.clicked.connect(self._vm.open_registration)
         layout.addWidget(self._add_button)
 
-        # --- Signal connections ---
         self._vm.sources_loaded.connect(self._on_sources_loaded)
 
     def _on_sources_loaded(self, sources: Sequence[SourceSummary]) -> None:
@@ -97,8 +85,6 @@ class SourceListView(QWidget):
             self._source_list.addItem(QListWidgetItem(text))
 
     def _on_filter_changed(self) -> None:
-        if self._updating_filters:
-            return
         status_idx = self._status_filter.currentIndex()
         cefr_idx = self._cefr_filter.currentIndex()
 

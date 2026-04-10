@@ -124,6 +124,10 @@ class NavigationController(QWidget):
         """Whether the tab bar is currently shown."""
         return not self._tab_bar.isHidden()
 
+    def set_tabs_visible(self, visible: bool) -> None:
+        """Show or hide the tab bar."""
+        self._tab_bar.setVisible(visible)
+
     @property
     def in_session(self) -> bool:
         """Whether the app is currently in session mode."""

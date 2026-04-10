@@ -16,8 +16,8 @@ class SetupViewModel(BaseViewModel):
     def __init__(self, event_bus: EventBus, settings_service: SettingsService) -> None:
         super().__init__(event_bus)
         self._settings_service = settings_service
-        self._selected_cefr: CEFRLevel = "B1"
-        self._selected_variant: EnglishVariant = "American"
+        self._selected_cefr: CEFRLevel = CEFRLevel.B1
+        self._selected_variant: EnglishVariant = EnglishVariant.AMERICAN
 
     @property
     def selected_cefr(self) -> CEFRLevel:

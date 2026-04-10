@@ -9,10 +9,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.domain.source import CEFRLevel, EnglishVariant
 from parla.ui.screens.settings.view_model import SettingsViewModel
-
-CEFR_LEVELS = ("A1", "A2", "B1", "B2", "C1", "C2")
-ENGLISH_VARIANTS = ("American", "British", "Australian", "Canadian", "Indian")
 
 
 class SettingsView(QWidget):
@@ -23,18 +21,16 @@ class SettingsView(QWidget):
         self._vm = view_model
         self._updating = False
 
-        # --- Widgets ---
         self._cefr_combo = QComboBox()
-        self._cefr_combo.addItems(CEFR_LEVELS)
+        self._cefr_combo.addItems(list(CEFRLevel))
 
         self._variant_combo = QComboBox()
-        self._variant_combo.addItems(ENGLISH_VARIANTS)
+        self._variant_combo.addItems(list(EnglishVariant))
 
         self._phonetic_check = QCheckBox("発音記号を表示する")
 
         self._sources_button = QPushButton("ソース管理")
 
-        # --- Layout ---
         form = QFormLayout()
         form.addRow("CEFRレベル", self._cefr_combo)
         form.addRow("英語バリエーション", self._variant_combo)
@@ -45,20 +41,11 @@ class SettingsView(QWidget):
         layout.addWidget(self._sources_button)
         layout.addStretch()
 
-        # --- Signal connections ---
-        self._vm.settings_loaded.connect(self._on_settings_loaded)
-        self._vm.settings_updated.connect(self._on_settings_updated)
-
+        self._vm.settings_changed.connect(self._set_ui_values)
         self._cefr_combo.currentTextChanged.connect(self._on_cefr_changed)
         self._variant_combo.currentTextChanged.connect(self._on_variant_changed)
         self._phonetic_check.toggled.connect(self._on_phonetic_toggled)
         self._sources_button.clicked.connect(self._vm.open_sources)
-
-    def _on_settings_loaded(self, cefr: str, variant: str, phonetic: bool) -> None:
-        self._set_ui_values(cefr, variant, phonetic)
-
-    def _on_settings_updated(self, cefr: str, variant: str, phonetic: bool) -> None:
-        self._set_ui_values(cefr, variant, phonetic)
 
     def _set_ui_values(self, cefr: str, variant: str, phonetic: bool) -> None:
         """Update UI widgets without triggering service calls."""

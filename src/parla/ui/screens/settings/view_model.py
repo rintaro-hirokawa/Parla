@@ -12,15 +12,14 @@ from parla.ui.base_view_model import BaseViewModel
 class SettingsViewModel(BaseViewModel):
     """Bridges SettingsService and the Settings View."""
 
-    settings_loaded = Signal(str, str, bool)  # cefr, variant, phonetic
-    settings_updated = Signal(str, str, bool)
+    settings_changed = Signal(str, str, bool)  # cefr, variant, phonetic
     navigate_to_sources = Signal()
 
     def __init__(self, event_bus: EventBus, settings_service: SettingsService) -> None:
         super().__init__(event_bus)
         self._settings_service = settings_service
-        self._cefr_level: CEFRLevel = "B1"
-        self._english_variant: EnglishVariant = "American"
+        self._cefr_level: CEFRLevel = CEFRLevel.B1
+        self._english_variant: EnglishVariant = EnglishVariant.AMERICAN
         self._phonetic_display: bool = False
         self._register_sync(SettingsChanged, self._on_settings_changed)
 
@@ -37,12 +36,12 @@ class SettingsViewModel(BaseViewModel):
         return self._phonetic_display
 
     def load_settings(self) -> None:
-        """Load current settings from service and emit settings_loaded."""
+        """Load current settings from service and emit settings_changed."""
         settings = self._settings_service.get_settings()
         self._cefr_level = settings.cefr_level
         self._english_variant = settings.english_variant
         self._phonetic_display = settings.phonetic_display
-        self.settings_loaded.emit(self._cefr_level, self._english_variant, self._phonetic_display)
+        self.settings_changed.emit(self._cefr_level, self._english_variant, self._phonetic_display)
 
     def update_cefr_level(self, level: CEFRLevel) -> None:
         self._settings_service.update_settings(cefr_level=level)
@@ -61,4 +60,4 @@ class SettingsViewModel(BaseViewModel):
         self._cefr_level = event.cefr_level
         self._english_variant = event.english_variant
         self._phonetic_display = event.phonetic_display
-        self.settings_updated.emit(self._cefr_level, self._english_variant, self._phonetic_display)
+        self.settings_changed.emit(self._cefr_level, self._english_variant, self._phonetic_display)

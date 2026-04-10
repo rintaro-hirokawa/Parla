@@ -1,6 +1,7 @@
 """Source entity and related types."""
 
 from datetime import datetime
+from enum import StrEnum
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -22,11 +23,25 @@ type SourceStatus = Literal[
     "archived",
 ]
 
-type CEFRLevel = Literal["A1", "A2", "B1", "B2", "C1", "C2"]
-type EnglishVariant = Literal["American", "British", "Australian", "Canadian", "Indian"]
 
-_MIN_TEXT_LENGTH = 100
-_MAX_TEXT_LENGTH = 50_000
+class CEFRLevel(StrEnum):
+    A1 = "A1"
+    A2 = "A2"
+    B1 = "B1"
+    B2 = "B2"
+    C1 = "C1"
+    C2 = "C2"
+
+
+class EnglishVariant(StrEnum):
+    AMERICAN = "American"
+    BRITISH = "British"
+    AUSTRALIAN = "Australian"
+    CANADIAN = "Canadian"
+    INDIAN = "Indian"
+
+MIN_TEXT_LENGTH = 100
+MAX_TEXT_LENGTH = 50_000
 
 _VALID_TRANSITIONS: dict[SourceStatus, set[SourceStatus]] = {
     "registered": {"generating"},
@@ -53,11 +68,11 @@ class Source(BaseModel):
 
     @model_validator(mode="after")
     def _validate_text_length(self) -> "Source":
-        if len(self.text) < _MIN_TEXT_LENGTH:
-            msg = f"Source text must be at least {_MIN_TEXT_LENGTH} characters, got {len(self.text)}"
+        if len(self.text) < MIN_TEXT_LENGTH:
+            msg = f"Source text must be at least {MIN_TEXT_LENGTH} characters, got {len(self.text)}"
             raise SourceTextTooShort(msg)
-        if len(self.text) > _MAX_TEXT_LENGTH:
-            msg = f"Source text must be at most {_MAX_TEXT_LENGTH} characters, got {len(self.text)}"
+        if len(self.text) > MAX_TEXT_LENGTH:
+            msg = f"Source text must be at most {MAX_TEXT_LENGTH} characters, got {len(self.text)}"
             raise SourceTextTooLong(msg)
         return self
 
