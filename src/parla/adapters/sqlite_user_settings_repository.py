@@ -23,6 +23,10 @@ class SQLiteUserSettingsRepository:
             phonetic_display=bool(row["phonetic_display"]),
         )
 
+    def exists(self) -> bool:
+        row = self._conn.execute("SELECT 1 FROM user_settings WHERE id = 1").fetchone()
+        return row is not None
+
     def save(self, settings: UserSettings) -> None:
         self._conn.execute(
             """\

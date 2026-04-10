@@ -101,6 +101,14 @@ class SQLiteSessionRepository:
             return None
         return self._row_to_state(row)
 
+    def get_completed_states(self) -> list[SessionState]:
+        rows = self._conn.execute(
+            """SELECT * FROM session_states
+               WHERE status = 'completed'
+               ORDER BY completed_at""",
+        ).fetchall()
+        return [self._row_to_state(r) for r in rows]
+
     def update_state(self, state: SessionState) -> None:
         self._conn.execute(
             """UPDATE session_states

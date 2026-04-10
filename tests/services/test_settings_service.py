@@ -9,12 +9,17 @@ from parla.services.settings_service import SettingsService
 class InMemorySettingsRepository:
     def __init__(self) -> None:
         self._settings = UserSettings()
+        self._saved = False
 
     def get(self) -> UserSettings:
         return self._settings
 
     def save(self, settings: UserSettings) -> None:
         self._settings = settings
+        self._saved = True
+
+    def exists(self) -> bool:
+        return self._saved
 
 
 class EventCollector:

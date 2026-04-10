@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from typing import Protocol
 from uuid import UUID
 
-from parla.domain.passage import Passage
+from parla.domain.passage import Passage, Sentence
 from parla.domain.source import Source
 
 
@@ -25,6 +25,14 @@ class SourceRepository(Protocol):
 
     def get_active_sources(self) -> Sequence[Source]:
         """Get sources with status not_started or in_progress."""
+        ...
+
+    def get_all_sources(self) -> Sequence[Source]:
+        """Get all sources regardless of status."""
+        ...
+
+    def get_sentence(self, sentence_id: UUID) -> Sentence | None:
+        """Get a single sentence by ID."""
         ...
 
     def get_source_by_sentence_id(self, sentence_id: UUID) -> Source | None:

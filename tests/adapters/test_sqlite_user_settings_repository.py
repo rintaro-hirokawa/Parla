@@ -43,6 +43,17 @@ class TestSQLiteUserSettingsRepository:
         assert result.phonetic_display is True
         assert result.cefr_level == "B1"  # unchanged
 
+    def test_exists_false_before_save(self, repo: SQLiteUserSettingsRepository) -> None:
+        assert repo.exists() is False
+
+    def test_exists_true_after_save(self, repo: SQLiteUserSettingsRepository) -> None:
+        repo.save(UserSettings())
+        assert repo.exists() is True
+
+    def test_exists_true_after_get_auto_creates(self, repo: SQLiteUserSettingsRepository) -> None:
+        repo.get()  # auto-creates defaults
+        assert repo.exists() is True
+
     def test_get_creates_row_only_once(self, repo: SQLiteUserSettingsRepository) -> None:
         repo.get()
         repo.get()

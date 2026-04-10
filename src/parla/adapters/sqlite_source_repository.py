@@ -153,11 +153,31 @@ class SQLiteSourceRepository:
 
         return passages
 
+    def get_all_sources(self) -> list[Source]:
+        rows = self._conn.execute(
+            "SELECT * FROM sources ORDER BY created_at",
+        ).fetchall()
+        return [self._row_to_source(r) for r in rows]
+
     def get_active_sources(self) -> list[Source]:
         rows = self._conn.execute(
             "SELECT * FROM sources WHERE status IN ('not_started', 'in_progress') ORDER BY created_at",
         ).fetchall()
         return [self._row_to_source(r) for r in rows]
+
+    def get_sentence(self, sentence_id: UUID) -> Sentence | None:
+        row = self._conn.execute(
+            "SELECT * FROM sentences WHERE id = ?", (str(sentence_id),)
+        ).fetchone()
+        if row is None:
+            return None
+        return Sentence(
+            id=UUID(row["id"]),
+            order=row["order"],
+            ja=row["ja"],
+            en=row["en"],
+            hints=Hint(hint1=row["hint1"], hint2=row["hint2"]),
+        )
 
     def get_source_by_sentence_id(self, sentence_id: UUID) -> Source | None:
         row = self._conn.execute(

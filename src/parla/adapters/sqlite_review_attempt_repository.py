@@ -40,6 +40,12 @@ class SQLiteReviewAttemptRepository:
         ).fetchall()
         return [self._row_to_attempt(r) for r in rows]
 
+    def get_all_attempts(self) -> list[ReviewAttempt]:
+        rows = self._conn.execute(
+            "SELECT * FROM review_attempts ORDER BY created_at",
+        ).fetchall()
+        return [self._row_to_attempt(r) for r in rows]
+
     @staticmethod
     def _row_to_attempt(row: sqlite3.Row) -> ReviewAttempt:
         return ReviewAttempt(

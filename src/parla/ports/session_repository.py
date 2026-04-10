@@ -1,5 +1,6 @@
 """Port for session menu and state persistence."""
 
+from collections.abc import Sequence
 from datetime import date
 from typing import Protocol
 from uuid import UUID
@@ -24,6 +25,10 @@ class SessionRepository(Protocol):
 
     def get_active_state(self) -> SessionState | None:
         """Get the current in_progress or interrupted session state."""
+        ...
+
+    def get_completed_states(self) -> Sequence[SessionState]:
+        """Get all completed session states, ordered by completed_at."""
         ...
 
     def update_state(self, state: SessionState) -> None: ...

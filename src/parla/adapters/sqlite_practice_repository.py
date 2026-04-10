@@ -142,6 +142,12 @@ class SQLitePracticeRepository:
         ).fetchall()
         return [self._row_to_live_delivery(r) for r in rows]
 
+    def get_all_live_delivery_results(self) -> list[LiveDeliveryResult]:
+        rows = self._conn.execute(
+            "SELECT * FROM live_delivery_results ORDER BY created_at",
+        ).fetchall()
+        return [self._row_to_live_delivery(r) for r in rows]
+
     # --- Passage Achievements ---
 
     def save_achievement(self, passage_id: UUID, achieved_at: datetime) -> None:
