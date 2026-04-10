@@ -97,6 +97,38 @@ class SQLiteSourceRepository:
                 )
         self._conn.commit()
 
+    def get_passage(self, passage_id: UUID) -> Passage | None:
+        p_row = self._conn.execute(
+            "SELECT * FROM passages WHERE id = ?", (str(passage_id),)
+        ).fetchone()
+        if p_row is None:
+            return None
+
+        sentence_rows = self._conn.execute(
+            'SELECT * FROM sentences WHERE passage_id = ? ORDER BY "order"',
+            (p_row["id"],),
+        ).fetchall()
+
+        sentences = tuple(
+            Sentence(
+                id=UUID(s["id"]),
+                order=s["order"],
+                ja=s["ja"],
+                en=s["en"],
+                hints=Hint(hint1=s["hint1"], hint2=s["hint2"]),
+            )
+            for s in sentence_rows
+        )
+
+        return Passage(
+            id=UUID(p_row["id"]),
+            source_id=UUID(p_row["source_id"]),
+            order=p_row["order"],
+            topic=p_row["topic"],
+            passage_type=p_row["passage_type"],
+            sentences=sentences,
+        )
+
     def get_passages_by_source(self, source_id: UUID) -> list[Passage]:
         passage_rows = self._conn.execute(
             'SELECT * FROM passages WHERE source_id = ? ORDER BY "order"',

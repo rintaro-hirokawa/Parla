@@ -37,6 +37,43 @@ CREATE TABLE IF NOT EXISTS sentences (
 CREATE INDEX IF NOT EXISTS idx_passages_source_id ON passages(source_id);
 CREATE INDEX IF NOT EXISTS idx_sentences_passage_id ON sentences(passage_id);
 CREATE INDEX IF NOT EXISTS idx_sources_status ON sources(status);
+
+CREATE TABLE IF NOT EXISTS learning_items (
+    id                  TEXT PRIMARY KEY,
+    pattern             TEXT NOT NULL,
+    explanation         TEXT NOT NULL,
+    category            TEXT NOT NULL,
+    sub_tag             TEXT NOT NULL DEFAULT '',
+    priority            INTEGER NOT NULL,
+    source_sentence_id  TEXT NOT NULL REFERENCES sentences(id),
+    is_reappearance     INTEGER NOT NULL DEFAULT 0,
+    matched_item_id     TEXT,
+    status              TEXT NOT NULL,
+    created_at          TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sentence_feedback (
+    id              TEXT PRIMARY KEY,
+    sentence_id     TEXT NOT NULL REFERENCES sentences(id),
+    user_utterance  TEXT NOT NULL,
+    model_answer    TEXT NOT NULL,
+    is_acceptable   INTEGER NOT NULL,
+    created_at      TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS practice_attempts (
+    id              TEXT PRIMARY KEY,
+    sentence_id     TEXT NOT NULL REFERENCES sentences(id),
+    attempt_number  INTEGER NOT NULL,
+    correct         INTEGER NOT NULL,
+    reason          TEXT NOT NULL DEFAULT '',
+    created_at      TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_items_status ON learning_items(status);
+CREATE INDEX IF NOT EXISTS idx_learning_items_sentence ON learning_items(source_sentence_id);
+CREATE INDEX IF NOT EXISTS idx_sentence_feedback_sentence ON sentence_feedback(sentence_id);
+CREATE INDEX IF NOT EXISTS idx_practice_attempts_sentence ON practice_attempts(sentence_id);
 """
 
 
@@ -56,6 +93,9 @@ def init_schema(conn: sqlite3.Connection) -> None:
 def reset_db(conn: sqlite3.Connection) -> None:
     """Drop all tables and recreate. For prototype-phase use only."""
     conn.executescript("""\
+        DROP TABLE IF EXISTS practice_attempts;
+        DROP TABLE IF EXISTS sentence_feedback;
+        DROP TABLE IF EXISTS learning_items;
         DROP TABLE IF EXISTS sentences;
         DROP TABLE IF EXISTS passages;
         DROP TABLE IF EXISTS sources;
