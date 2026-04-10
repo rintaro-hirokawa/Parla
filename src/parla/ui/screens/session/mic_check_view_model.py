@@ -28,6 +28,8 @@ class MicCheckViewModel(QObject):
         self._recorder = recorder
         self._start_enabled = False
         self._testing = False
+        self._warning_shown = False
+        self._devices: list | None = None
 
         self._recorder.level_changed.connect(self._on_level)
         self._recorder.error_occurred.connect(self._on_error)
@@ -45,13 +47,17 @@ class MicCheckViewModel(QObject):
     # ------------------------------------------------------------------
 
     def device_names(self) -> list[str]:
-        devices = self._recorder.available_devices()
-        return [d.description() for d in devices]
+        self._ensure_devices()
+        return [d.description() for d in self._devices]  # type: ignore[union-attr]
 
     def select_device(self, index: int) -> None:
-        devices = self._recorder.available_devices()
-        if 0 <= index < len(devices):
-            self._recorder.select_device(devices[index])
+        self._ensure_devices()
+        if 0 <= index < len(self._devices):  # type: ignore[arg-type]
+            self._recorder.select_device(self._devices[index])  # type: ignore[index]
+
+    def _ensure_devices(self) -> None:
+        if self._devices is None:
+            self._devices = self._recorder.available_devices()
 
     def start_test(self) -> None:
         if not self._testing:
@@ -78,8 +84,10 @@ class MicCheckViewModel(QObject):
     def _on_level(self, rms: float) -> None:
         if rms >= LEVEL_THRESHOLD and not self._start_enabled:
             self._start_enabled = True
+            self._warning_shown = False
             self.start_enabled_changed.emit(True)
-        elif rms < LEVEL_THRESHOLD and not self._start_enabled:
+        elif rms < LEVEL_THRESHOLD and not self._start_enabled and not self._warning_shown:
+            self._warning_shown = True
             self.level_warning.emit()
 
     def _on_error(self, message: str) -> None:

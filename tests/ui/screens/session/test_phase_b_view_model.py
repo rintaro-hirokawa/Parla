@@ -63,7 +63,7 @@ class FakeFeedbackRepo:
 def _make_vm(
     passage_id: UUID | None = None,
     sentence_ids: list[UUID] | None = None,
-) -> tuple[PhaseBViewModel, EventBus, FakeFeedbackService, FakePracticeService, FakeFeedbackRepo]:
+) -> tuple[PhaseBViewModel, EventBus, FakeFeedbackService, FakePracticeService, FakeFeedbackRepo, UUID]:
     bus = EventBus()
     fb_svc = FakeFeedbackService()
     pr_svc = FakePracticeService()
@@ -83,14 +83,14 @@ def _make_vm(
     vm.start(pid, sids)
     vm.activate()
 
-    return vm, bus, fb_svc, pr_svc, fb_repo
+    return vm, bus, fb_svc, pr_svc, fb_repo, pid
 
 
 class TestProgressiveDisplay:
     def test_feedback_added_on_event(self, qtbot) -> None:
         s1, s2 = uuid4(), uuid4()
-        vm, bus, _, _, fb_repo = _make_vm(sentence_ids=[s1, s2])
-        pid = vm._passage_id
+        vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
+        pid = pid
 
         fb_repo.add(SentenceFeedback(
             sentence_id=s1,
@@ -109,8 +109,8 @@ class TestProgressiveDisplay:
 
     def test_all_feedback_received(self, qtbot) -> None:
         s1, s2 = uuid4(), uuid4()
-        vm, bus, _, _, fb_repo = _make_vm(sentence_ids=[s1, s2])
-        pid = vm._passage_id
+        vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
+        pid = pid
 
         fb_repo.add(SentenceFeedback(
             sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True,
@@ -126,8 +126,8 @@ class TestProgressiveDisplay:
 
     def test_feedback_failed_emits_signal(self, qtbot) -> None:
         s1 = uuid4()
-        vm, bus, _, _, _ = _make_vm(sentence_ids=[s1])
-        pid = vm._passage_id
+        vm, bus, _, _, _, pid = _make_vm(sentence_ids=[s1])
+        pid = pid
 
         with qtbot.waitSignal(vm.feedback_failed, timeout=1000) as blocker:
             bus.emit(FeedbackFailed(passage_id=pid, sentence_id=s1, error_message="LLM error"))
@@ -138,7 +138,7 @@ class TestProgressiveDisplay:
 
 class TestLearningItems:
     def test_item_stocked_forwarded(self, qtbot) -> None:
-        vm, bus, _, _, _ = _make_vm()
+        vm, bus, _, _, _, _ = _make_vm()
 
         with qtbot.waitSignal(vm.item_stocked, timeout=1000) as blocker:
             bus.emit(LearningItemStocked(item_id=uuid4(), pattern="past tense", is_reappearance=False))
@@ -150,7 +150,7 @@ class TestLearningItems:
 class TestRetry:
     def test_retry_result_emitted(self, qtbot) -> None:
         s1 = uuid4()
-        vm, bus, _, _, _ = _make_vm(sentence_ids=[s1])
+        vm, bus, _, _, _, pid = _make_vm(sentence_ids=[s1])
 
         with qtbot.waitSignal(vm.retry_result, timeout=1000) as blocker:
             bus.emit(RetryJudged(sentence_id=s1, attempt=1, correct=True))
@@ -159,7 +159,7 @@ class TestRetry:
 
     def test_retry_max_3_enforced(self, qtbot) -> None:
         s1 = uuid4()
-        vm, bus, fb_svc, _, _ = _make_vm(sentence_ids=[s1])
+        vm, bus, fb_svc, _, _, _ = _make_vm(sentence_ids=[s1])
 
         # Record 3 failed retries
         vm._retry_counts[s1] = 3
@@ -172,14 +172,14 @@ class TestRetry:
 class TestModelAudioRequest:
     def test_model_audio_requested_on_start(self, qtbot) -> None:
         pid = uuid4()
-        vm, bus, _, pr_svc, _ = _make_vm(passage_id=pid)
+        vm, bus, _, pr_svc, _, _ = _make_vm(passage_id=pid)
 
         assert pid in pr_svc.model_audio_calls
 
 
 class TestNavigation:
     def test_proceed_skip_phase_c(self, qtbot) -> None:
-        vm, bus, _, pr_svc, _ = _make_vm()
+        vm, bus, _, pr_svc, _, _ = _make_vm()
         pr_svc._should_skip = True
 
         with qtbot.waitSignal(vm.navigate_to_next, timeout=1000) as blocker:
@@ -188,7 +188,7 @@ class TestNavigation:
         assert blocker.args == [True]  # skip_phase_c
 
     def test_proceed_to_phase_c(self, qtbot) -> None:
-        vm, bus, _, pr_svc, _ = _make_vm()
+        vm, bus, _, pr_svc, _, _ = _make_vm()
         pr_svc._should_skip = False
 
         with qtbot.waitSignal(vm.navigate_to_next, timeout=1000) as blocker:
@@ -199,7 +199,7 @@ class TestNavigation:
 
 class TestDeactivate:
     def test_deactivate_unsubscribes(self, qtbot) -> None:
-        vm, bus, _, _, _ = _make_vm()
+        vm, bus, _, _, _, _ = _make_vm()
         vm.deactivate()
 
         with qtbot.assertNotEmitted(vm.feedback_added):

@@ -4,19 +4,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Signal
-
-from parla.ui.base_view_model import BaseViewModel
+from PySide6.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
+    from uuid import UUID
+
     from parla.domain.audio import AudioData
     from parla.domain.passage import Passage
-    from parla.event_bus import EventBus
-    from parla.ui.screens.session.session_context import SessionContext
 
 
-class PhaseAViewModel(BaseViewModel):
-    """Manages Phase A: sequential sentence recording for a passage."""
+class PhaseAViewModel(QObject):
+    """Manages Phase A: sequential sentence recording for a passage.
+
+    Does not inherit BaseViewModel — no EventBus event handlers needed.
+    """
 
     current_sentence_changed = Signal(int)  # new index
     all_sentences_done = Signal()
@@ -25,18 +26,17 @@ class PhaseAViewModel(BaseViewModel):
     def __init__(
         self,
         *,
-        event_bus: EventBus,
         feedback_service: Any,
         item_query_service: Any,
-        session_context: SessionContext,
+        parent: QObject | None = None,
     ) -> None:
-        super().__init__(event_bus)
+        super().__init__(parent)
         self._feedback_service = feedback_service
         self._item_query = item_query_service
-        self._ctx = session_context
 
         self._passage: Passage | None = None
         self._current_index = 0
+        self._hint_cache: dict[UUID, tuple] = {}
 
     # ------------------------------------------------------------------
     # Properties
@@ -63,6 +63,7 @@ class PhaseAViewModel(BaseViewModel):
     def load_passage(self, passage: Passage) -> None:
         self._passage = passage
         self._current_index = 0
+        self._hint_cache = {}
 
     def sentence_ja_list(self) -> list[str]:
         if self._passage is None:
@@ -70,17 +71,15 @@ class PhaseAViewModel(BaseViewModel):
         return [s.ja for s in self._passage.sentences]
 
     def has_hint_for_current(self) -> bool:
-        if self._passage is None:
-            return False
-        sentence = self._passage.sentences[self._current_index]
-        items = self._item_query.get_sentence_items(sentence.id)
-        return len(items) > 0
+        return len(self.get_hint_items()) > 0
 
     def get_hint_items(self) -> tuple:
         if self._passage is None:
             return ()
         sentence = self._passage.sentences[self._current_index]
-        return self._item_query.get_sentence_items(sentence.id)
+        if sentence.id not in self._hint_cache:
+            self._hint_cache[sentence.id] = self._item_query.get_sentence_items(sentence.id)
+        return self._hint_cache[sentence.id]
 
     def submit_recording(self, audio: AudioData) -> None:
         if self._passage is None:

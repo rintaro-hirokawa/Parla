@@ -80,6 +80,8 @@ class SessionContext(QObject):
     # ------------------------------------------------------------------
 
     def update_progress(self, block_name: str, current: int, total: int) -> None:
+        if (self._block_name, self._progress_current, self._progress_total) == (block_name, current, total):
+            return
         self._block_name = block_name
         self._progress_current = current
         self._progress_total = total

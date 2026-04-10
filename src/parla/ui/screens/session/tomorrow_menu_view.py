@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.ui.screens.today.view import BLOCK_TYPE_LABELS
+
 if TYPE_CHECKING:
     from parla.ui.screens.session.tomorrow_menu_view_model import TomorrowMenuViewModel
 
@@ -58,8 +60,7 @@ class TomorrowMenuView(QWidget):
 
         lines = []
         for b in preview.blocks:
-            label = {"review": "復習", "new_material": "新規素材", "consolidation": "定着"}
-            name = label.get(b.block_type, b.block_type)
+            name = BLOCK_TYPE_LABELS.get(b.block_type, b.block_type)
             lines.append(f"  {name}: {b.item_count}問 ({b.estimated_minutes:.0f}分)")
         self._blocks_label.setText("\n".join(lines))
 

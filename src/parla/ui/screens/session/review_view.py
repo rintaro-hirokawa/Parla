@@ -68,9 +68,11 @@ class ReviewView(QWidget):
         self._vm.retry_result.connect(self._on_retry_result)
         self._vm.error.connect(self._on_error)
 
+        self._in_retry = False
+
         self._hint_button.clicked.connect(self._vm.reveal_hint)
         self._recording.recording_finished.connect(self._on_recording_finished)
-        self._retry_button.clicked.connect(self._start_retry)
+        self._retry_button.clicked.connect(self._on_retry_clicked)
 
     def showEvent(self, event) -> None:  # noqa: ANN001
         super().showEvent(event)
@@ -85,6 +87,7 @@ class ReviewView(QWidget):
     # ------------------------------------------------------------------
 
     def _on_question(self) -> None:
+        self._in_retry = False
         self._prompt_label.setText(self._vm.current_ja)
         self._hint_label.setText("")
         self._result_label.setText("")
@@ -115,10 +118,13 @@ class ReviewView(QWidget):
         self._result_label.setText(f"エラー: {message}")
 
     def _on_recording_finished(self, audio: object) -> None:
-        self._vm.submit_recording(audio)  # type: ignore[arg-type]
+        if self._in_retry:
+            self._vm.submit_retry(audio)  # type: ignore[arg-type]
+        else:
+            self._vm.submit_recording(audio)  # type: ignore[arg-type]
 
-    def _start_retry(self) -> None:
-        pass  # Recording will be captured via recording_finished → submit_retry
+    def _on_retry_clicked(self) -> None:
+        self._in_retry = True
 
     def _on_auto_advance(self) -> None:
         self._vm.advance()

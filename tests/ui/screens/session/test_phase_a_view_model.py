@@ -4,9 +4,7 @@ from uuid import uuid4
 
 from parla.domain.audio import AudioData
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.event_bus import EventBus
 from parla.ui.screens.session.phase_a_view_model import PhaseAViewModel
-from parla.ui.screens.session.session_context import SessionContext
 
 
 def _make_audio() -> AudioData:
@@ -67,15 +65,11 @@ def _make_vm(
     feedback_service: FakeFeedbackService | None = None,
     item_query: FakeLearningItemQueryService | None = None,
 ) -> tuple[PhaseAViewModel, FakeFeedbackService, FakeLearningItemQueryService]:
-    bus = EventBus()
     fb_svc = feedback_service or FakeFeedbackService()
     iq_svc = item_query or FakeLearningItemQueryService()
-    ctx = SessionContext()
     vm = PhaseAViewModel(
-        event_bus=bus,
         feedback_service=fb_svc,
         item_query_service=iq_svc,
-        session_context=ctx,
     )
     if passage:
         vm.load_passage(passage)

@@ -42,6 +42,10 @@ class FeedbackCard(QWidget):
     def set_error(self, message: str) -> None:
         self._status_label.setText(f"エラー: {message}")
 
+    def set_retry_status(self, attempt: int, correct: bool) -> None:
+        status = "正解" if correct else "不正解"
+        self._status_label.setText(f"リトライ{attempt}: {status}")
+
 
 class PhaseBView(QWidget):
     """Phase B — progressive feedback display with retry and navigation."""
@@ -65,6 +69,7 @@ class PhaseBView(QWidget):
         scroll.setWidgetResizable(True)
 
         # --- Items and controls ---
+        self._stocked_items: list[str] = []
         self._items_label = QLabel("")
         self._recording = RecordingControlsWidget(recorder, parent=self)
         self._edit_button = QPushButton("項目を編集")
@@ -110,13 +115,12 @@ class PhaseBView(QWidget):
         card.set_error(message)
 
     def _on_item_stocked(self, pattern: str, is_reappearance: bool) -> None:
-        current = self._items_label.text()
         marker = " (再出)" if is_reappearance else ""
-        self._items_label.setText(f"{current}\n• {pattern}{marker}".strip())
+        self._stocked_items.append(f"• {pattern}{marker}")
+        self._items_label.setText("\n".join(self._stocked_items))
 
     def _on_retry_result(self, index: int, attempt: int, correct: bool) -> None:
         card = self._cards.get(index)
         if card is None:
             return
-        status = "正解" if correct else "不正解"
-        card._status_label.setText(f"リトライ{attempt}: {status}")
+        card.set_retry_status(attempt, correct)

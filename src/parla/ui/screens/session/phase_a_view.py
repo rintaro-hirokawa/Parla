@@ -59,14 +59,6 @@ class PhaseAView(QWidget):
         self._recording.recording_finished.connect(self._on_recording_finished)
         self._hint_button.clicked.connect(self._on_hint_clicked)
 
-    def showEvent(self, event) -> None:  # noqa: ANN001
-        super().showEvent(event)
-        self._vm.activate()
-
-    def hideEvent(self, event) -> None:  # noqa: ANN001
-        self._vm.deactivate()
-        super().hideEvent(event)
-
     def _highlight_current(self) -> None:
         idx = self._vm.current_index
         self._sentence_list.setCurrentRow(idx)

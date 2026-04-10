@@ -15,6 +15,7 @@ from parla.domain.events import (
     VariationReady,
 )
 from parla.ui.base_view_model import BaseViewModel
+from parla.ui.screens.session import MAX_RETRY
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -23,8 +24,6 @@ if TYPE_CHECKING:
     from parla.domain.variation import Variation
     from parla.event_bus import EventBus
     from parla.ui.screens.session.session_context import SessionContext
-
-MAX_RETRY = 3
 
 
 class ReviewViewModel(BaseViewModel):
