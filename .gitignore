@@ -41,3 +41,5 @@ audio/
 # Verification intermediate outputs (reproducible, large files)
 verification/*/outputs/
 verification/*/results/
+
+docs/architecture/ui-implementation-review.md
