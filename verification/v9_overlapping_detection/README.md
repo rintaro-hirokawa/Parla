@@ -4,6 +4,8 @@
 
 詳細な検証経緯と結果は [docs/verification/v9-overlapping-detection/result-2026-04-07.md](../../docs/verification/v9-overlapping-detection/result-2026-04-07.md) を参照。
 
+> **⚠️ レイテンシに関する注意:** 本検証では Azure Pronunciation Assessment をファイルベース（非ストリーミング）で使用しており、34秒の音声に 17秒かかっている。本番実装では `PushAudioInputStream` によるストリーミング方式を採用すること（体感レイテンシ ~1.2秒）。ストリーミング方式は [V11](../v11_full_passage_evaluation/) で検証済み。
+
 ## クイックスタート
 
 ```bash
