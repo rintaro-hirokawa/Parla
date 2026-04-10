@@ -18,15 +18,26 @@
 - ViewModel は **EventBus の sync ハンドラ** として登録される
   - 理由: ViewModel の状態更新は軽量な代入だけなので sync で十分。UI更新の即時性が保証される
   - async ハンドラは外部APIコール用（サービス層が使う）
+- ViewModel は `activate()` 時に **Query Service** で初期 state をロードし、その後の差分更新を EventBus イベントで受け取る
 - ドメインイベント受信 → ViewModel 内部状態更新 → Qt Signal emit → View 描画
 - ViewModel のライフサイクル:
   - `activate()`: 画面がアクティブになったとき、EventBus にハンドラ登録
   - `deactivate()`: 画面が非アクティブになったとき、EventBus からハンドラ解除
 
 ### サービス呼び出しパターン
-- ViewModel から `asyncio.create_task(service.method(...))` で非同期呼び出し
-- 結果は EventBus 経由でイベントとして ViewModel に返る（直接 await しない）
-- 例: 録音完了 → `asyncio.create_task(feedback_service.judge_retry(...))` → `RetryJudged` イベント → ViewModel → UI
+- **状態変更** は ViewModel から command service を呼び出す
+  - 非同期処理は `asyncio.create_task(service.method(...))` で起動する
+  - 結果は EventBus 経由でイベントとして ViewModel に返る（直接 await しない）
+  - 例: 録音完了 → `asyncio.create_task(feedback_service.judge_retry(...))` → `RetryJudged` イベント → ViewModel → UI
+- **初期表示 / 一覧 / 履歴 / 集計 / 起動時判定** は Query Service を同期呼び出しする
+  - 例: C2 表示開始 → `learning_item_query_service.list_items(filters)` → ViewModel state 初期化
+
+### Read Model / Query Service
+- 一覧・履歴・集計・起動時判定は **read model / query service** で取得する
+- Query Service は **読み取り専用**。副作用なし、EventBus emit なし、状態変更なし
+- ローカル SQLite の読み取りが中心なので、Query Service は基本 sync でよい
+- 複数 Repository をまたぐ集約や direct SQL は Query 層に閉じ込め、ViewModel / View に書かない
+- Query Service の戻り値は UI 向け DTO とし、集約済みの表示モデルを返す
 
 ### プログレッシブ表示
 - 全結果の完了を待たず、部分結果をドメインイベントとして逐次 UI に反映
@@ -59,6 +70,14 @@ UI が呼び出すサービス:
 - `PracticeService`: `request_model_audio()`, `should_skip()`, `evaluate_overlapping()`, `detect_lag()`, `evaluate_live_delivery()`
 - `SettingsService`: `get_settings()`, `update_settings()`
 
+### UI が呼び出す Query Service（参照）
+
+- `AppStateQueryService`: `get_bootstrap_state()`
+- `SourceQueryService`: `list_sources()`, `list_active_sources()`
+- `LearningItemQueryService`: `list_items()`, `get_item_detail()`, `get_sentence_items()`
+- `HistoryQueryService`: `get_history_overview()`, `get_daily_summary()`
+- `SessionQueryService`: `get_today_dashboard()`, `get_menu_preview()`, `get_passage_summary()`, `get_session_summary()`
+
 ### UI が受信するドメインイベント（参照）
 - ソース: `SourceRegistered`, `PassageGenerationStarted`, `PassageGenerationCompleted`, `PassageGenerationFailed`
 - フィードバック: `SentenceRecorded`, `FeedbackReady`, `FeedbackFailed`, `LearningItemStocked`, `RetryJudged`
@@ -72,6 +91,15 @@ UI が呼び出すサービス:
 ## ディレクトリ構成
 
 ```
+src/parla/queries/
+  __init__.py
+  models.py                    # UI向け read model / DTO
+  app_state_query_service.py   # 起動時判定、再開候補、今日メニュー
+  source_query_service.py      # D2, F2 用のソース一覧・進捗集計
+  learning_item_query_service.py  # C2, C3, E3, E4 用の学習項目読み取り
+  history_query_service.py     # C4 用の履歴集計
+  session_query_service.py     # C1, E9, F1, F2 用のサマリー集計
+
 src/parla/ui/
     __init__.py
     app.py              # QApplication + QtAsyncio.run エントリーポイント
@@ -102,6 +130,14 @@ src/parla/ui/
         sources/     # SCREEN-D1（ソース登録）, D2（ソース一覧）
         session/     # SCREEN-E1〜E9, F1, F2 + ヘッダー + コーディネーター
 
+tests/queries/
+    __init__.py
+    test_app_state_query_service.py
+    test_source_query_service.py
+    test_learning_item_query_service.py
+    test_history_query_service.py
+    test_session_query_service.py
+
 tests/ui/
     __init__.py
     # 上記と対応する構成でテストを配置
@@ -110,6 +146,82 @@ tests/ui/
 ---
 
 ## タスクリスト
+
+### フェーズ -1: Read Model / Query Service
+
+UI の一覧・履歴・集計・起動時判定は Qt 依存なしで先に固める。このフェーズは `pytest-qt` ではなく通常の `pytest` で TDD する。
+
+- [ ] **-1-1: Query 層の方針と read model DTO の定義**
+  - ファイル: `src/parla/queries/__init__.py`, `src/parla/queries/models.py`
+  - Query Service の原則を明文化する
+    - 読み取り専用
+    - EventBus emit なし
+    - ViewModel / View に SQL や集計ロジックを書かない
+    - UI 向け DTO を返す
+  - 画面と Query Service の対応表を決める（C1/C2/C3/C4/D2/E9/F1/F2）
+
+- [ ] **-1-2: アプリ起動状態 Query**
+  - ファイル: `src/parla/queries/app_state_query_service.py`
+  - テスト: `tests/queries/test_app_state_query_service.py`
+  - 返す内容:
+    - 初回セットアップが必要か
+    - 再開可能なセッションがあるか
+    - 今日の confirmed menu があるか
+    - メニュー鮮度チェック結果
+  - テスト観点: 初回起動、再開候補あり、今日メニューあり、今日メニューなし
+
+- [ ] **-1-3: ソース一覧 / 進捗 Query**
+  - ファイル: `src/parla/queries/source_query_service.py`
+  - テスト: `tests/queries/test_source_query_service.py`
+  - 対象画面: D2, F2
+  - 返す内容:
+    - ソース一覧（タイトル、CEFR、英語バリエーション、生成ステータス）
+    - 学習進捗率、学習完了状態、次に学習するパッセージ候補
+    - フィルタ用の read model
+  - テスト観点: フィルタ、進捗率計算、active source 一覧
+
+- [ ] **-1-4: 学習項目一覧 Query**
+  - ファイル: `src/parla/queries/learning_item_query_service.py`
+  - テスト: `tests/queries/test_learning_item_query_service.py`
+  - 対象画面: C2, E3, E4
+  - 返す内容:
+    - C2 用のフィルタ付き一覧
+    - ソース名・カテゴリ・SRS 段階・習得状態を含む行 DTO
+    - センテンス単位の関連学習項目一覧（ヒント表示や E4 の項目表示に利用）
+  - テスト観点: フィルタ組み合わせ、関連学習項目取得、ソース情報 join
+
+- [ ] **-1-5: 学習項目詳細 Query**
+  - ファイル: `src/parla/queries/learning_item_query_service.py`
+  - テスト: `tests/queries/test_learning_item_query_service.py`
+  - 対象画面: C3
+  - 返す内容:
+    - 初出時の発話
+    - 各復習での発話・判定履歴
+    - WPM 推移グラフ用系列
+    - 元ソース・元センテンス情報
+  - テスト観点: 成長ストーリー集約、履歴順序、WPM 系列生成
+  - 備考: 必要データが不足する場合、このフェーズで不足永続化項目を確定してから UI に進む
+
+- [ ] **-1-6: 学習履歴 Query**
+  - ファイル: `src/parla/queries/history_query_service.py`
+  - テスト: `tests/queries/test_history_query_service.py`
+  - 対象画面: C4
+  - 返す内容:
+    - カレンダーマーカー用日付一覧
+    - 日別サマリー
+    - 累計 WPM 推移
+  - テスト観点: 日付集約、サマリー計算、WPM トレンド
+
+- [ ] **-1-7: 今日メニュー / パッセージ / セッション summary Query**
+  - ファイル: `src/parla/queries/session_query_service.py`
+  - テスト: `tests/queries/test_session_query_service.py`
+  - 対象画面: C1, E9, F1, F2
+  - 返す内容:
+    - C1 用の今日メニュー表示 DTO
+    - E9 用のパッセージ完了サマリー DTO
+    - F1 用のセッション終了サマリー DTO
+    - F2 用のメニュー preview DTO
+  - テスト観点: メニュー表示、パッセージ結果集計、セッション成果集計
 
 ### フェーズ 0: 基盤整備
 
@@ -143,13 +255,13 @@ tests/ui/
 
 - [ ] **0-6: DI コンテナ**
   - ファイル: `src/parla/ui/container.py`
-  - EventBus、SQLite DB接続、各 Repository/Port アダプタ、各 Service の生成・配線
+  - EventBus、SQLite DB接続、各 Repository/Port アダプタ、各 Service、各 Query Service の生成・配線
   - サービス側の async ハンドラを EventBus に登録
   - ViewModel はコンテナから直接生成しない（各画面のファクトリが必要なサービスを受け取って生成）
 
 - [ ] **0-7: アプリエントリーポイント**
   - ファイル: `src/parla/ui/app.py`, `src/parla/__main__.py`
-  - `QApplication` 生成 → コンテナ初期化 → 初回判定（UserSettings 有無で SCREEN-B or C1）→ `QtAsyncio.run()`
+  - `QApplication` 生成 → コンテナ初期化 → `AppStateQueryService.get_bootstrap_state()` で起動先判定 → `QtAsyncio.run()`
   - `python -m parla` で起動可能にする
 
 ---
@@ -257,13 +369,15 @@ tests/ui/
 - [ ] **3-4: ソース一覧画面 (SCREEN-D2)**
   - ファイル: `src/parla/ui/screens/sources/list_view.py`, `src/parla/ui/screens/sources/list_view_model.py`
   - テスト: `tests/ui/screens/sources/test_list_view_model.py`, `tests/ui/screens/sources/test_list_view.py`
-  - フィルタ付きリスト、各ソースのプログレスバー
-  - `SourceRegistered` / `PassageGenerationCompleted` イベントで自動更新
+  - `SourceQueryService.list_sources()` で初期表示
+  - フィルタ付きリスト、各ソースのプログレスバー、学習完了状態
+  - `SourceRegistered` / `PassageGenerationCompleted` / `PassageGenerationFailed` イベントで差分更新
   - テスト観点: フィルタ適用、イベント受信→リスト更新
 
 - [ ] **3-5: 今日の学習タブ (SCREEN-C1)**
   - ファイル: `src/parla/ui/screens/today/view.py`, `src/parla/ui/screens/today/view_model.py`
   - テスト: `tests/ui/screens/today/test_view_model.py`, `tests/ui/screens/today/test_view.py`
+  - `SessionQueryService.get_today_dashboard()` で初期表示
   - セッションメニュー表示（ブロック一覧 + 推定時間）
   - 「学習開始」ボタン（メニューが無い/未確定の場合は無効）
   - テスト観点: メニュー有無による表示切替、学習開始ボタンの有効/無効制御
@@ -275,6 +389,7 @@ tests/ui/
 - [ ] **4-1: 学習項目一覧 (SCREEN-C2)**
   - ファイル: `src/parla/ui/screens/items/list_view.py`, `src/parla/ui/screens/items/list_view_model.py`
   - テスト: `tests/ui/screens/items/test_list_view_model.py`, `tests/ui/screens/items/test_list_view.py`
+  - `LearningItemQueryService.list_items()` で初期表示・フィルタ反映
   - フィルタ付きリスト（SRS 段階、カテゴリ、ソース、習得状態）
   - クリックで C3 へプッシュ遷移
   - テスト観点: フィルタ操作、項目クリック→遷移 Signal
@@ -282,6 +397,7 @@ tests/ui/
 - [ ] **4-2: 学習項目詳細 (SCREEN-C3)**
   - ファイル: `src/parla/ui/screens/items/detail_view.py`, `src/parla/ui/screens/items/detail_view_model.py`
   - テスト: `tests/ui/screens/items/test_detail_view_model.py`, `tests/ui/screens/items/test_detail_view.py`
+  - `LearningItemQueryService.get_item_detail()` で集約読み取り
   - 成長ストーリー（初出時発話 → 各復習での発話推移）
   - WPM推移グラフ（`WpmChartWidget` 使用）
   - テスト観点: データ取得→表示、グラフ表示
@@ -289,6 +405,7 @@ tests/ui/
 - [ ] **4-3: 学習履歴タブ (SCREEN-C4)**
   - ファイル: `src/parla/ui/screens/history/view.py`, `src/parla/ui/screens/history/view_model.py`
   - テスト: `tests/ui/screens/history/test_view_model.py`, `tests/ui/screens/history/test_view.py`
+  - `HistoryQueryService.get_history_overview()` / `get_daily_summary()` で初期表示
   - カレンダー（学習日マーク）、WPM推移グラフ、日別サマリー
   - テスト観点: 日付選択→サマリー表示、カレンダーマーカー
 
@@ -334,6 +451,7 @@ tests/ui/
   - パッセージの全センテンス一覧表示（日本語お題）
   - 現在センテンスのハイライト
   - タイマー、録音UI
+  - `LearningItemQueryService.get_sentence_items()` でヒント有無を判定
   - ヒントボタン（関連学習項目がある場合のみ表示）
   - 録音完了で `FeedbackService.record_sentence()` → 自動で次センテンスへ
   - 全センテンス完了で E4（フェーズB）へ遷移
@@ -383,6 +501,7 @@ tests/ui/
 - [ ] **5-7: パッセージ完了サマリー (SCREEN-E9)**
   - ファイル: `src/parla/ui/screens/session/passage_summary_view.py`, `src/parla/ui/screens/session/passage_summary_view_model.py`
   - テスト: `tests/ui/screens/session/test_passage_summary_view_model.py`, `tests/ui/screens/session/test_passage_summary_view.py`
+  - `SessionQueryService.get_passage_summary()` で集約読み取り
   - パッセージ学習結果サマリー（完了 / 通し発話達成の有無）
   - ストック学習項目一覧
   - WPM結果
@@ -392,6 +511,7 @@ tests/ui/
 - [ ] **5-8: セッション終了サマリー (SCREEN-F1)**
   - ファイル: `src/parla/ui/screens/session/session_summary_view.py`, `src/parla/ui/screens/session/session_summary_view_model.py`
   - テスト: `tests/ui/screens/session/test_session_summary_view_model.py`, `tests/ui/screens/session/test_session_summary_view.py`
+  - `SessionQueryService.get_session_summary()` で集約読み取り
   - 今日の成果: パッセージ数、新規項目数、復習正答率、WPM推移等
   - WPM推移グラフ（`WpmChartWidget`）
   - 「次へ」ボタン → F2 へ
@@ -400,6 +520,7 @@ tests/ui/
 - [ ] **5-9: 明日のメニュー確定 (SCREEN-F2)**
   - ファイル: `src/parla/ui/screens/session/tomorrow_menu_view.py`, `src/parla/ui/screens/session/tomorrow_menu_view_model.py`
   - テスト: `tests/ui/screens/session/test_tomorrow_menu_view_model.py`, `tests/ui/screens/session/test_tomorrow_menu_view.py`
+  - `SessionQueryService.get_menu_preview()` と `SourceQueryService.list_active_sources()` で初期表示
   - `SessionService.compose_menu()` で自動構成したメニュー表示
   - 各ブロックの内容と推定時間
   - 素材変更（`recompose_menu()`、進行中ソース一覧 + 新規追加ボタン）
@@ -463,6 +584,8 @@ tests/ui/
 
 ## 並行作業メモ
 
+- フェーズ -1 はフェーズ 3〜6 の前提であり、原則として最初に完了させる
+- フェーズ -1 は Qt 非依存なので単独で先行可能
 - フェーズ 1 と フェーズ 2 は独立しており並行可能
 - フェーズ 3 と フェーズ 4 は独立しており並行可能
 - フェーズ 5 はフェーズ 1 + 2 の完了が前提
@@ -471,4 +594,4 @@ tests/ui/
 
 ## 推奨着手順
 
-0（基盤）→ 1+2（並行）→ 3-1（設定画面で ViewModel パターン検証）→ 3-5（C1）→ 5-1（マイクチェックで音声結合確認）→ 5-2（復習）→ 5-3 → 5-4 → 5-6 → 残り
+-1（Read Model / Query Service）→ 0（基盤）→ 1+2（並行）→ 3-1（設定画面で ViewModel パターン検証）→ 3-5（C1）→ 5-1（マイクチェックで音声結合確認）→ 5-2（復習）→ 5-3 → 5-4 → 5-6 → 残り
