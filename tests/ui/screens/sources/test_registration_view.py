@@ -102,4 +102,5 @@ class TestProgressDisplay:
 
         vm.generation_failed.emit("LLM timeout")
 
-        assert "LLM timeout" in view._progress_label.text()
+        assert not view._error_banner.isHidden()
+        assert "LLM timeout" in view._error_banner.message

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.ui.widgets.error_banner import ErrorBanner
 from parla.ui.widgets.recording_controls import RecordingControlsWidget
 from parla.ui.widgets.timer_widget import TimerWidget
 
@@ -43,6 +44,7 @@ class ReviewView(QWidget):
         self._hint_button = QPushButton("ヒント")
         self._retry_button = QPushButton("リトライ")
         self._retry_button.hide()
+        self._error_banner = ErrorBanner(retryable=False)
 
         # --- Layout ---
         layout = QVBoxLayout(self)
@@ -54,6 +56,7 @@ class ReviewView(QWidget):
         layout.addWidget(self._result_label)
         layout.addWidget(self._model_answer_label)
         layout.addWidget(self._retry_button)
+        layout.addWidget(self._error_banner)
 
         # --- Auto-advance timer ---
         self._advance_timer = QTimer(self)
@@ -93,6 +96,7 @@ class ReviewView(QWidget):
         self._result_label.setText("")
         self._model_answer_label.setText("")
         self._retry_button.hide()
+        self._error_banner.clear()
 
     def _on_hint(self, level: int, text: str) -> None:
         self._hint_label.setText(f"ヒント{level}: {text}")
@@ -115,7 +119,7 @@ class ReviewView(QWidget):
             self._result_label.setText(f"リトライ{attempt}: 不正解")
 
     def _on_error(self, message: str) -> None:
-        self._result_label.setText(f"エラー: {message}")
+        self._error_banner.show_error(message)
 
     def _on_recording_finished(self, audio: object) -> None:
         if self._in_retry:

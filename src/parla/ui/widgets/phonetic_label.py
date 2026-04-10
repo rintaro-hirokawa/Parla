@@ -4,8 +4,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPaintEvent
+from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
+
+from parla.ui import theme
 
 
 @dataclass
@@ -33,13 +35,13 @@ class PhoneticLabel(QWidget):
     Used in E6 (phase C workspace).
     """
 
-    _WORD_SPACING = 8
-    _LINE_SPACING = 4
-    _PADDING = 4
+    _WORD_SPACING = theme.SPACING_MD
+    _LINE_SPACING = theme.SPACING_SM
+    _PADDING = theme.SPACING_SM
 
-    _TEXT_COLOR = QColor(230, 230, 230)
-    _PHONETIC_COLOR = QColor(150, 150, 150)
-    _HIGHLIGHT_COLOR = QColor(255, 220, 80, 80)
+    _TEXT_COLOR = theme.TEXT_PRIMARY
+    _PHONETIC_COLOR = theme.TEXT_SECONDARY
+    _HIGHLIGHT_COLOR = theme.HIGHLIGHT_BG
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -51,11 +53,11 @@ class PhoneticLabel(QWidget):
         self._cached_lines: int = 0
 
         self._text_font = QFont()
-        self._text_font.setPointSize(14)
+        self._text_font.setPointSize(theme.FONT_SIZE_LG)
         self._text_fm = QFontMetrics(self._text_font)
 
         self._phonetic_font = QFont()
-        self._phonetic_font.setPointSize(9)
+        self._phonetic_font.setPointSize(theme.FONT_SIZE_SM)
         self._phonetic_font.setItalic(True)
         self._phonetic_fm = QFontMetrics(self._phonetic_font)
 

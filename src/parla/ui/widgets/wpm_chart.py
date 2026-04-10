@@ -3,12 +3,13 @@
 from collections.abc import Sequence
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPaintEvent, QPen
+from PySide6.QtGui import QFont, QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
 
 from parla.domain.source import CEFRLevel
 from parla.domain.wpm import CEFR_WPM_TARGETS
 from parla.services.query_models import WpmDataPoint
+from parla.ui import theme
 
 
 class WpmChartWidget(QWidget):
@@ -22,13 +23,13 @@ class WpmChartWidget(QWidget):
     _MARGIN_TOP = 10
     _MARGIN_BOTTOM = 30
 
-    _BG_COLOR = QColor(30, 30, 30)
-    _AXIS_PEN = QPen(QColor(80, 80, 80), 1)
-    _LABEL_COLOR = QColor(150, 150, 150)
-    _NO_DATA_COLOR = QColor(120, 120, 120)
-    _BAND_COLOR = QColor(0, 150, 100, 40)
-    _LINE_PEN = QPen(QColor(80, 180, 255), 2)
-    _DOT_COLOR = QColor(80, 180, 255)
+    _BG_COLOR = theme.BG_PRIMARY
+    _AXIS_PEN = theme.PEN_BORDER
+    _LABEL_COLOR = theme.TEXT_SECONDARY
+    _NO_DATA_COLOR = theme.TEXT_DISABLED
+    _BAND_COLOR = theme.BAND_BG
+    _LINE_PEN = theme.PEN_ACCENT_BLUE_2
+    _DOT_COLOR = theme.ACCENT_BLUE
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -36,7 +37,7 @@ class WpmChartWidget(QWidget):
         self._cefr_level: CEFRLevel | None = None
 
         self._label_font = QFont()
-        self._label_font.setPointSize(7)
+        self._label_font.setPointSize(theme.FONT_SIZE_XS)
 
     @property
     def data_points(self) -> Sequence[WpmDataPoint]:

@@ -4,8 +4,10 @@ from collections import deque
 from collections.abc import Sequence
 
 from PySide6.QtCore import QLine, QSize
-from PySide6.QtGui import QColor, QPainter, QPaintEvent, QPen
+from PySide6.QtGui import QPainter, QPaintEvent, QPen
 from PySide6.QtWidgets import QWidget
+
+from parla.ui import theme
 
 
 class WaveformWidget(QWidget):
@@ -14,9 +16,9 @@ class WaveformWidget(QWidget):
     Used in E1 (mic check), E2 (review), E3 (phase A), E6 (phase C).
     """
 
-    _BG_COLOR = QColor(30, 30, 30)
-    _CENTER_LINE_PEN = QPen(QColor(60, 60, 60), 1)
-    _WAVEFORM_PEN = QPen(QColor(0, 200, 100), 1)
+    _BG_COLOR = theme.BG_PRIMARY
+    _CENTER_LINE_PEN = theme.PEN_GRID_LINE
+    _WAVEFORM_PEN = QPen(theme.ACCENT_GREEN, 1)
 
     def __init__(self, buffer_size: int = 1024, parent: QWidget | None = None) -> None:
         super().__init__(parent)

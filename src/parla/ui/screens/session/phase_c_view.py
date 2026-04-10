@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.ui.widgets.error_banner import ErrorBanner
 from parla.ui.widgets.recording_controls import RecordingControlsWidget
 
 if TYPE_CHECKING:
@@ -47,6 +48,7 @@ class PhaseCView(QWidget):
         self._speed_slider.setValue(100)
         self._speed_label = QLabel("1.0x")
         self._complete_button = QPushButton("完了")
+        self._error_banner = ErrorBanner(retryable=True)
 
         # --- Layout ---
         layout = QVBoxLayout(self)
@@ -57,6 +59,7 @@ class PhaseCView(QWidget):
         layout.addWidget(self._speed_label)
         layout.addWidget(self._recording)
         layout.addWidget(self._status_label)
+        layout.addWidget(self._error_banner)
         layout.addWidget(self._complete_button)
 
         # --- Connections ---
@@ -67,6 +70,7 @@ class PhaseCView(QWidget):
         self._vm.mode_changed.connect(self._on_mode_changed)
         self._vm.model_audio_ready.connect(self._on_audio_ready)
         self._vm.model_audio_failed.connect(self._on_audio_failed)
+        self._error_banner.retry_clicked.connect(self._vm.retry_model_audio)
         self._vm.overlapping_result.connect(self._on_overlapping)
         self._vm.lag_detected.connect(self._on_lag)
         self._vm.live_delivery_result.connect(self._on_delivery)
@@ -95,9 +99,10 @@ class PhaseCView(QWidget):
     def _on_audio_ready(self) -> None:
         self._play_button.setEnabled(True)
         self._status_label.setText("モデル音声準備完了")
+        self._error_banner.clear()
 
     def _on_audio_failed(self, message: str) -> None:
-        self._status_label.setText(f"TTS エラー: {message}")
+        self._error_banner.show_error(f"TTS エラー: {message}")
 
     def _on_overlapping(self, score: float) -> None:
         self._status_label.setText(f"発音スコア: {score:.1f}")

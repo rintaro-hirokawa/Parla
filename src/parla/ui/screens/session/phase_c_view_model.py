@@ -116,6 +116,11 @@ class PhaseCViewModel(BaseViewModel):
             )
         )
 
+    def retry_model_audio(self) -> None:
+        """Re-request model audio generation after a failure."""
+        if self._passage_id is not None:
+            self._practice_service.request_model_audio(self._passage_id)
+
     def complete(self) -> None:
         self.phase_complete.emit()
 

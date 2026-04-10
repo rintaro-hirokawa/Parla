@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.ui import theme
 from parla.ui.widgets.recording_controls import RecordingControlsWidget
 
 if TYPE_CHECKING:
@@ -40,6 +41,8 @@ class FeedbackCard(QWidget):
         self._status_label.setText("正解" if is_acceptable else "要復習")
 
     def set_error(self, message: str) -> None:
+        color = f"rgb({theme.ERROR.red()}, {theme.ERROR.green()}, {theme.ERROR.blue()})"
+        self._status_label.setStyleSheet(f"color: {color}; background: transparent;")
         self._status_label.setText(f"エラー: {message}")
 
     def set_retry_status(self, attempt: int, correct: bool) -> None:

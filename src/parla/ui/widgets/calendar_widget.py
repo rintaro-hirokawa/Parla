@@ -9,6 +9,7 @@ from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import QCalendarWidget, QWidget
 
 from parla.services.query_models import CalendarMarker
+from parla.ui import theme
 
 
 class CalendarWidget(QCalendarWidget):
@@ -47,7 +48,12 @@ class CalendarWidget(QCalendarWidget):
         session_count = self._qdate_markers.get(qdate)
         if session_count is not None and session_count > 0:
             alpha = min(255, 100 + session_count * 50)
-            color = QColor(0, 180, 120, alpha)
+            color = QColor(
+                theme.ACCENT_TEAL.red(),
+                theme.ACCENT_TEAL.green(),
+                theme.ACCENT_TEAL.blue(),
+                alpha,
+            )
             dot_radius = 3
             cx = rect.center().x()
             cy = rect.bottom() - dot_radius - 2

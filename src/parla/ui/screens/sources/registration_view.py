@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 from parla.ui.screens.sources.registration_view_model import SourceRegistrationViewModel
+from parla.ui.widgets.error_banner import ErrorBanner
 
 
 class SourceRegistrationView(QWidget):
@@ -41,9 +42,13 @@ class SourceRegistrationView(QWidget):
         self._char_count_label = QLabel("0文字")
         layout.addWidget(self._char_count_label)
 
-        # --- Error message ---
+        # --- Validation message ---
         self._error_label = QLabel()
         layout.addWidget(self._error_label)
+
+        # --- Generation error banner ---
+        self._error_banner = ErrorBanner(retryable=False)
+        layout.addWidget(self._error_banner)
 
         # --- Register button ---
         self._register_button = QPushButton("登録")
@@ -93,4 +98,5 @@ class SourceRegistrationView(QWidget):
         self._progress_label.setText(f"完了: {passage_count}パッセージ、{sentence_count}センテンス生成")
 
     def _on_failed(self, error_message: str) -> None:
-        self._progress_label.setText(f"エラー: {error_message}")
+        self._progress_label.setText("")
+        self._error_banner.show_error(error_message)

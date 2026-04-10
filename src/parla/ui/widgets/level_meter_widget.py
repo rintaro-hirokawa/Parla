@@ -1,8 +1,10 @@
 """Vertical level meter widget for audio RMS display."""
 
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QColor, QPainter, QPaintEvent
+from PySide6.QtGui import QPainter, QPaintEvent
 from PySide6.QtWidgets import QWidget
+
+from parla.ui import theme
 
 
 class LevelMeterWidget(QWidget):
@@ -11,10 +13,10 @@ class LevelMeterWidget(QWidget):
     Used in E1 (mic check) and recording controls.
     """
 
-    _BG_COLOR = QColor(40, 40, 40)
-    _OK_COLOR = QColor(0, 200, 100)
-    _WARN_COLOR = QColor(220, 80, 40)
-    _BORDER_COLOR = QColor(80, 80, 80)
+    _BG_COLOR = theme.BG_SECONDARY
+    _OK_COLOR = theme.ACCENT_GREEN
+    _WARN_COLOR = theme.WARNING
+    _BORDER_COLOR = theme.BORDER
 
     def __init__(
         self,

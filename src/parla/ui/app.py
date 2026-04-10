@@ -8,6 +8,7 @@ from PySide6 import QtAsyncio
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget
 
+from parla.ui import theme
 from parla.ui.base_view_model import BaseViewModel
 from parla.ui.container import Container
 from parla.ui.navigation import NavigationController
@@ -38,7 +39,8 @@ class MainWindow(QMainWindow):
         self._coordinator: SessionCoordinator | None = None
 
         self.setWindowTitle("Parla")
-        self.resize(400, 700)
+        self.resize(*theme.WINDOW_INITIAL_SIZE)
+        self.setMinimumSize(*theme.WINDOW_MIN_SIZE)
 
         self._nav = NavigationController(TAB_TITLES)
         self.setCentralWidget(self._nav)
@@ -157,6 +159,7 @@ class MainWindow(QMainWindow):
 def main() -> None:
     """Launch the Parla application."""
     _app = QApplication(sys.argv)  # noqa: F841 — must stay alive for Qt event loop
+    _app.setStyleSheet(theme.build_app_qss())
 
     container = Container()
 
@@ -165,7 +168,7 @@ def main() -> None:
         for handler in reg.handlers:
             logger.info(
                 "handler_registered",
-                event=reg.event_name,
+                event_name=reg.event_name,
                 handler=handler.name,
                 kind=handler.kind,
             )
