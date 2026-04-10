@@ -1,6 +1,7 @@
 """Simple in-memory event bus with sync/async handler support."""
 
 import asyncio
+import contextlib
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from typing import Any, Literal
@@ -67,6 +68,22 @@ class EventBus:
             return fn
 
         return decorator
+
+    def off_sync[E: Event](self, event_type: type[E], handler: Callable[[E], None]) -> None:
+        """Unregister a synchronous handler."""
+        handlers = self._sync_handlers.get(event_type, [])
+        with contextlib.suppress(ValueError):
+            handlers.remove(handler)
+        if not handlers and event_type in self._sync_handlers:
+            del self._sync_handlers[event_type]
+
+    def off_async[E: Event](self, event_type: type[E], handler: Callable[[E], Coroutine[Any, Any, None]]) -> None:
+        """Unregister an async handler."""
+        handlers = self._async_handlers.get(event_type, [])
+        with contextlib.suppress(ValueError):
+            handlers.remove(handler)
+        if not handlers and event_type in self._async_handlers:
+            del self._async_handlers[event_type]
 
     def emit(self, event: Event) -> list[asyncio.Task[None]]:
         """Emit an event. Sync handlers run first, then async tasks are created."""
