@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 from PySide6.QtCore import QObject
 
-from parla.domain.base_event import Event
+from parla.domain.events import Event
 from parla.event_bus import EventBus
 
 

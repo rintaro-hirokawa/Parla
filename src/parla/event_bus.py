@@ -9,7 +9,7 @@ from typing import Any, Literal
 import structlog
 from pydantic import BaseModel
 
-from parla.domain.base_event import Event
+from parla.domain.events import Event
 
 logger = structlog.get_logger()
 

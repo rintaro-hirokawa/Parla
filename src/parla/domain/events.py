@@ -3,9 +3,14 @@
 from datetime import date
 from uuid import UUID
 
-from parla.domain.base_event import Event
+from pydantic import BaseModel
+
 from parla.domain.session import SessionPattern
 from parla.domain.source import CEFRLevel, EnglishVariant
+
+
+class Event(BaseModel, frozen=True):
+    """Base class for all domain events. Immutable value objects."""
 
 # --- Slice 7: User Settings ---
 
