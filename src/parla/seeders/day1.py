@@ -23,7 +23,12 @@ logger = structlog.get_logger()
 _FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def seed(container: Container) -> None:
+def seed(
+    container: Container,
+    *,
+    max_passages: int | None = None,
+    max_sentences: int | None = None,
+) -> None:
     """Reset DB and seed day-1 state: settings, source, passages, confirmed menu."""
     logger.info("seed_day1_start")
 
@@ -45,8 +50,15 @@ def seed(container: Container) -> None:
 
     # 3. Passages
     raw = json.loads((_FIXTURES / "passage_generation_response.json").read_text(encoding="utf-8"))
+    raw_passages = raw["passages"]
+    if max_passages is not None:
+        raw_passages = raw_passages[:max_passages]
+
     passages: list[Passage] = []
-    for p in raw["passages"]:
+    for p in raw_passages:
+        raw_sentences = p["sentences"]
+        if max_sentences is not None:
+            raw_sentences = raw_sentences[:max_sentences]
         sentences = tuple(
             Sentence(
                 order=i,
@@ -54,7 +66,7 @@ def seed(container: Container) -> None:
                 en=s["en"],
                 hints=Hint(hint1=s["hints"]["hint1"], hint2=s["hints"]["hint2"]),
             )
-            for i, s in enumerate(p["sentences"])
+            for i, s in enumerate(raw_sentences)
         )
         passages.append(
             Passage(
