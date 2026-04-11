@@ -44,6 +44,7 @@ class RunThroughViewModel(BaseViewModel):
     live_delivery_result = Signal(bool, float, float, float)  # passed, error_rate, error_rate_threshold, wpm
     complete_enabled_changed = Signal(bool)
     run_through_complete = Signal()
+    ipa_toggled = Signal(bool)  # visible
     error = Signal(str)
 
     # Playback transport signals
@@ -76,6 +77,7 @@ class RunThroughViewModel(BaseViewModel):
         self._current_mode: PracticeMode = "listening"
         self._model_audio_loaded = False
         self._live_delivery_passed = False
+        self._ipa_visible = False
         self._sentence_texts: tuple[str, ...] = ()
         self._sentence_ja_texts: tuple[str, ...] = ()
         self._word_timestamps: tuple[WordTimestamp, ...] = ()
@@ -124,9 +126,19 @@ class RunThroughViewModel(BaseViewModel):
     def word_timestamps(self) -> tuple[WordTimestamp, ...]:
         return self._word_timestamps
 
+    @property
+    def ipa_visible(self) -> bool:
+        return self._ipa_visible
+
     # ------------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------------
+
+    def toggle_ipa(self) -> None:
+        """Toggle IPA phonetic display."""
+        self._ipa_visible = not self._ipa_visible
+        self.ipa_toggled.emit(self._ipa_visible)
+
 
     def start(
         self,

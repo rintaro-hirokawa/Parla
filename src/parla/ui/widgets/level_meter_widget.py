@@ -51,9 +51,9 @@ class LevelMeterWidget(QWidget):
     - Clip indicator (red band at top)
     """
 
-    _BG_COLOR = theme.BG_SECONDARY
-    _OK_COLOR = theme.ACCENT_GREEN
-    _WARN_COLOR = theme.ACCENT_YELLOW
+    _BG_COLOR = theme.BG_SURFACE
+    _OK_COLOR = theme.ACCENT
+    _WARN_COLOR = theme.WARNING
     _DANGER_COLOR = theme.ERROR
     _CLIP_COLOR = theme.ERROR
     _BORDER_COLOR = theme.BORDER

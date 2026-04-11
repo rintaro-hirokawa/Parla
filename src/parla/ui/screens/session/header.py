@@ -1,12 +1,14 @@
 """Session header widget — always visible at top during a session."""
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
+from parla.ui import theme
 from parla.ui.screens.session.session_context import SessionContext
 
 
 class SessionHeaderWidget(QWidget):
-    """Displays block progress, elapsed time, word count, and average WPM.
+    """Top bar: progress label (left), phase label (center), timer (right).
 
     Connects directly to ``SessionContext`` signals.
     """
@@ -15,16 +17,44 @@ class SessionHeaderWidget(QWidget):
         super().__init__(parent)
         self._ctx = context
 
-        self._progress_label = QLabel("")
-        self._elapsed_label = QLabel("00:00")
-        self._word_count_label = QLabel("0 words")
-        self._wpm_label = QLabel("0.0 WPM")
+        self.setStyleSheet(
+            f"background: {theme.rgb(theme.BG_CARD)}; "
+            f"border-bottom: 1px solid {theme.rgb(theme.BORDER)};"
+        )
+        self.setFixedHeight(48)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.addWidget(self._progress_label, stretch=1)
+        layout.setContentsMargins(28, 0, 28, 0)
+
+        self._progress_label = QLabel("")
+        self._progress_label.setStyleSheet(
+            f"color: {theme.rgb(theme.TEXT_SECONDARY)}; font-size: 13px; border: none;"
+        )
+        layout.addWidget(self._progress_label)
+
+        layout.addStretch()
+
+        self._elapsed_label = QLabel("00:00")
+        self._elapsed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._elapsed_label.setStyleSheet(
+            f"color: {theme.rgb(theme.TEXT_PRIMARY)}; font-size: 15px; "
+            f"font-weight: 600; font-family: Consolas, monospace; border: none;"
+        )
         layout.addWidget(self._elapsed_label)
+
+        layout.addStretch()
+
+        self._word_count_label = QLabel("0 words")
+        self._word_count_label.setStyleSheet(
+            f"color: {theme.rgb(theme.TEXT_TERTIARY)}; font-size: 12px; border: none;"
+        )
         layout.addWidget(self._word_count_label)
+
+        self._wpm_label = QLabel("0.0 WPM")
+        self._wpm_label.setStyleSheet(
+            f"color: {theme.rgb(theme.TEXT_TERTIARY)}; font-size: 12px; "
+            f"margin-left: 12px; border: none;"
+        )
         layout.addWidget(self._wpm_label)
 
         # Connect to context signals

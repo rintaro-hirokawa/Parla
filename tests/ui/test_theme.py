@@ -8,7 +8,7 @@ from parla.ui import theme
 class TestColourConstants:
     def test_all_bg_colours_are_qcolor(self) -> None:
         assert isinstance(theme.BG_PRIMARY, QColor)
-        assert isinstance(theme.BG_SECONDARY, QColor)
+        assert isinstance(theme.BG_CARD, QColor)
         assert isinstance(theme.BG_SURFACE, QColor)
 
     def test_all_text_colours_are_qcolor(self) -> None:
@@ -17,10 +17,9 @@ class TestColourConstants:
         assert isinstance(theme.TEXT_DISABLED, QColor)
 
     def test_all_accent_colours_are_qcolor(self) -> None:
-        assert isinstance(theme.ACCENT_GREEN, QColor)
-        assert isinstance(theme.ACCENT_BLUE, QColor)
-        assert isinstance(theme.ACCENT_TEAL, QColor)
-        assert isinstance(theme.ACCENT_YELLOW, QColor)
+        assert isinstance(theme.ACCENT, QColor)
+        assert isinstance(theme.ACCENT_HOVER, QColor)
+        assert isinstance(theme.ACCENT_LIGHT, QColor)
         assert isinstance(theme.WARNING, QColor)
         assert isinstance(theme.ERROR, QColor)
 
@@ -31,10 +30,10 @@ class TestColourConstants:
         assert isinstance(theme.BAND_BG, QColor)
 
     def test_highlight_bg_has_alpha(self) -> None:
-        assert theme.HIGHLIGHT_BG.alpha() == 80
+        assert theme.HIGHLIGHT_BG.alpha() < 255
 
     def test_band_bg_has_alpha(self) -> None:
-        assert theme.BAND_BG.alpha() == 40
+        assert theme.BAND_BG.alpha() < 255
 
 
 class TestPens:

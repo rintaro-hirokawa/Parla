@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from parla.domain.session import SessionBlock, SessionMenu, SessionState
     from parla.event_bus import EventBus
     from parla.ui.navigation import NavigationController
+    from parla.ui.screens.session.speaking_item import SpeakingItem
 
 from parla.domain.session import BlockType, SessionStatus
 
@@ -62,6 +63,16 @@ class SessionCoordinator(QObject):
 
         # Current ViewModel reference for cleanup
         self._current_vm: QObject | None = None
+
+        # Review batch tracking
+        self._review_remaining: list[tuple[UUID, UUID]] = []
+        self._review_block_label = ""
+        self._review_batch_items: list[tuple[UUID, UUID]] = []
+        self._variation_collector: object = None
+        self._review_variation_map: dict[UUID, tuple[UUID, UUID]] = {}
+        self._review_variation_ids: list[UUID] = []
+        self._review_ja_texts: list[str] = []
+        self._review_model_answers: list[str] = []
 
     # ------------------------------------------------------------------
     # Public API
@@ -140,28 +151,121 @@ class SessionCoordinator(QObject):
         return self._menu.blocks[idx]
 
     # ------------------------------------------------------------------
-    # Review block (E2) — used for both review and consolidation
+    # Review block (E2) — batched recording → feedback flow
     # ------------------------------------------------------------------
 
     def _start_review_block(
         self, items: list[tuple[UUID, UUID]], block_label: str
     ) -> None:
-        from parla.ui.screens.session.review_view import ReviewView
-        from parla.ui.screens.session.review_view_model import ReviewViewModel
+        self._review_remaining = items
+        self._review_block_label = block_label
+        self._review_batch_items = []
+        self._variation_collector = None
+        self._start_next_review_batch()
 
-        vm = ReviewViewModel(
+    def _start_next_review_batch(self) -> None:
+        from parla.ui.screens.session.variation_collector import VariationCollector
+
+        batch = self._review_remaining[:5]
+        self._review_remaining = self._review_remaining[5:]
+        self._review_batch_items = batch
+
+        if not batch:
+            self._on_block_complete()
+            return
+
+        self._session_context.update_progress(
+            self._review_block_label, 0, len(batch)
+        )
+
+        # Collect variations for the batch
+        self._variation_collector = VariationCollector(
+            expected_items=batch,
+            review_service=self._c.review_service,
             event_bus=self._bus,
+            on_ready=self._on_review_batch_ready,
+        )
+
+        # Request all variations
+        for item_id, source_id in batch:
+            self._c.review_service.request_variation(item_id, source_id)
+
+    def _on_review_batch_ready(
+        self,
+        items: list[SpeakingItem],
+        variation_map: dict[UUID, tuple[UUID, UUID]],
+    ) -> None:
+        """All variations collected — show recording screen."""
+        from parla.ui.screens.session.recording_view import RecordingView
+        from parla.ui.screens.session.recording_view_model import RecordingViewModel
+
+        self._review_variation_map = variation_map
+        self._review_variation_ids = [item.id for item in items]
+        self._review_ja_texts = [item.ja for item in items]
+        self._review_model_answers = []
+
+        # Resolve model answers from variations
+        for item in items:
+            variation = self._c.review_service.get_variation(item.id)
+            self._review_model_answers.append(variation.en if variation else "")
+
+        vm = RecordingViewModel()
+        vm.load_items(items)
+        vm.recording_submitted.connect(self._on_review_item_recorded)
+        vm.all_sentences_done.connect(self._on_review_recording_done)
+
+        view = RecordingView(vm, recorder=self._recorder)
+        self._current_vm = vm
+        self._nav.push_screen(view)
+
+    def _on_review_item_recorded(self, variation_id: object, audio: object) -> None:
+        """Submit review judgment for a recorded variation."""
+        import asyncio
+        from datetime import date as date_type
+
+        asyncio.ensure_future(
+            self._c.review_service.judge_review(
+                variation_id=variation_id,  # type: ignore[arg-type]
+                audio=audio,  # type: ignore[arg-type]
+                hint_level=0,
+                timer_ratio=0.0,
+                today=date_type.today(),
+            )
+        )
+
+    def _on_review_recording_done(self) -> None:
+        """All items in batch recorded — show feedback screen."""
+        from parla.ui.screens.session import FeedbackMode
+        from parla.ui.screens.session.feedback_view import FeedbackView
+        from parla.ui.screens.session.feedback_view_model import FeedbackViewModel
+
+        self._pop_current()
+
+        vm = FeedbackViewModel(
+            event_bus=self._bus,
+            mode=FeedbackMode.REVIEW,
             review_service=self._c.review_service,
             session_context=self._session_context,
         )
-        view = ReviewView(vm, recorder=self._recorder)
-        vm.all_done.connect(self._on_block_complete)
-        self._session_context.update_progress(block_label, 0, len(items))
-        vm.start_review(items)
+        vm.start_for_review(
+            self._review_variation_ids,
+            self._review_ja_texts,
+            self._review_model_answers,
+        )
+        view = FeedbackView(vm, recorder=self._recorder)
+        vm.navigate_to_next.connect(self._on_review_feedback_done)
         vm.activate()
         self._current_vm = vm
         self._nav.push_screen(view)
-        vm.request_next()
+
+    def _on_review_feedback_done(self) -> None:
+        """Feedback complete for current batch — next batch or block complete."""
+        self._deactivate_current_vm()
+        self._pop_current()
+        if self._review_remaining:
+            self._start_next_review_batch()
+        else:
+            self._advance_block()
 
     def _resolve_review_items(self, item_ids: list[UUID]) -> list[tuple[UUID, UUID]]:
         """Resolve learning_item_ids to (item_id, source_id) pairs."""
@@ -209,11 +313,27 @@ class SessionCoordinator(QObject):
     def _show_recording(self, passage: Passage) -> None:
         from parla.ui.screens.session.recording_view import RecordingView
         from parla.ui.screens.session.recording_view_model import RecordingViewModel
+        from parla.ui.screens.session.speaking_item import SpeakingItem
 
-        vm = RecordingViewModel(
-            feedback_service=self._c.feedback_service,
+        items = [
+            SpeakingItem(
+                id=s.id,
+                ja=s.ja,
+                hint1=s.hints.hint1,
+                hint2=s.hints.hint2,
+            )
+            for s in passage.sentences
+        ]
+
+        vm = RecordingViewModel()
+        vm.load_items(items)
+        vm.recording_submitted.connect(
+            lambda sid, audio: self._c.feedback_service.record_sentence(
+                passage_id=passage.id,
+                sentence_id=sid,
+                audio=audio,
+            )
         )
-        vm.load_passage(passage)
         view = RecordingView(vm, recorder=self._recorder)
         vm.all_sentences_done.connect(self._on_recording_done)
         self._current_vm = vm
@@ -231,6 +351,7 @@ class SessionCoordinator(QObject):
     # --- Feedback (E4) ---
 
     def _show_feedback(self) -> None:
+        from parla.ui.screens.session import FeedbackMode
         from parla.ui.screens.session.feedback_view import FeedbackView
         from parla.ui.screens.session.feedback_view_model import FeedbackViewModel
 
@@ -240,12 +361,17 @@ class SessionCoordinator(QObject):
 
         vm = FeedbackViewModel(
             event_bus=self._bus,
+            mode=FeedbackMode.NEW_MATERIAL,
             feedback_service=self._c.feedback_service,
             practice_service=self._c.practice_service,
             item_query=self._c.item_query,
             session_context=self._session_context,
         )
-        vm.start(passage.id, [s.id for s in passage.sentences])
+        vm.start_for_passage(
+            passage.id,
+            [s.id for s in passage.sentences],
+            [s.ja for s in passage.sentences],
+        )
         view = FeedbackView(vm, recorder=self._recorder)
         vm.navigate_to_next.connect(self._on_feedback_done)
         vm.navigate_to_edit.connect(self._show_item_edit)

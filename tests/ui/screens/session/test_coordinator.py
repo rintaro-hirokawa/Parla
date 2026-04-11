@@ -231,11 +231,18 @@ class FakeItemRepo:
 
 
 class FakeReviewService:
-    def request_variation(self, item_id: UUID, source_id: UUID) -> None:
-        pass
+    def __init__(self) -> None:
+        self.request_variation_calls: list[tuple[UUID, UUID]] = []
+        self._variations: dict[UUID, Any] = {}
 
-    def get_variation(self, variation_id: UUID) -> None:
-        return None
+    def request_variation(self, item_id: UUID, source_id: UUID) -> None:
+        self.request_variation_calls.append((item_id, source_id))
+
+    def get_variation(self, variation_id: UUID) -> Any:
+        return self._variations.get(variation_id)
+
+    def add_variation(self, variation: Any) -> None:
+        self._variations[variation.id] = variation
 
     async def judge_review(self, **kwargs: Any) -> None:
         pass
@@ -395,7 +402,7 @@ class TestStart:
 
 class TestMicCheckDone:
     def test_mic_check_proceed_starts_first_block(self, qtbot: Any) -> None:
-        """After mic check, the first block screen should be pushed."""
+        """After mic check, the first block starts variation collection."""
         item_id = uuid4()
         source = _make_source()
         item = _make_item(item_id=item_id)
@@ -418,12 +425,14 @@ class TestMicCheckDone:
         # Simulate mic check completion
         coord._on_mic_check_done()
 
-        assert len(nav.pushed) == 2  # MicCheck + ReviewView
+        # Variation collection started (no view pushed yet — waiting for variations)
         assert coord._session_context.is_running  # timer started
+        assert len(container.review_service.request_variation_calls) == 1
 
 
 class TestReviewBlock:
-    def test_review_block_pushes_review_view(self, qtbot: Any) -> None:
+    def test_review_block_requests_variations(self, qtbot: Any) -> None:
+        """Review block requests variations for all items."""
         item_id = uuid4()
         source = _make_source()
         item = _make_item(item_id=item_id)
@@ -442,8 +451,51 @@ class TestReviewBlock:
         coord.start(menu.id)
         coord._on_mic_check_done()
 
-        # ReviewView should be pushed (after MicCheck was popped)
-        assert len(nav.pushed) == 2
+        # Variation requested for the item
+        assert len(container.review_service.request_variation_calls) == 1
+        assert container.review_service.request_variation_calls[0] == (item_id, source.id)
+
+    def test_review_batch_ready_pushes_recording_view(self, qtbot: Any) -> None:
+        """When variations are collected, RecordingView is pushed."""
+        from parla.domain.events import VariationReady
+        from parla.domain.variation import Variation
+
+        item_id = uuid4()
+        source = _make_source()
+        item = _make_item(item_id=item_id)
+        source_repo = FakeSourceRepo()
+        source_repo.add_source_for_sentence(item.source_sentence_id, source)
+        item_repo = FakeItemRepo()
+        item_repo.add_item(item)
+
+        menu = _make_menu(
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(SessionBlock(block_type=BlockType.REVIEW, items=(item_id,), estimated_minutes=2.0),),
+        )
+        coord, nav, container = _build_coordinator(
+            menu, source_repo=source_repo, item_repo=item_repo
+        )
+
+        # Add a variation
+        variation = Variation(
+            learning_item_id=item_id,
+            source_id=source.id,
+            ja="テスト質問",
+            en="Test answer",
+            hint1="hint1",
+            hint2="hint2",
+        )
+        container.review_service.add_variation(variation)
+
+        coord.start(menu.id)
+        coord._on_mic_check_done()
+
+        pushed_before = len(nav.pushed)
+        # Simulate variation arrival
+        container.event_bus.emit(VariationReady(variation_id=variation.id, learning_item_id=item_id))
+
+        # RecordingView should now be pushed
+        assert len(nav.pushed) == pushed_before + 1
 
     def test_review_all_done_advances_block(self, qtbot: Any) -> None:
         item_id = uuid4()
@@ -464,7 +516,7 @@ class TestReviewBlock:
         coord.start(menu.id)
         coord._on_mic_check_done()
 
-        # Simulate review completion
+        # Simulate review completion via _on_block_complete
         coord._on_block_complete()
 
         assert len(container.session_service.advance_block_calls) == 1
@@ -786,8 +838,8 @@ class TestResume:
 
         assert nav.entered_session
         assert len(container.session_service.resume_calls) == 1
-        # Should go directly to first block (ReviewView), no MicCheck
-        assert len(nav.pushed) == 1  # Only ReviewView, no MicCheck
+        # Review block starts variation collection (no view pushed yet)
+        assert len(container.review_service.request_variation_calls) == 1
         assert coord._session_context.is_running
 
     def test_resume_at_block_1(self, qtbot: Any) -> None:

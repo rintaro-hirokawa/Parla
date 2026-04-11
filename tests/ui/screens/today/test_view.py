@@ -72,7 +72,7 @@ class TestConfirmedMenuDisplay:
 
         assert view._no_menu_label.isHidden()
         assert not view._blocks_widget.isHidden()
-        assert view._block_list.count() == 2
+        assert len(view._block_widgets) == 2
 
     def test_start_button_enabled(self, qtbot) -> None:
         dash = TodayDashboard(

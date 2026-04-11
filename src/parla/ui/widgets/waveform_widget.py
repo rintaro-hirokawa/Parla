@@ -18,7 +18,7 @@ class WaveformWidget(QWidget):
 
     _BG_COLOR = theme.BG_PRIMARY
     _CENTER_LINE_PEN = theme.PEN_GRID_LINE
-    _WAVEFORM_PEN = QPen(theme.ACCENT_GREEN, 1)
+    _WAVEFORM_PEN = QPen(theme.ACCENT, 1)
 
     def __init__(self, buffer_size: int = 1024, parent: QWidget | None = None) -> None:
         super().__init__(parent)

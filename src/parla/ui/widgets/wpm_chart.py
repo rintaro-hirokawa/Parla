@@ -29,7 +29,7 @@ class WpmChartWidget(QWidget):
     _NO_DATA_COLOR = theme.TEXT_DISABLED
     _BAND_COLOR = theme.BAND_BG
     _LINE_PEN = theme.PEN_ACCENT_BLUE_2
-    _DOT_COLOR = theme.ACCENT_BLUE
+    _DOT_COLOR = theme.ACCENT
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)

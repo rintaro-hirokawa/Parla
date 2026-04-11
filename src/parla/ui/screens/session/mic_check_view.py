@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QComboBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.ui import theme
 from parla.ui.audio.recorder import AudioRecorder
 from parla.ui.screens.session.mic_check_view_model import MicCheckViewModel
 from parla.ui.widgets.level_meter_widget import LevelMeterWidget
@@ -32,34 +34,73 @@ class MicCheckView(QWidget):
         super().__init__(parent)
         self._vm = view_model
 
-        # --- Widgets ---
+        root = QVBoxLayout(self)
+        root.setContentsMargins(32, 24, 32, 24)
+        root.setSpacing(16)
+
+        # Title
+        title = QLabel("マイクを選択してください")
+        title.setStyleSheet(
+            f"font-size: 16px; font-weight: 600; color: {theme.rgb(theme.TEXT_PRIMARY)};"
+        )
+        root.addWidget(title)
+
+        # Device combo
         self._device_combo = QComboBox()
+        root.addWidget(self._device_combo)
+
+        # Audio monitoring card
+        monitor_card = QFrame()
+        monitor_card.setStyleSheet(
+            f"QFrame {{ background: {theme.rgb(theme.BG_CARD)}; "
+            f"border: 1px solid {theme.rgb(theme.BORDER)}; "
+            f"border-radius: 14px; }}"
+        )
+        card_layout = QVBoxLayout(monitor_card)
+        card_layout.setContentsMargins(24, 20, 24, 20)
+        card_layout.setSpacing(12)
+
         self._waveform = WaveformWidget(parent=self)
+        card_layout.addWidget(self._waveform)
+
         self._level_meter = LevelMeterWidget(parent=self)
+        card_layout.addWidget(self._level_meter)
+
+        root.addWidget(monitor_card)
+
+        # Gain slider
+        gain_row = QHBoxLayout()
+        gain_label = QLabel("入力ゲイン")
+        gain_label.setStyleSheet(
+            f"color: {theme.rgb(theme.TEXT_SECONDARY)}; font-size: 12px;"
+        )
+        gain_row.addWidget(gain_label)
         self._gain_slider = QSlider(Qt.Orientation.Horizontal)
-        self._gain_slider.setRange(-6, 10)  # dB
+        self._gain_slider.setRange(-6, 10)
         self._gain_slider.setValue(0)
         self._gain_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self._gain_slider.setTickInterval(3)
+        gain_row.addWidget(self._gain_slider, stretch=1)
         self._gain_label = QLabel("0 dB")
+        self._gain_label.setStyleSheet(
+            f"color: {theme.rgb(theme.ACCENT)}; font-size: 12px; font-weight: 600;"
+        )
+        gain_row.addWidget(self._gain_label)
+        root.addLayout(gain_row)
+
+        # Warning
         self._warning_label = QLabel("")
+        self._warning_label.setStyleSheet(
+            f"color: {theme.rgb(theme.WARNING)}; font-size: 12px;"
+        )
+        root.addWidget(self._warning_label)
+
+        root.addStretch()
+
+        # Start button
         self._start_button = QPushButton("開始")
         self._start_button.setEnabled(False)
-
-        # --- Layout ---
-        gain_row = QHBoxLayout()
-        gain_row.addWidget(QLabel("入力ゲイン"))
-        gain_row.addWidget(self._gain_slider, stretch=1)
-        gain_row.addWidget(self._gain_label)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("マイクを選択してください"))
-        layout.addWidget(self._device_combo)
-        layout.addWidget(self._waveform)
-        layout.addWidget(self._level_meter)
-        layout.addLayout(gain_row)
-        layout.addWidget(self._warning_label)
-        layout.addWidget(self._start_button)
+        root.addWidget(self._start_button)
 
         # --- Populate devices ---
         for name in self._vm.device_names():

@@ -1,7 +1,7 @@
 """Parla UI theme constants and QSS generator.
 
 Centralises colour palette, font definitions, spacing scale, and
-application-wide Qt Style Sheet for the dark theme.
+application-wide Qt Style Sheet for the light theme.
 """
 
 from PySide6.QtGui import QColor, QPen
@@ -11,32 +11,59 @@ from PySide6.QtGui import QColor, QPen
 # ---------------------------------------------------------------------------
 
 # Backgrounds
-BG_PRIMARY = QColor(30, 30, 30)
-BG_SECONDARY = QColor(40, 40, 40)
-BG_SURFACE = QColor(50, 50, 50)
+BG_PRIMARY = QColor(244, 246, 251)  # #f4f6fb
+BG_CARD = QColor(255, 255, 255)  # #ffffff
+BG_SURFACE = QColor(248, 249, 252)  # #f8f9fc
 
 # Text
-TEXT_PRIMARY = QColor(230, 230, 230)
-TEXT_SECONDARY = QColor(150, 150, 150)
-TEXT_DISABLED = QColor(120, 120, 120)
+TEXT_PRIMARY = QColor(26, 26, 46)  # #1a1a2e
+TEXT_SECONDARY = QColor(107, 114, 128)  # #6b7280
+TEXT_TERTIARY = QColor(156, 163, 175)  # #9ca3af
+TEXT_DISABLED = QColor(192, 197, 208)  # #c0c5d0
 
-# Accent / status
-ACCENT_GREEN = QColor(0, 200, 100)
-ACCENT_GREEN_HOVER = QColor(0, 220, 110)
-ACCENT_GREEN_PRESSED = QColor(0, 170, 85)
-ACCENT_BLUE = QColor(80, 180, 255)
-ACCENT_TEAL = QColor(0, 180, 120)
-ACCENT_YELLOW = QColor(255, 220, 80)
-WARNING = QColor(220, 80, 40)
-ERROR = QColor(220, 60, 60)
+# Accent / primary action
+ACCENT = QColor(79, 110, 247)  # #4f6ef7
+ACCENT_HOVER = QColor(59, 93, 231)  # #3b5de7
+ACCENT_LIGHT = QColor(240, 242, 255)  # #f0f2ff
+ACCENT_BORDER = QColor(199, 208, 247)  # #c7d0f7
+ACCENT_SUBTLE = QColor(238, 241, 254)  # #eef1fe
+
+# Status — correct
+CORRECT_BG = QColor(236, 253, 245)  # #ecfdf5
+CORRECT_TEXT = QColor(5, 150, 105)  # #059669
+CORRECT_BORDER = QColor(167, 243, 208)  # #a7f3d0
+
+# Status — needs review
+REVIEW_BG = QColor(254, 243, 199)  # #fef3c7
+REVIEW_TEXT = QColor(180, 83, 9)  # #b45309
+REVIEW_BORDER = QColor(253, 230, 138)  # #fde68a
+
+# Warning / error
+WARNING = QColor(245, 158, 11)  # #f59e0b
+ERROR = QColor(239, 68, 68)  # #ef4444
 
 # Borders / grid
-BORDER = QColor(80, 80, 80)
-GRID_LINE = QColor(60, 60, 60)
+BORDER = QColor(232, 234, 240)  # #e8eaf0
+BORDER_LIGHT = QColor(238, 240, 245)  # #eef0f5
+BORDER_SECONDARY = QColor(224, 228, 237)  # #e0e4ed
+GRID_LINE = QColor(209, 213, 224)  # #d1d5e0
+
+# Hints
+HINT_BG1 = QColor(240, 242, 255)  # #f0f2ff
+HINT_BG2 = QColor(248, 249, 252)  # #f8f9fc
+HINT_TEXT2 = QColor(75, 85, 99)  # #4b5563
+HINT_BORDER = QColor(209, 213, 224)  # #d1d5e0
+
+# Waveform
+WAVE_ACTIVE = QColor(79, 110, 247)  # #4f6ef7
+WAVE_IDLE = QColor(199, 208, 247)  # #c7d0f7
+WAVE_BG = QColor(248, 249, 252)  # #f8f9fc
+WAVE_LINE = QColor(224, 228, 237)  # #e0e4ed
 
 # Semi-transparent
-HIGHLIGHT_BG = QColor(255, 220, 80, 80)
-BAND_BG = QColor(0, 150, 100, 40)
+HIGHLIGHT_BG = QColor(79, 110, 247, 30)
+BAND_BG = QColor(79, 110, 247, 20)
+
 
 # ---------------------------------------------------------------------------
 # Pre-built pens (used by QPainter widgets)
@@ -44,13 +71,13 @@ BAND_BG = QColor(0, 150, 100, 40)
 
 PEN_GRID_LINE = QPen(GRID_LINE, 1)
 PEN_BORDER = QPen(BORDER, 1)
-PEN_ACCENT_BLUE_2 = QPen(ACCENT_BLUE, 2)
+PEN_ACCENT_BLUE_2 = QPen(ACCENT, 2)
 
 # ---------------------------------------------------------------------------
 # Font families
 # ---------------------------------------------------------------------------
 
-FONT_FAMILY = '"Noto Sans JP", "Yu Gothic UI", "Meiryo", sans-serif'
+FONT_FAMILY = '"Noto Sans JP", "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif'
 
 # ---------------------------------------------------------------------------
 # Font sizes (point)
@@ -96,9 +123,9 @@ def rgba(color: QColor) -> str:
 
 
 def build_app_qss() -> str:
-    """Return the application-wide QSS string for the dark theme."""
+    """Return the application-wide QSS string for the light theme."""
     return f"""
-/* ── Base ── */
+/* -- Base -- */
 QWidget {{
     background-color: {rgb(BG_PRIMARY)};
     color: {rgb(TEXT_PRIMARY)};
@@ -106,45 +133,45 @@ QWidget {{
     font-size: {FONT_SIZE_MD}pt;
 }}
 
-/* ── Labels ── */
+/* -- Labels -- */
 QLabel {{
     background-color: transparent;
 }}
 
-/* ── Buttons ── */
+/* -- Buttons -- */
 QPushButton {{
-    background-color: {rgb(ACCENT_GREEN)};
-    color: {rgb(BG_PRIMARY)};
+    background-color: {rgb(ACCENT)};
+    color: #ffffff;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     padding: {SPACING_SM}px {SPACING_XL}px;
     font-weight: bold;
 }}
 QPushButton:hover {{
-    background-color: {rgb(ACCENT_GREEN_HOVER)};
+    background-color: {rgb(ACCENT_HOVER)};
 }}
 QPushButton:pressed {{
-    background-color: {rgb(ACCENT_GREEN_PRESSED)};
+    background-color: {rgb(ACCENT_HOVER)};
 }}
 QPushButton:disabled {{
-    background-color: {rgb(BG_SURFACE)};
-    color: {rgb(TEXT_DISABLED)};
+    background-color: {rgb(BORDER_SECONDARY)};
+    color: {rgb(TEXT_TERTIARY)};
 }}
 
-/* ── Text inputs ── */
+/* -- Text inputs -- */
 QLineEdit, QPlainTextEdit {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BG_CARD)};
     color: {rgb(TEXT_PRIMARY)};
     border: 1px solid {rgb(BORDER)};
-    border-radius: 4px;
+    border-radius: 6px;
     padding: {SPACING_SM}px;
     selection-background-color: {rgba(HIGHLIGHT_BG)};
 }}
 QLineEdit:focus, QPlainTextEdit:focus {{
-    border-color: {rgb(ACCENT_GREEN)};
+    border-color: {rgb(ACCENT)};
 }}
 
-/* ── Scroll area ── */
+/* -- Scroll area -- */
 QScrollArea {{
     background-color: {rgb(BG_PRIMARY)};
     border: none;
@@ -153,12 +180,12 @@ QScrollArea > QWidget > QWidget {{
     background-color: {rgb(BG_PRIMARY)};
 }}
 QScrollBar:vertical {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BG_SURFACE)};
     width: 8px;
     border: none;
 }}
 QScrollBar::handle:vertical {{
-    background-color: {rgb(BORDER)};
+    background-color: {rgb(GRID_LINE)};
     border-radius: 4px;
     min-height: 20px;
 }}
@@ -166,9 +193,9 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
     height: 0px;
 }}
 
-/* ── Tab bar ── */
+/* -- Tab bar -- */
 QTabBar::tab {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BG_CARD)};
     color: {rgb(TEXT_SECONDARY)};
     padding: {SPACING_SM}px {SPACING_LG}px;
     border: none;
@@ -176,53 +203,55 @@ QTabBar::tab {{
 }}
 QTabBar::tab:selected {{
     color: {rgb(TEXT_PRIMARY)};
-    border-bottom-color: {rgb(ACCENT_GREEN)};
+    border-bottom-color: {rgb(ACCENT)};
 }}
 QTabBar::tab:hover {{
     color: {rgb(TEXT_PRIMARY)};
 }}
 
-/* ── Combo box ── */
+/* -- Combo box -- */
 QComboBox {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BG_CARD)};
     color: {rgb(TEXT_PRIMARY)};
     border: 1px solid {rgb(BORDER)};
-    border-radius: 4px;
+    border-radius: 6px;
     padding: {SPACING_SM}px;
 }}
 QComboBox::drop-down {{
     border: none;
 }}
 QComboBox QAbstractItemView {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BG_CARD)};
     color: {rgb(TEXT_PRIMARY)};
-    selection-background-color: {rgb(BG_SURFACE)};
+    selection-background-color: {rgb(ACCENT_LIGHT)};
     border: 1px solid {rgb(BORDER)};
 }}
 
-/* ── Slider ── */
+/* -- Slider -- */
 QSlider::groove:horizontal {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BORDER)};
     height: 4px;
     border-radius: 2px;
 }}
 QSlider::handle:horizontal {{
-    background-color: {rgb(ACCENT_GREEN)};
+    background-color: {rgb(ACCENT)};
     width: 14px;
     height: 14px;
     margin: -5px 0;
     border-radius: 7px;
+    border: 2px solid {rgb(BG_CARD)};
 }}
 QSlider::groove:vertical {{
-    background-color: {rgb(BG_SECONDARY)};
+    background-color: {rgb(BORDER)};
     width: 4px;
     border-radius: 2px;
 }}
 QSlider::handle:vertical {{
-    background-color: {rgb(ACCENT_GREEN)};
+    background-color: {rgb(ACCENT)};
     width: 14px;
     height: 14px;
     margin: 0 -5px;
     border-radius: 7px;
+    border: 2px solid {rgb(BG_CARD)};
 }}
 """
