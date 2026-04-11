@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import asyncio
 import difflib
+import io
 import json
 import os
 import threading
 import time
+import wave
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -152,8 +154,12 @@ def _run_streaming_assessment(
     # Start continuous recognition
     recognizer.start_continuous_recognition()
 
-    # Stream audio in real-time 100ms chunks
-    pcm_data = audio.data
+    # Extract raw PCM from WAV container
+    if audio.format == "wav":
+        with wave.open(io.BytesIO(audio.data), "rb") as wf:
+            pcm_data = wf.readframes(wf.getnframes())
+    else:
+        pcm_data = audio.data
     bytes_per_second = audio.sample_rate * audio.sample_width * audio.channels
     offset = 0
     stream_start = time.perf_counter()

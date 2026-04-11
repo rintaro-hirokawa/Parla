@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import io
 import struct
+import wave
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,7 +12,7 @@ from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtMultimedia import QMediaPlayer
 
 from parla.domain.audio import AudioData
-from parla.ui.audio.player import AudioPlayer, _pcm_to_wav_bytes
+from parla.ui.audio.player import AudioPlayer
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -95,10 +97,16 @@ def _make_player(fake: FakeMediaPlayer | None = None) -> tuple[AudioPlayer, Fake
 
 
 def _make_wav_audio_data(n_samples: int = 160) -> AudioData:
-    """Create a small WAV AudioData with raw PCM."""
+    """Create a small WAV AudioData with valid WAV bytes."""
     pcm = struct.pack(f"<{n_samples}h", *([1000] * n_samples))
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(16000)
+        wf.writeframes(pcm)
     return AudioData(
-        data=pcm,
+        data=buf.getvalue(),
         format="wav",
         sample_rate=16000,
         channels=1,
@@ -244,46 +252,6 @@ class TestFormatHandling:
         audio = _make_mp3_audio_data()
         player.play_audio_data(audio)
         assert fm._source_device is not None
-
-    def test_pcm_to_wav_bytes_has_correct_header(self) -> None:
-        pcm = struct.pack("<4h", 100, 200, 300, 400)
-        audio = AudioData(
-            data=pcm,
-            format="wav",
-            sample_rate=16000,
-            channels=1,
-            sample_width=2,
-            duration_seconds=4 / 16000,
-        )
-        wav = _pcm_to_wav_bytes(audio)
-
-        # RIFF header
-        assert wav[:4] == b"RIFF"
-        # WAVE marker
-        assert wav[8:12] == b"WAVE"
-        # fmt chunk
-        assert wav[12:16] == b"fmt "
-        # data chunk
-        assert wav[36:40] == b"data"
-
-        # Data size field (bytes 40-43)
-        data_size = struct.unpack_from("<I", wav, 40)[0]
-        assert data_size == len(pcm)
-
-        # Sample rate (bytes 24-27)
-        sr = struct.unpack_from("<I", wav, 24)[0]
-        assert sr == 16000
-
-        # Channels (bytes 22-23)
-        ch = struct.unpack_from("<H", wav, 22)[0]
-        assert ch == 1
-
-        # Bits per sample (bytes 34-35)
-        bps = struct.unpack_from("<H", wav, 34)[0]
-        assert bps == 16
-
-        # PCM data follows header
-        assert wav[44:] == pcm
 
     def test_play_file_sets_source_url(self, qtbot: QtBot, tmp_path: Path) -> None:
         f = tmp_path / "test.wav"

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import struct
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QObject, QUrl, Signal
@@ -16,39 +15,6 @@ if TYPE_CHECKING:
 # Speed limits
 MIN_SPEED = 0.5
 MAX_SPEED = 2.0
-
-
-def _pcm_to_wav_bytes(audio: AudioData) -> bytes:
-    """Prepend a 44-byte WAV header to raw PCM data."""
-    pcm = audio.data
-    n_channels = audio.channels
-    sample_rate = audio.sample_rate
-    bits_per_sample = audio.sample_width * 8
-    byte_rate = sample_rate * n_channels * audio.sample_width
-    block_align = n_channels * audio.sample_width
-    data_size = len(pcm)
-    # RIFF chunk size = 36 + data_size
-    riff_size = 36 + data_size
-
-    header = struct.pack(
-        "<4sI4s"  # RIFF, size, WAVE
-        "4sIHHIIHH"  # fmt chunk
-        "4sI",  # data chunk header
-        b"RIFF",
-        riff_size,
-        b"WAVE",
-        b"fmt ",
-        16,
-        1,  # PCM format
-        n_channels,
-        sample_rate,
-        byte_rate,
-        block_align,
-        bits_per_sample,
-        b"data",
-        data_size,
-    )
-    return header + pcm
 
 
 class AudioPlayer(QObject):
@@ -95,7 +61,7 @@ class AudioPlayer(QObject):
         """Play audio from an in-memory AudioData object."""
         self._stop_current()
 
-        raw = _pcm_to_wav_bytes(audio_data) if audio_data.format == "wav" else audio_data.data
+        raw = audio_data.data
 
         self._buffer_data = QByteArray(raw)
         self._buffer = QBuffer(self._buffer_data)

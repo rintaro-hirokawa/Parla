@@ -3,6 +3,7 @@
 from PySide6.QtCore import QObject, Qt, Signal
 
 from parla.domain.audio import AudioData
+from tests.conftest import make_wav_audio
 from parla.ui.widgets.recording_controls import RecordingControlsWidget
 
 
@@ -33,14 +34,7 @@ class MockRecorder(QObject):
 
 
 def _make_audio_data() -> AudioData:
-    return AudioData(
-        data=b"\x00" * 100,
-        format="wav",
-        sample_rate=16000,
-        channels=1,
-        sample_width=2,
-        duration_seconds=1.0,
-    )
+    return make_wav_audio()
 
 
 class TestRecordingControlsWidget:

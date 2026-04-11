@@ -24,10 +24,7 @@ class LocalAudioStorage:
 
     def save(self, sentence_id: UUID, audio: AudioData) -> None:
         path = self._path_for(sentence_id, audio.format)
-        if audio.format == "wav":
-            self._write_wav(path, audio)
-        else:
-            path.write_bytes(audio.data)
+        path.write_bytes(audio.data)
         logger.info(
             "audio_saved",
             sentence_id=str(sentence_id),
@@ -63,21 +60,13 @@ class LocalAudioStorage:
         return self._base_dir / f"{sentence_id}.{fmt}"
 
     @staticmethod
-    def _write_wav(path: Path, audio: AudioData) -> None:
-        with wave.open(str(path), "wb") as wf:
-            wf.setnchannels(audio.channels)
-            wf.setsampwidth(audio.sample_width)
-            wf.setframerate(audio.sample_rate)
-            wf.writeframes(audio.data)
-
-    @staticmethod
     def _read_wav(path: Path) -> AudioData:
+        data = path.read_bytes()
         with wave.open(str(path), "rb") as wf:
             channels = wf.getnchannels()
             sample_width = wf.getsampwidth()
             sample_rate = wf.getframerate()
             n_frames = wf.getnframes()
-            data = wf.readframes(n_frames)
             duration = n_frames / sample_rate if sample_rate > 0 else 0.0
         return AudioData(
             data=data,

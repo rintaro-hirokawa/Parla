@@ -28,6 +28,7 @@ from parla.adapters.sqlite_feedback_repository import SQLiteFeedbackRepository
 from parla.adapters.sqlite_practice_repository import SQLitePracticeRepository
 from parla.adapters.sqlite_source_repository import SQLiteSourceRepository
 from parla.domain.audio import AudioData
+from tests.conftest import make_wav_audio
 from parla.domain.events import (
     LiveDeliveryCompleted,
     ModelAudioFailed,
@@ -147,9 +148,7 @@ class EventCollector:
 
 
 def _make_audio() -> AudioData:
-    return AudioData(
-        data=b"\x00" * 100, format="wav", sample_rate=16000, channels=1, sample_width=2, duration_seconds=5.0
-    )
+    return make_wav_audio(n_samples=50, duration_seconds=5.0)
 
 
 # --- Fixtures ---

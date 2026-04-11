@@ -1,23 +1,40 @@
 """Tests for LocalAudioStorage."""
 
+import io
+import wave
 from uuid import uuid4
 
 from parla.adapters.local_audio_storage import LocalAudioStorage
 from parla.domain.audio import AudioData
 
 
-def _make_pcm_data(n_samples: int = 160, sample_width: int = 2) -> bytes:
-    """Generate simple PCM audio data (silence)."""
-    return b"\x00" * n_samples * sample_width
+def _make_wav_data(
+    n_samples: int = 160,
+    sample_width: int = 2,
+    sample_rate: int = 16000,
+    channels: int = 1,
+) -> bytes:
+    """Generate valid WAV bytes containing silence."""
+    pcm = b"\x00" * n_samples * sample_width * channels
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(sample_width)
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm)
+    return buf.getvalue()
 
 
 def _make_audio(**overrides) -> AudioData:
+    sample_rate = overrides.pop("sample_rate", 16000)
+    channels = overrides.pop("channels", 1)
+    sample_width = overrides.pop("sample_width", 2)
     defaults = {
-        "data": _make_pcm_data(160),
+        "data": _make_wav_data(160, sample_width, sample_rate, channels),
         "format": "wav",
-        "sample_rate": 16000,
-        "channels": 1,
-        "sample_width": 2,
+        "sample_rate": sample_rate,
+        "channels": channels,
+        "sample_width": sample_width,
         "duration_seconds": 0.01,
     }
     defaults.update(overrides)
@@ -73,7 +90,7 @@ class TestWavRoundTrip:
             sample_rate=44100,
             channels=2,
             sample_width=2,
-            data=_make_pcm_data(441, 2),
+            data=_make_wav_data(441, 2, 44100, 2),
         )
 
         storage.save(sid, audio)
@@ -87,9 +104,8 @@ class TestWavRoundTrip:
     def test_duration_computed_from_frames(self, tmp_path) -> None:
         storage = LocalAudioStorage(tmp_path / "audio")
         sid = uuid4()
-        # 16000 samples at 16000 Hz = 1.0 second
         audio = _make_audio(
-            data=_make_pcm_data(16000, 2),
+            data=_make_wav_data(16000, 2, 16000, 1),
             sample_rate=16000,
             duration_seconds=1.0,
         )

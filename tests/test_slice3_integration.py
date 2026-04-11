@@ -26,6 +26,7 @@ from parla.adapters.sqlite_review_attempt_repository import SQLiteReviewAttemptR
 from parla.adapters.sqlite_source_repository import SQLiteSourceRepository
 from parla.adapters.sqlite_variation_repository import SQLiteVariationRepository
 from parla.domain.audio import AudioData
+from tests.conftest import make_wav_audio
 from parla.domain.events import (
     ReviewAnswered,
     ReviewRetryJudged,
@@ -108,14 +109,7 @@ class EventCollector:
 
 
 def _make_audio() -> AudioData:
-    return AudioData(
-        data=b"\x00" * 3200,
-        format="wav",
-        sample_rate=16000,
-        channels=1,
-        sample_width=2,
-        duration_seconds=0.1,
-    )
+    return make_wav_audio(n_samples=1600, duration_seconds=0.1)
 
 
 def _setup(
