@@ -7,9 +7,8 @@ import io
 import math
 import wave
 from collections.abc import Callable
-from typing import Any
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QIODevice, QObject, Signal
 from PySide6.QtMultimedia import QAudio, QAudioDevice, QAudioFormat, QAudioSource, QMediaDevices
 
 from parla.domain.audio import AudioData
@@ -23,7 +22,7 @@ WAVEFORM_POINTS = 64  # downsampled waveform size per emission
 MAX_INT16 = 32768.0
 
 
-AudioSourceFactory = Callable[[QAudioDevice, QAudioFormat], Any]
+AudioSourceFactory = Callable[[QAudioDevice, QAudioFormat], QAudioSource]
 
 
 def _default_audio_source_factory(device: QAudioDevice, fmt: QAudioFormat) -> QAudioSource:
@@ -49,6 +48,7 @@ class AudioRecorder(QObject):
     recording_stopped = Signal(AudioData)
     level_changed = Signal(float)
     waveform_updated = Signal(list)
+    chunk_ready = Signal(bytes)  # raw PCM after gain
     error_occurred = Signal(str)
 
     def __init__(
@@ -60,8 +60,8 @@ class AudioRecorder(QObject):
         super().__init__(parent)
         self._factory = audio_source_factory or _default_audio_source_factory
         self._device: QAudioDevice | None = None
-        self._source: Any | None = None  # QAudioSource or fake
-        self._io: Any | None = None  # QIODevice or fake
+        self._source: QAudioSource | None = None
+        self._io: QIODevice | None = None
         self._buffer = bytearray()
         self._recording = False
         self._gain: float = 1.0
@@ -153,6 +153,7 @@ class AudioRecorder(QObject):
             raw = samples.tobytes()
 
         self._buffer.extend(raw)
+        self.chunk_ready.emit(raw)
         self._emit_level(samples)
         self._emit_waveform(samples)
 
@@ -198,7 +199,7 @@ class AudioRecorder(QObject):
         if self._source is None:
             return
         err = self._source.error()
-        if err != QAudio.Error.NoError:
+        if err != QAudio.Error.NoError:  # type: ignore[comparison-overlap]  # PySide6 stub issue
             self.error_occurred.emit(f"Audio source error: {err.name}")
 
     def _build_audio_data(self) -> AudioData:

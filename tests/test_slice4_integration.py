@@ -28,7 +28,6 @@ from parla.adapters.sqlite_feedback_repository import SQLiteFeedbackRepository
 from parla.adapters.sqlite_practice_repository import SQLitePracticeRepository
 from parla.adapters.sqlite_source_repository import SQLiteSourceRepository
 from parla.domain.audio import AudioData
-from tests.conftest import make_wav_audio
 from parla.domain.events import (
     LiveDeliveryCompleted,
     ModelAudioFailed,
@@ -46,6 +45,7 @@ from parla.event_bus import Event, EventBus
 from parla.ports.pronunciation_assessment import RawAssessedWord, RawAssessmentResult
 from parla.ports.tts_generation import RawTTSResult, RawWordTimestamp
 from parla.services.practice_service import PracticeService
+from tests.conftest import make_wav_audio
 
 # --- Fake adapters ---
 
@@ -445,11 +445,9 @@ class TestLagDetection:
         )
 
         await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
-        result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
+        await service.evaluate_overlapping(setup["passage_id"], _make_audio())
 
-        lag_result = await service.detect_lag(setup["passage_id"], result)
-        assert lag_result is not None
-        assert len(lag_result.lag_points) > 0
+        # detect_lag is now called automatically within evaluate_overlapping
         assert len(collector.of_type(OverlappingLagDetected)) == 1
 
     @pytest.mark.asyncio

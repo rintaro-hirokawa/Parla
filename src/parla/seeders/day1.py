@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import json
+import struct
+import wave
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import structlog
 
-from parla.adapters.sqlite_db import reset_db
+from parla.domain.audio import AudioData
+from parla.domain.feedback import SentenceFeedback
 from parla.domain.passage import Hint, Passage, Sentence
+from parla.domain.practice import ModelAudio, WordTimestamp
 from parla.domain.session import SessionConfig, SessionMenu, compose_blocks
 from parla.domain.source import CEFRLevel, EnglishVariant, Source
 from parla.domain.user_settings import UserSettings
@@ -28,11 +33,13 @@ def seed(
     *,
     max_passages: int | None = None,
     max_sentences: int | None = None,
+    seed_feedback: bool = False,
+    seed_model_audio: bool = False,
 ) -> None:
     """Reset DB and seed day-1 state: settings, source, passages, confirmed menu."""
     logger.info("seed_day1_start")
 
-    reset_db(container.conn)
+    container.reset_state()
 
     # 1. User settings
     settings = UserSettings(cefr_level=CEFRLevel.A2, english_variant=EnglishVariant.AMERICAN)
@@ -79,6 +86,23 @@ def seed(
         )
     container.source_repo.save_passages(passages)
 
+    # 3b. Sentence feedback (optional — needed for Phase C seeding)
+    if seed_feedback:
+        for passage in passages:
+            for sentence in passage.sentences:
+                feedback = SentenceFeedback(
+                    sentence_id=sentence.id,
+                    user_utterance=sentence.en,
+                    model_answer=sentence.en,
+                    is_acceptable=True,
+                )
+                container.feedback_repo.save_feedback(feedback)
+
+    # 3c. Model audio (optional — pre-seeds TTS output for Phase C)
+    if seed_model_audio:
+        for passage in passages:
+            _seed_model_audio_for_passage(passage, container)
+
     # 4. Session menu (pattern "c" — new material only, no reviews on day 1)
     today = date.today()
     blocks = compose_blocks(
@@ -102,3 +126,45 @@ def seed(
         passage_count=len(passages),
         menu_id=str(menu.id),
     )
+
+
+def _seed_model_audio_for_passage(passage: Passage, container: Container) -> None:
+    """Generate synthetic model audio with word timestamps for a passage."""
+    sentence_texts = tuple(s.en for s in passage.sentences)
+    all_words = " ".join(sentence_texts).split()
+
+    # Build word timestamps (0.3s per word)
+    timestamps: list[WordTimestamp] = []
+    t = 0.0
+    for word in all_words:
+        timestamps.append(WordTimestamp(word=word, start_seconds=t, end_seconds=t + 0.3))
+        t += 0.35
+
+    duration = t if timestamps else 1.0
+
+    # Generate silent WAV
+    sample_rate = 16000
+    n_samples = int(duration * sample_rate)
+    buf = BytesIO()
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(struct.pack(f"<{n_samples}h", *([0] * n_samples)))
+
+    audio = AudioData(
+        data=buf.getvalue(),
+        format="wav",
+        sample_rate=sample_rate,
+        channels=1,
+        sample_width=2,
+        duration_seconds=duration,
+    )
+
+    model_audio = ModelAudio(
+        passage_id=passage.id,
+        audio=audio,
+        word_timestamps=tuple(timestamps),
+        sentence_texts=sentence_texts,
+    )
+    container.practice_repo.save_model_audio(model_audio)

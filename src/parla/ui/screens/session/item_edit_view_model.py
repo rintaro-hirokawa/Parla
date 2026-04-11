@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from uuid import UUID
 
     from parla.domain.learning_item import LearningItem
+    from parla.ports.learning_item_repository import LearningItemRepository
 
 
 class ItemEditViewModel(QObject):
@@ -22,11 +24,11 @@ class ItemEditViewModel(QObject):
     item_dismissed = Signal(str)  # item_id
     dismissed = Signal()
 
-    def __init__(self, *, item_repo: Any, parent: QObject | None = None) -> None:
+    def __init__(self, *, item_repo: LearningItemRepository, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._repo = item_repo
         self._sentence_id: UUID | None = None
-        self._items: list[LearningItem] = []
+        self._items: Sequence[LearningItem] = []
 
     # ------------------------------------------------------------------
     # Properties
@@ -37,7 +39,7 @@ class ItemEditViewModel(QObject):
         return len(self._items)
 
     @property
-    def items(self) -> list[LearningItem]:
+    def items(self) -> Sequence[LearningItem]:
         return list(self._items)
 
     # ------------------------------------------------------------------

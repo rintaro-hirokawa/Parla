@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Signal
 
@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from parla.domain.audio import AudioData
     from parla.domain.variation import Variation
     from parla.event_bus import EventBus
+    from parla.ports.variation_repository import VariationRepository
+    from parla.services.review_service import ReviewService
     from parla.ui.screens.session.session_context import SessionContext
 
 
@@ -40,8 +42,8 @@ class ReviewViewModel(BaseViewModel):
         self,
         *,
         event_bus: EventBus,
-        review_service: Any,
-        variation_repo: Any,
+        review_service: ReviewService,
+        variation_repo: VariationRepository,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)

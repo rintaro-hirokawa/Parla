@@ -6,7 +6,6 @@ from uuid import UUID
 import pytest
 
 from parla.domain.audio import AudioData
-from tests.conftest import make_wav_audio
 from parla.domain.events import (
     FeedbackFailed,
     FeedbackReady,
@@ -21,6 +20,7 @@ from parla.domain.source import Source
 from parla.event_bus import Event, EventBus
 from parla.ports.feedback_generation import RawFeedback, RawLearningItem, StockedItemInfo
 from parla.services.feedback_service import FeedbackService
+from tests.conftest import make_wav_audio
 
 # --- Fakes ---
 

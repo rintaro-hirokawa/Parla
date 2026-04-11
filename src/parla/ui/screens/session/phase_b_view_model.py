@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Signal
 
@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 
     from parla.domain.audio import AudioData
     from parla.event_bus import EventBus
+    from parla.ports.feedback_repository import FeedbackRepository
+    from parla.ports.learning_item_repository import LearningItemRepository
+    from parla.services.feedback_service import FeedbackService
+    from parla.services.practice_service import PracticeService
     from parla.ui.screens.session.session_context import SessionContext
 
 
@@ -42,10 +46,10 @@ class PhaseBViewModel(BaseViewModel):
         self,
         *,
         event_bus: EventBus,
-        feedback_service: Any,
-        practice_service: Any,
-        feedback_repo: Any,
-        item_repo: Any,
+        feedback_service: FeedbackService,
+        practice_service: PracticeService,
+        feedback_repo: FeedbackRepository,
+        item_repo: LearningItemRepository,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)

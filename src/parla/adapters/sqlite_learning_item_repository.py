@@ -54,6 +54,20 @@ class SQLiteLearningItemRepository:
         ).fetchall()
         return [self._row_to_item(r) for r in rows]
 
+    def update_item(self, item_id: UUID, pattern: str, explanation: str) -> None:
+        self._conn.execute(
+            "UPDATE learning_items SET pattern = ?, explanation = ? WHERE id = ?",
+            (pattern, explanation, str(item_id)),
+        )
+        self._conn.commit()
+
+    def dismiss_item(self, item_id: UUID) -> None:
+        self._conn.execute(
+            "UPDATE learning_items SET status = 'dismissed' WHERE id = ?",
+            (str(item_id),),
+        )
+        self._conn.commit()
+
     def update_item_status(self, item_id: UUID, status: LearningItemStatus) -> None:
         self._conn.execute(
             "UPDATE learning_items SET status = ? WHERE id = ?",

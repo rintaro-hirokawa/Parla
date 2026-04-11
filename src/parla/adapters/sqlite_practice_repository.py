@@ -11,6 +11,7 @@ from parla.domain.practice import (
     LiveDeliveryResult,
     ModelAudio,
     OverlappingResult,
+    PronunciationWord,
     SentenceStatus,
     WordTimestamp,
 )
@@ -36,12 +37,13 @@ class SQLitePracticeRepository:
                 for wt in model_audio.word_timestamps
             ]
         )
+        sentence_texts_json = json.dumps(list(model_audio.sentence_texts))
 
         self._conn.execute(
             """INSERT OR REPLACE INTO model_audio
                (passage_id, audio_path, timestamps, sample_rate, channels,
-                sample_width, duration_seconds, generated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                sample_width, duration_seconds, generated_at, sentence_texts)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 str(model_audio.passage_id),
                 str(audio_path),
@@ -51,6 +53,7 @@ class SQLitePracticeRepository:
                 model_audio.audio.sample_width,
                 model_audio.audio.duration_seconds,
                 model_audio.generated_at.isoformat(),
+                sentence_texts_json,
             ),
         )
         self._conn.commit()
@@ -75,6 +78,8 @@ class SQLitePracticeRepository:
             for t in json.loads(row["timestamps"])
         )
 
+        sentence_texts = tuple(json.loads(row["sentence_texts"]))
+
         return ModelAudio(
             passage_id=UUID(row["passage_id"]),
             audio=AudioData(
@@ -86,6 +91,7 @@ class SQLitePracticeRepository:
                 duration_seconds=row["duration_seconds"],
             ),
             word_timestamps=timestamps,
+            sentence_texts=sentence_texts,
             generated_at=datetime.fromisoformat(row["generated_at"]),
         )
 
@@ -113,6 +119,15 @@ class SQLitePracticeRepository:
             ),
         )
         self._conn.commit()
+
+    def get_overlapping_result(self, passage_id: UUID) -> OverlappingResult | None:
+        row = self._conn.execute(
+            "SELECT * FROM overlapping_results WHERE passage_id = ? ORDER BY created_at DESC LIMIT 1",
+            (str(passage_id),),
+        ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_overlapping_result(row)
 
     # --- Live Delivery Results ---
 
@@ -166,6 +181,22 @@ class SQLitePracticeRepository:
         return row is not None
 
     # --- Row converters ---
+
+    @staticmethod
+    def _row_to_overlapping_result(row: sqlite3.Row) -> OverlappingResult:
+        words = tuple(PronunciationWord(**w) for w in json.loads(row["words"]))
+        deviations = tuple(json.loads(row["timing_deviations"]))
+        return OverlappingResult(
+            id=UUID(row["id"]),
+            passage_id=UUID(row["passage_id"]),
+            words=words,
+            timing_deviations=deviations,
+            accuracy_score=row["accuracy_score"],
+            fluency_score=row["fluency_score"],
+            prosody_score=row["prosody_score"],
+            pronunciation_score=row["pronunciation_score"],
+            created_at=datetime.fromisoformat(row["created_at"]),
+        )
 
     @staticmethod
     def _row_to_live_delivery(row: sqlite3.Row) -> LiveDeliveryResult:

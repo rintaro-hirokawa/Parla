@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer
+from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
@@ -17,6 +18,7 @@ from parla.ui.widgets.recording_controls import RecordingControlsWidget
 from parla.ui.widgets.timer_widget import TimerWidget
 
 if TYPE_CHECKING:
+    from parla.ui.audio.recorder import AudioRecorder
     from parla.ui.screens.session.review_view_model import ReviewViewModel
 
 AUTO_ADVANCE_MS = 1500
@@ -28,7 +30,7 @@ class ReviewView(QWidget):
     def __init__(
         self,
         view_model: ReviewViewModel,
-        recorder: Any,
+        recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -77,11 +79,11 @@ class ReviewView(QWidget):
         self._recording.recording_finished.connect(self._on_recording_finished)
         self._retry_button.clicked.connect(self._on_retry_clicked)
 
-    def showEvent(self, event) -> None:  # noqa: ANN001
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._vm.activate()
 
-    def hideEvent(self, event) -> None:  # noqa: ANN001
+    def hideEvent(self, event: QHideEvent) -> None:
         self._vm.deactivate()
         super().hideEvent(event)
 

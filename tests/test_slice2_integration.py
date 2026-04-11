@@ -17,7 +17,6 @@ from parla.adapters.sqlite_feedback_repository import SQLiteFeedbackRepository
 from parla.adapters.sqlite_learning_item_repository import SQLiteLearningItemRepository
 from parla.adapters.sqlite_source_repository import SQLiteSourceRepository
 from parla.domain.audio import AudioData
-from tests.conftest import make_wav_audio
 from parla.domain.events import (
     FeedbackFailed,
     FeedbackReady,
@@ -35,6 +34,7 @@ from parla.ports.feedback_generation import (
     StockedItemInfo,
 )
 from parla.services.feedback_service import FeedbackService
+from tests.conftest import make_wav_audio
 
 # --- Fake LLM adapters ---
 

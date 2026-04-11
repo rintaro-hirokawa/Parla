@@ -263,8 +263,160 @@ def _apply_difflib_miscue(
     return result
 
 
+class _AzureStreamingSession:
+    """Live streaming session — pushes PCM chunks to Azure in real-time."""
+
+    def __init__(self, reference_text: str, *, sample_rate: int, sample_width: int, channels: int) -> None:
+        import azure.cognitiveservices.speech as speechsdk
+
+        audio_format = speechsdk.audio.AudioStreamFormat(
+            samples_per_second=sample_rate,
+            bits_per_sample=sample_width * 8,
+            channels=channels,
+        )
+        self._stream = speechsdk.audio.PushAudioInputStream(audio_format)
+        audio_config = speechsdk.audio.AudioConfig(stream=self._stream)
+
+        speech_config = speechsdk.SpeechConfig(
+            subscription=_get_speech_key(),
+            region=_get_speech_region(),
+        )
+        speech_config.speech_recognition_language = "en-US"
+
+        pron_config = speechsdk.PronunciationAssessmentConfig(
+            reference_text=reference_text,
+            grading_system=speechsdk.PronunciationAssessmentGradingSystem.HundredMark,
+            granularity=speechsdk.PronunciationAssessmentGranularity.Phoneme,
+            enable_miscue=False,
+        )
+        pron_config.enable_prosody_assessment()
+
+        self._recognizer = speechsdk.SpeechRecognizer(
+            speech_config=speech_config,
+            audio_config=audio_config,
+        )
+        pron_config.apply_to(self._recognizer)
+
+        self._state = _StreamingState()
+        self._reference_text = reference_text
+
+        self._recognizer.recognized.connect(self._on_recognized)
+        self._recognizer.session_stopped.connect(lambda _evt: self._state.done.set())
+        self._recognizer.canceled.connect(self._on_canceled)
+
+        self._recognizer.start_continuous_recognition()
+        logger.info("streaming_session_started", reference_length=len(reference_text))
+
+    def _on_recognized(self, evt: Any) -> None:
+        import azure.cognitiveservices.speech as speechsdk
+
+        if evt.result.reason != speechsdk.ResultReason.RecognizedSpeech:
+            return
+        raw_json = evt.result.properties.get(speechsdk.PropertyId.SpeechServiceResponse_JsonResult)
+        if not raw_json:
+            return
+        data = json.loads(raw_json)
+        nbest = data.get("NBest", [])
+        if not nbest:
+            return
+        best = nbest[0]
+        self._state.recognized_texts.append(data.get("DisplayText", ""))
+        pron_assess = best.get("PronunciationAssessment", {})
+        self._state.utterance_scores.append(
+            {
+                "accuracy_score": pron_assess.get("AccuracyScore", 0),
+                "fluency_score": pron_assess.get("FluencyScore", 0),
+                "completeness_score": pron_assess.get("CompletenessScore", 0),
+                "pronunciation_score": pron_assess.get("PronScore", 0),
+                "prosody_score": pron_assess.get("ProsodyScore", 0),
+            }
+        )
+        for w in best.get("Words", []):
+            pa = w.get("PronunciationAssessment", {})
+            self._state.words.append(
+                {
+                    "word": w["Word"],
+                    "accuracy_score": pa.get("AccuracyScore", 0),
+                    "error_type": pa.get("ErrorType", "None"),
+                    "offset_seconds": w["Offset"] / TICKS_PER_SECOND,
+                    "duration_seconds": w["Duration"] / TICKS_PER_SECOND,
+                }
+            )
+
+    def _on_canceled(self, evt: Any) -> None:
+        import azure.cognitiveservices.speech as speechsdk
+
+        if evt.reason == speechsdk.CancellationReason.Error:
+            self._state.error = evt.error_details
+        self._state.done.set()
+
+    def push_chunk(self, pcm_data: bytes) -> None:
+        """Push raw PCM bytes to the Azure stream. Thread-safe."""
+        self._stream.write(pcm_data)
+
+    async def finalize(self) -> RawAssessmentResult:
+        """Close stream, wait for results, apply difflib miscue correction."""
+        self._stream.close()
+        logger.info("streaming_session_finalizing")
+
+        await asyncio.to_thread(self._state.done.wait, 30)
+        self._recognizer.stop_continuous_recognition()
+
+        if self._state.error:
+            msg = f"Azure recognition error: {self._state.error}"
+            raise RuntimeError(msg)
+
+        logger.info("streaming_session_done", word_count=len(self._state.words))
+
+        ref_words = self._reference_text.split()
+        words = _apply_difflib_miscue(ref_words, self._state.words)
+
+        if self._state.utterance_scores:
+            n = len(self._state.utterance_scores)
+            accuracy = sum(u["accuracy_score"] for u in self._state.utterance_scores) / n
+            fluency = sum(u["fluency_score"] for u in self._state.utterance_scores) / n
+            completeness = sum(u.get("completeness_score", 0) for u in self._state.utterance_scores) / n
+            prosody = sum(u.get("prosody_score", 0) for u in self._state.utterance_scores) / n
+            pron_score = sum(u["pronunciation_score"] for u in self._state.utterance_scores) / n
+        else:
+            accuracy = fluency = completeness = prosody = pron_score = 0.0
+
+        logger.info(
+            "streaming_assessment_done",
+            accuracy=f"{accuracy:.1f}",
+            fluency=f"{fluency:.1f}",
+            pronunciation=f"{pron_score:.1f}",
+        )
+
+        return RawAssessmentResult(
+            recognized_text=" ".join(self._state.recognized_texts),
+            words=tuple(words),
+            accuracy_score=accuracy,
+            fluency_score=fluency,
+            completeness_score=completeness,
+            prosody_score=prosody,
+            pronunciation_score=pron_score,
+        )
+
+
 class AzurePronunciationAdapter:
     """Azure Speech Service Pronunciation Assessment via PushAudioInputStream."""
+
+    def start_streaming(
+        self,
+        reference_text: str,
+        *,
+        sample_rate: int = 16000,
+        sample_width: int = 2,
+        channels: int = 1,
+    ) -> _AzureStreamingSession:
+        """Start a live streaming assessment session."""
+        return _AzureStreamingSession(
+            reference_text,
+            sample_rate=sample_rate,
+            sample_width=sample_width,
+            channels=channels,
+        )
 
     async def assess(
         self,

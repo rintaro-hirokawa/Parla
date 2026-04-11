@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Signal
 
@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
     from parla.event_bus import EventBus
     from parla.services.query_models import MenuPreview
+    from parla.services.session_query_service import SessionQueryService
+    from parla.services.session_service import SessionService
     from parla.ui.screens.session.session_context import SessionContext
 
 
@@ -34,8 +36,8 @@ class TomorrowMenuViewModel(BaseViewModel):
         self,
         *,
         event_bus: EventBus,
-        session_service: Any,
-        session_query_service: Any,
+        session_service: SessionService,
+        session_query_service: SessionQueryService,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)

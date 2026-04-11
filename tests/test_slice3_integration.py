@@ -26,7 +26,6 @@ from parla.adapters.sqlite_review_attempt_repository import SQLiteReviewAttemptR
 from parla.adapters.sqlite_source_repository import SQLiteSourceRepository
 from parla.adapters.sqlite_variation_repository import SQLiteVariationRepository
 from parla.domain.audio import AudioData
-from tests.conftest import make_wav_audio
 from parla.domain.events import (
     ReviewAnswered,
     ReviewRetryJudged,
@@ -42,6 +41,7 @@ from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
 from parla.ports.variation_generation import PastVariationInfo, RawVariation
 from parla.services.review_service import ReviewService
+from tests.conftest import make_wav_audio
 
 # --- Fake LLM adapters ---
 

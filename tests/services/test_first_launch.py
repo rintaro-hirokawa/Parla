@@ -15,9 +15,8 @@ from parla.domain.session import SessionConfig, SessionMenu
 from parla.domain.source import Source
 from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
-from parla.ports.variation_generation import PastVariationInfo, RawVariation
+from parla.ports.variation_generation import RawVariation
 from parla.services.session_service import SessionService
-
 
 # --- Fakes ---
 

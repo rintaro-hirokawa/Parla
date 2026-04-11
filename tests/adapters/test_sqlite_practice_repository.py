@@ -8,7 +8,6 @@ import pytest
 from parla.adapters.sqlite_db import create_connection, init_schema
 from parla.adapters.sqlite_practice_repository import SQLitePracticeRepository
 from parla.domain.audio import AudioData
-from tests.conftest import make_wav_audio
 from parla.domain.practice import (
     LiveDeliveryResult,
     ModelAudio,
@@ -17,6 +16,7 @@ from parla.domain.practice import (
     SentenceStatus,
     WordTimestamp,
 )
+from tests.conftest import make_wav_audio
 
 
 def _make_audio() -> AudioData:

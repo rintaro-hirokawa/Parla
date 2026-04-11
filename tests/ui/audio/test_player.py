@@ -64,11 +64,14 @@ class FakeMediaPlayer(QObject):
     def playbackRate(self) -> float:  # noqa: N802
         return self._rate
 
+    def setPosition(self, ms: int) -> None:  # noqa: N802
+        self._position = ms
+
     def position(self) -> int:
-        return 0
+        return getattr(self, "_position", 0)
 
     def duration(self) -> int:
-        return 0
+        return getattr(self, "_duration_ms", 0)
 
     def setAudioOutput(self, output: object) -> None:  # noqa: N802
         pass
@@ -259,6 +262,31 @@ class TestFormatHandling:
         player, fm = _make_player()
         player.play_file(f)
         assert fm._source_url is not None
+
+
+# ---------------------------------------------------------------------------
+# TestErrorHandling
+# ---------------------------------------------------------------------------
+
+
+class TestSeekAndPause:
+    def test_seek_sets_position(self, qtbot: QtBot) -> None:
+        player, fm = _make_player()
+        player.seek(3.5)
+        assert fm.position() == 3500
+
+    def test_is_paused_reflects_state(self, qtbot: QtBot) -> None:
+        player, fm = _make_player()
+        assert player.is_paused is False
+
+        player.play_audio_data(_make_wav_audio_data())
+        assert player.is_paused is False
+
+        player.pause()
+        assert player.is_paused is True
+
+        player.resume()
+        assert player.is_paused is False
 
 
 # ---------------------------------------------------------------------------

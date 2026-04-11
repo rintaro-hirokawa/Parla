@@ -13,11 +13,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from parla.domain.source import CEFRLevel
+from parla.domain.source import CEFRLevel, SourceStatus
 from parla.services.query_models import SourceSummary
 from parla.ui.screens.sources.list_view_model import SourceListViewModel
 
-STATUS_OPTIONS: list[tuple[str | None, str]] = [
+STATUS_OPTIONS: list[tuple[SourceStatus | None, str]] = [
     (None, "すべて"),
     ("registered", "登録済み"),
     ("generating", "生成中"),
@@ -27,7 +27,7 @@ STATUS_OPTIONS: list[tuple[str | None, str]] = [
     ("completed", "完了"),
 ]
 
-CEFR_OPTIONS: list[tuple[str | None, str]] = [(None, "すべて"), *((lv, lv) for lv in CEFRLevel)]
+CEFR_OPTIONS: list[tuple[CEFRLevel | None, str]] = [(None, "すべて"), *((lv, lv) for lv in CEFRLevel)]
 
 STATUS_LABELS = {
     "registered": "登録済み",

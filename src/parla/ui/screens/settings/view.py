@@ -57,11 +57,11 @@ class SettingsView(QWidget):
 
     def _on_cefr_changed(self, text: str) -> None:
         if not self._updating and text:
-            self._vm.update_cefr_level(text)
+            self._vm.update_cefr_level(CEFRLevel(text))
 
     def _on_variant_changed(self, text: str) -> None:
         if not self._updating and text:
-            self._vm.update_english_variant(text)
+            self._vm.update_english_variant(EnglishVariant(text))
 
     def _on_phonetic_toggled(self, checked: bool) -> None:
         if not self._updating:

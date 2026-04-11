@@ -317,6 +317,7 @@ class FakeContainer:
         self.variation_repo = FakeVariationRepo()
         self.session_query = FakeSessionQuery()
         self.item_query = FakeItemQuery()
+        self.skip_to_phase: str | None = None
 
 
 # ======================================================================

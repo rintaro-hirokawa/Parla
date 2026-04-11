@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -19,6 +19,7 @@ from parla.ui.widgets.recording_controls import RecordingControlsWidget
 from parla.ui.widgets.timer_widget import TimerWidget
 
 if TYPE_CHECKING:
+    from parla.ui.audio.recorder import AudioRecorder
     from parla.ui.screens.session.phase_a_view_model import PhaseAViewModel
 
 
@@ -28,7 +29,7 @@ class PhaseAView(QWidget):
     def __init__(
         self,
         view_model: PhaseAViewModel,
-        recorder: Any,
+        recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)

@@ -26,12 +26,11 @@ class ErrorBanner(QWidget):
         layout.setContentsMargins(0, theme.SPACING_SM, 0, theme.SPACING_SM)
         layout.addWidget(self._message_label, stretch=1)
 
+        self._retry_button: QPushButton | None = None
         if retryable:
             self._retry_button = QPushButton("再試行")
             self._retry_button.clicked.connect(self.retry_clicked)
             layout.addWidget(self._retry_button)
-        else:
-            self._retry_button = None
 
         self.hide()
 

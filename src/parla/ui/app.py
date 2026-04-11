@@ -2,16 +2,23 @@
 
 import sys
 from datetime import date
+from uuid import UUID
 
 import structlog
 from PySide6 import QtAsyncio
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 
 from parla.ui import theme
 from parla.ui.base_view_model import BaseViewModel
 from parla.ui.container import Container
 from parla.ui.navigation import NavigationController
+from parla.ui.screens.history.view import HistoryView
+from parla.ui.screens.history.view_model import HistoryViewModel
+from parla.ui.screens.items.detail_view import DetailView
+from parla.ui.screens.items.detail_view_model import DetailViewModel
+from parla.ui.screens.items.list_view import ListView
+from parla.ui.screens.items.list_view_model import ListViewModel
 from parla.ui.screens.session.coordinator import SessionCoordinator
 from parla.ui.screens.settings.view import SettingsView
 from parla.ui.screens.settings.view_model import SettingsViewModel
@@ -46,24 +53,33 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self._nav)
 
         self._today_vm = TodayViewModel(container.event_bus, container.session_query)
+        self._items_vm = ListViewModel(container.event_bus, container.item_query)
+        self._history_vm = HistoryViewModel(container.event_bus, container.history_query)
         self._settings_vm = SettingsViewModel(container.event_bus, container.settings_service)
 
         today_view = TodayView(self._today_vm)
+        items_view = ListView(self._items_vm)
+        history_view = HistoryView(self._history_vm)
         settings_view = SettingsView(self._settings_vm)
 
         self._nav.set_tab_widget(NavigationController.TAB_TODAY, today_view)
-        self._nav.set_tab_widget(NavigationController.TAB_ITEMS, QLabel("Learning Items"))
-        self._nav.set_tab_widget(NavigationController.TAB_HISTORY, QLabel("History"))
+        self._nav.set_tab_widget(NavigationController.TAB_ITEMS, items_view)
+        self._nav.set_tab_widget(NavigationController.TAB_HISTORY, history_view)
         self._nav.set_tab_widget(NavigationController.TAB_SETTINGS, settings_view)
 
         self._settings_vm.navigate_to_sources.connect(self._push_source_list)
         self._today_vm.start_session_requested.connect(self._enter_session)
         self._today_vm.navigate_to_source_registration.connect(self._push_source_registration)
+        self._items_vm.navigate_to_detail.connect(self._push_item_detail)
 
         self._settings_vm.activate()
         self._settings_vm.load_settings()
         self._today_vm.activate()
         self._today_vm.load_dashboard()
+        self._items_vm.activate()
+        self._items_vm.load_items()
+        self._history_vm.activate()
+        self._history_vm.load_overview()
 
     @property
     def navigation(self) -> NavigationController:
@@ -100,6 +116,15 @@ class MainWindow(QMainWindow):
         vm.deactivate()
         if vm in self._pushed_vms:
             self._pushed_vms.remove(vm)
+
+    def _push_item_detail(self, item_id: object) -> None:
+        """Push item detail screen onto items tab stack."""
+        assert isinstance(item_id, UUID)
+        vm = DetailViewModel(self._container.event_bus, self._container.item_query)
+        view = DetailView(vm)
+        vm.navigate_back.connect(lambda: self._nav.pop_screen())
+        vm.load_detail(item_id)
+        self._push_screen_with_vm(view, vm)
 
     def _push_source_list(self) -> None:
         """Push source list screen onto settings tab stack."""
@@ -150,6 +175,8 @@ class MainWindow(QMainWindow):
             self._coordinator.interrupt()
             self._coordinator = None
         self._today_vm.deactivate()
+        self._items_vm.deactivate()
+        self._history_vm.deactivate()
         self._settings_vm.deactivate()
         for vm in self._pushed_vms:
             vm.deactivate()

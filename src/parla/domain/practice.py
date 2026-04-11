@@ -23,6 +23,7 @@ class ModelAudio(BaseModel, frozen=True):
     passage_id: UUID
     audio: AudioData
     word_timestamps: tuple[WordTimestamp, ...]
+    sentence_texts: tuple[str, ...] = ()
     generated_at: datetime = Field(default_factory=datetime.now)
 
 
@@ -70,3 +71,22 @@ class LiveDeliveryResult(BaseModel, frozen=True):
     duration_seconds: float = Field(ge=0.0)
     wpm: float = Field(ge=0.0)
     created_at: datetime = Field(default_factory=datetime.now)
+
+
+def map_words_to_sentence_groups(
+    words: tuple[PronunciationWord, ...],
+    sentence_texts: tuple[str, ...],
+) -> tuple[tuple[PronunciationWord, ...], ...]:
+    """Map assessed words to sentence groups, excluding Insertions.
+
+    Splits reference-aligned words sequentially by each sentence's word count.
+    """
+    ref_aligned = [w for w in words if w.error_type != "Insertion"]
+    sentence_word_counts = [len(s.split()) for s in sentence_texts]
+
+    groups: list[tuple[PronunciationWord, ...]] = []
+    offset = 0
+    for count in sentence_word_counts:
+        groups.append(tuple(ref_aligned[offset : offset + count]))
+        offset += count
+    return tuple(groups)

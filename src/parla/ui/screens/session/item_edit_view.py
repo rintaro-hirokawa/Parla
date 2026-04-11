@@ -42,8 +42,8 @@ class ItemEditView(QDialog):
         # Clear existing
         while self._items_layout.count():
             child = self._items_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+            if child is not None and (w := child.widget()) is not None:
+                w.deleteLater()
 
         for item in self._vm.items:
             row = QWidget()

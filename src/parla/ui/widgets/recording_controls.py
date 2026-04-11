@@ -1,10 +1,9 @@
 """Composite recording controls: waveform + level meter + record button."""
 
-from typing import Any
-
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
+from parla.ui.audio.recorder import AudioRecorder
 from parla.ui.widgets.level_meter_widget import LevelMeterWidget
 from parla.ui.widgets.waveform_widget import WaveformWidget
 
@@ -21,7 +20,7 @@ class RecordingControlsWidget(QWidget):
 
     def __init__(
         self,
-        recorder: Any,
+        recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)

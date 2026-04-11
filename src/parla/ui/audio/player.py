@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QObject, QUrl, Signal
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
@@ -32,13 +32,13 @@ class AudioPlayer(QObject):
     def __init__(
         self,
         *,
-        player: Any | None = None,
-        audio_output: Any | None = None,
+        player: QMediaPlayer | None = None,
+        audio_output: QAudioOutput | None = None,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
-        self._player: Any = player or QMediaPlayer(self)
-        self._audio_output: Any = audio_output or QAudioOutput(self)
+        self._player: QMediaPlayer = player or QMediaPlayer(self)
+        self._audio_output: QAudioOutput = audio_output or QAudioOutput(self)
         self._player.setAudioOutput(self._audio_output)
 
         # Internal buffer for in-memory playback (must outlive playback)
@@ -84,6 +84,10 @@ class AudioPlayer(QObject):
     def resume(self) -> None:
         self._player.play()
 
+    def seek(self, seconds: float) -> None:
+        """Seek to the given position in seconds."""
+        self._player.setPosition(int(seconds * 1000))
+
     # ------------------------------------------------------------------
     # Speed control
     # ------------------------------------------------------------------
@@ -103,6 +107,10 @@ class AudioPlayer(QObject):
     @property
     def is_playing(self) -> bool:
         return self._playing
+
+    @property
+    def is_paused(self) -> bool:
+        return bool(self._player.playbackState() == QMediaPlayer.PlaybackState.PausedState)
 
     @property
     def position_seconds(self) -> float:

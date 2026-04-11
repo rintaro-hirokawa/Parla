@@ -4,6 +4,9 @@ from collections.abc import Sequence
 from datetime import date
 from uuid import UUID
 
+import structlog
+
+from parla.domain.practice import map_words_to_sentence_groups
 from parla.domain.session import SessionBlock
 from parla.ports.learning_item_repository import LearningItemRepository
 from parla.ports.practice_repository import PracticeRepository
@@ -12,13 +15,19 @@ from parla.ports.session_repository import SessionRepository
 from parla.ports.source_repository import SourceRepository
 from parla.services.query_models import (
     ActiveSourceOption,
+    LiveDeliverySentenceResult,
+    LiveDeliverySummary,
     MenuBlockSummary,
     MenuPreview,
+    OverlappingSummary,
+    OverlappingWordResult,
     PassageSummary,
     SessionSummary,
     SessionSummaryBlock,
     TodayDashboard,
 )
+
+logger = structlog.get_logger()
 
 
 class SessionQueryService:
@@ -72,7 +81,14 @@ class SessionQueryService:
         """Get passage completion summary (E9 screen)."""
         passage = self._source_repo.get_passage(passage_id)
         if passage is None:
+            logger.warning("get_passage_summary_passage_not_found", passage_id=str(passage_id))
             return None
+        logger.info(
+            "get_passage_summary_passage_found",
+            passage_id=str(passage_id),
+            topic=passage.topic,
+            sentence_count=len(passage.sentences),
+        )
 
         new_item_count = sum(
             len(self._item_repo.get_items_by_sentence(s.id))
@@ -175,6 +191,55 @@ class SessionQueryService:
             return ""
         source = self._source_repo.get_source(source_id)
         return source.title if source else ""
+
+    def get_overlapping_summary(self, passage_id: UUID) -> OverlappingSummary | None:
+        """Get per-word overlapping results mapped to sentences for display."""
+        result = self._practice_repo.get_overlapping_result(passage_id)
+        if result is None:
+            return None
+
+        model_audio = self._practice_repo.get_model_audio(passage_id)
+        if model_audio is None:
+            return None
+
+        groups = map_words_to_sentence_groups(result.words, model_audio.sentence_texts)
+        sentence_words = tuple(
+            tuple(
+                OverlappingWordResult(
+                    word=pw.word,
+                    error_type=pw.error_type,
+                    accuracy_score=pw.accuracy_score,
+                )
+                for pw in group
+            )
+            for group in groups
+        )
+
+        return OverlappingSummary(
+            pronunciation_score=result.pronunciation_score,
+            sentence_words=sentence_words,
+        )
+
+    def get_live_delivery_summary(self, passage_id: UUID) -> LiveDeliverySummary | None:
+        """Get per-sentence live delivery results for display."""
+        results = self._practice_repo.get_live_delivery_results(passage_id)
+        if not results:
+            return None
+        last = results[-1]
+        sentences = tuple(
+            LiveDeliverySentenceResult(
+                model_text=s.model_text,
+                recognized_text=s.recognized_text,
+                status=s.status,
+                similarity=s.similarity,
+            )
+            for s in last.sentence_statuses
+        )
+        return LiveDeliverySummary(
+            passed=last.passed,
+            wpm=last.wpm,
+            sentences=sentences,
+        )
 
     def _count_remaining_passages(self, source_id: UUID) -> int:
         passages = self._source_repo.get_passages_by_source(source_id)

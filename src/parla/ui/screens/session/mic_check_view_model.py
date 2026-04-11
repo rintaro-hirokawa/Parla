@@ -1,8 +1,14 @@
 """ViewModel for the mic check screen (SCREEN-E1)."""
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtMultimedia import QAudioDevice
+
+if TYPE_CHECKING:
+    from parla.ui.audio.recorder import AudioRecorder
 
 LEVEL_THRESHOLD = 0.05
 
@@ -21,7 +27,7 @@ class MicCheckViewModel(QObject):
     def __init__(
         self,
         *,
-        recorder: Any,
+        recorder: AudioRecorder,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
@@ -29,7 +35,7 @@ class MicCheckViewModel(QObject):
         self._start_enabled = False
         self._testing = False
         self._warning_shown = False
-        self._devices: list | None = None
+        self._devices: list[QAudioDevice] | None = None
 
         self._recorder.level_changed.connect(self._on_level)
         self._recorder.error_occurred.connect(self._on_error)

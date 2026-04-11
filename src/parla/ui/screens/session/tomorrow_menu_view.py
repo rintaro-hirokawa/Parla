@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
@@ -45,11 +46,11 @@ class TomorrowMenuView(QWidget):
         self._vm.error.connect(self._on_error)
         self._confirm_button.clicked.connect(self._vm.confirm)
 
-    def showEvent(self, event) -> None:  # noqa: ANN001
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._vm.activate()
 
-    def hideEvent(self, event) -> None:  # noqa: ANN001
+    def hideEvent(self, event: QHideEvent) -> None:
         self._vm.deactivate()
         super().hideEvent(event)
 

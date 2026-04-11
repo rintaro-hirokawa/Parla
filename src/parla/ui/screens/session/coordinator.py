@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import structlog
 from PySide6.QtCore import QObject, Signal
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from parla.domain.passage import Passage
     from parla.domain.session import SessionBlock, SessionMenu, SessionState
     from parla.event_bus import EventBus
+    from parla.ui.container import Container
     from parla.ui.navigation import NavigationController
 
 logger = structlog.get_logger()
@@ -32,7 +33,7 @@ class SessionCoordinator(QObject):
         self,
         *,
         nav: NavigationController,
-        container: Any,
+        container: Container,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
@@ -206,6 +207,11 @@ class SessionCoordinator(QObject):
         if source is not None:
             self._session_context.set_cefr_level(source.cefr_level)
 
+        if self._c.skip_to_phase == "c":
+            self._c.practice_service.request_model_audio(passage.id)
+            self._show_phase_c(passage.id)
+            return
+
         self._show_phase_a(passage)
 
     # --- Phase A (E3) ---
@@ -281,9 +287,12 @@ class SessionCoordinator(QObject):
             practice_service=self._c.practice_service,
             practice_repo=self._c.practice_repo,
             audio_player=AudioPlayer(),
+            recorder=self._recorder,
             session_context=self._session_context,
+            session_query_service=self._c.session_query,
         )
-        vm.start(passage_id)
+        ja_texts = tuple(s.ja for s in self._current_passage.sentences) if self._current_passage else ()
+        vm.start(passage_id, sentence_ja_texts=ja_texts)
         view = PhaseCView(vm, recorder=self._recorder)
         vm.phase_complete.connect(lambda: self._on_phase_c_done(passage_id))
         vm.activate()
@@ -303,6 +312,7 @@ class SessionCoordinator(QObject):
             PassageSummaryViewModel,
         )
 
+        logger.info("show_passage_summary", passage_id=str(passage_id))
         vm = PassageSummaryViewModel(session_query_service=self._c.session_query)
         has_more = self._current_passage_index < len(self._current_passage_ids) - 1
         vm.set_has_more_passages(has_more)

@@ -4,7 +4,6 @@ from datetime import date
 from uuid import UUID, uuid4
 
 from parla.domain.audio import AudioData
-from tests.conftest import make_wav_audio
 from parla.domain.events import (
     ReviewAnswered,
     ReviewRetryJudged,
@@ -15,6 +14,7 @@ from parla.domain.variation import Variation
 from parla.event_bus import EventBus
 from parla.ui.screens.session.review_view_model import ReviewViewModel
 from parla.ui.screens.session.session_context import SessionContext
+from tests.conftest import make_wav_audio
 
 
 def _make_audio() -> AudioData:

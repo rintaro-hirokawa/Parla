@@ -36,6 +36,18 @@ class RawAssessmentResult(BaseModel, frozen=True):
     pronunciation_score: float
 
 
+class StreamingAssessmentSession(Protocol):
+    """A live streaming session that accepts PCM chunks incrementally."""
+
+    def push_chunk(self, pcm_data: bytes) -> None:
+        """Push a raw PCM chunk (16-bit mono) to the assessment stream."""
+        ...
+
+    async def finalize(self) -> RawAssessmentResult:
+        """Close the stream and return the assessment result."""
+        ...
+
+
 class PronunciationAssessmentPort(Protocol):
     """Assesses pronunciation quality and word-level timing from audio."""
 
@@ -44,3 +56,12 @@ class PronunciationAssessmentPort(Protocol):
         audio: AudioData,
         reference_text: str,
     ) -> RawAssessmentResult: ...
+
+    def start_streaming(
+        self,
+        reference_text: str,
+        *,
+        sample_rate: int = 16000,
+        sample_width: int = 2,
+        channels: int = 1,
+    ) -> StreamingAssessmentSession: ...

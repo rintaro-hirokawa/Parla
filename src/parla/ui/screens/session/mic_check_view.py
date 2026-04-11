@@ -1,9 +1,9 @@
 """View for the mic check screen (SCREEN-E1)."""
 
 import math
-from typing import Any
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from parla.ui.audio.recorder import AudioRecorder
 from parla.ui.screens.session.mic_check_view_model import MicCheckViewModel
 from parla.ui.widgets.level_meter_widget import LevelMeterWidget
 from parla.ui.widgets.waveform_widget import WaveformWidget
@@ -25,7 +26,7 @@ class MicCheckView(QWidget):
     def __init__(
         self,
         view_model: MicCheckViewModel,
-        recorder: Any,
+        recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -78,11 +79,11 @@ class MicCheckView(QWidget):
         self._gain_slider.valueChanged.connect(self._on_gain_changed)
         self._start_button.clicked.connect(self._vm.confirm_start)
 
-    def showEvent(self, event) -> None:  # noqa: ANN001
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._vm.start_test()
 
-    def hideEvent(self, event) -> None:  # noqa: ANN001
+    def hideEvent(self, event: QHideEvent) -> None:
         self._vm.stop_test()
         super().hideEvent(event)
 

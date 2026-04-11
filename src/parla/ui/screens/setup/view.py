@@ -64,4 +64,4 @@ class SetupView(QWidget):
 
     def _on_variant_changed(self, text: str) -> None:
         if text:
-            self._vm.select_variant(text)
+            self._vm.select_variant(EnglishVariant(text))

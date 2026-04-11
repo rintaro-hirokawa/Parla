@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import os
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,7 @@ import structlog
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from pathlib import Path
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from parla.ports.tts_generation import RawTTSResult, RawWordTimestamp
@@ -83,8 +85,15 @@ def _chars_to_word_timestamps(
 class ElevenLabsTTSAdapter:
     """TTS generation via ElevenLabs convert_with_timestamps API."""
 
-    def __init__(self, voice_map: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        voice_map: dict[str, str] | None = None,
+        cache_dir: Path | None = None,
+    ) -> None:
         self._voice_map = voice_map or _DEFAULT_VOICES
+        self._cache_dir = cache_dir
+        if cache_dir:
+            cache_dir.mkdir(parents=True, exist_ok=True)
         from elevenlabs import ElevenLabs
 
         self._client = ElevenLabs(api_key=_get_api_key())
@@ -97,6 +106,11 @@ class ElevenLabsTTSAdapter:
     ) -> RawTTSResult:
         """Generate TTS audio with word-level timestamps."""
         voice_id = self._voice_map.get(english_variant, list(self._voice_map.values())[0])
+
+        cached = self._load_cache(text, voice_id)
+        if cached is not None:
+            logger.info("tts_cache_hit", text_length=len(text), voice_id=voice_id)
+            return cached
 
         logger.info(
             "elevenlabs_tts_start",
@@ -134,7 +148,7 @@ class ElevenLabsTTSAdapter:
             duration=duration,
         )
 
-        return RawTTSResult(
+        result = RawTTSResult(
             audio_data=audio_data,
             audio_format="mp3",
             sample_rate=44100,
@@ -143,3 +157,40 @@ class ElevenLabsTTSAdapter:
             duration_seconds=duration,
             word_timestamps=tuple(word_timestamps),
         )
+        self._save_cache(text, voice_id, result)
+        return result
+
+    # ------------------------------------------------------------------
+    # Content-addressed TTS cache
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _cache_key(text: str, voice_id: str) -> str:
+        return hashlib.sha256(f"{text}|{voice_id}".encode()).hexdigest()
+
+    def _load_cache(self, text: str, voice_id: str) -> RawTTSResult | None:
+        if self._cache_dir is None:
+            return None
+        path = self._cache_dir / f"{self._cache_key(text, voice_id)}.json"
+        if not path.exists():
+            return None
+        try:
+            import json
+
+            data = json.loads(path.read_bytes())
+            data["audio_data"] = base64.b64decode(data["audio_data"])
+            return RawTTSResult.model_validate(data)
+        except Exception:
+            logger.warning("tts_cache_corrupt", path=str(path))
+            path.unlink(missing_ok=True)
+            return None
+
+    def _save_cache(self, text: str, voice_id: str, result: RawTTSResult) -> None:
+        if self._cache_dir is None:
+            return
+        import json
+
+        data = result.model_dump()
+        data["audio_data"] = base64.b64encode(result.audio_data).decode("ascii")
+        path = self._cache_dir / f"{self._cache_key(text, voice_id)}.json"
+        path.write_bytes(json.dumps(data).encode())

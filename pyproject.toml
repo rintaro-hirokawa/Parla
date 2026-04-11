@@ -3,6 +3,7 @@ name = "parla"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "azure-cognitiveservices-speech>=1.40.0",
     "elevenlabs>=2.42.0",
     "pydantic>=2.12.5",
     "PySide6>=6.7",

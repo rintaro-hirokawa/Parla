@@ -8,6 +8,6 @@ from parla.domain.source import CEFRLevel, EnglishVariant
 class UserSettings(BaseModel):
     """Application-level user settings (single-user desktop app)."""
 
-    cefr_level: CEFRLevel = "B1"
-    english_variant: EnglishVariant = "American"
+    cefr_level: CEFRLevel = CEFRLevel.B1
+    english_variant: EnglishVariant = EnglishVariant.AMERICAN
     phonetic_display: bool = False

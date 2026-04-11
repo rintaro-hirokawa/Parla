@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS model_audio (
     passage_id       TEXT PRIMARY KEY REFERENCES passages(id),
     audio_path       TEXT NOT NULL,
     timestamps       TEXT NOT NULL,
+    sentence_texts   TEXT NOT NULL DEFAULT '[]',
     sample_rate      INTEGER NOT NULL DEFAULT 16000,
     channels         INTEGER NOT NULL DEFAULT 1,
     sample_width     INTEGER NOT NULL DEFAULT 2,

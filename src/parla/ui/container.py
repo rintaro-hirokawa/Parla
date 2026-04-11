@@ -20,7 +20,7 @@ from parla.adapters.gemini_retry_judgment import GeminiRetryJudgmentAdapter
 from parla.adapters.gemini_review_judgment import GeminiReviewJudgmentAdapter
 from parla.adapters.gemini_variation import GeminiVariationAdapter
 from parla.adapters.local_audio_storage import LocalAudioStorage
-from parla.adapters.sqlite_db import create_connection, init_schema
+from parla.adapters.sqlite_db import create_connection, init_schema, reset_db
 from parla.adapters.sqlite_feedback_repository import SQLiteFeedbackRepository
 from parla.adapters.sqlite_learning_item_repository import SQLiteLearningItemRepository
 from parla.adapters.sqlite_practice_repository import SQLitePracticeRepository
@@ -69,7 +69,9 @@ class Container:
         init_schema(self.conn)
 
         # --- Shared paths ---
-        audio_dir = self._audio_dir(resolved_path)
+        self._audio_dir_path = self._audio_dir(resolved_path)
+        audio_dir = self._audio_dir_path
+        tts_cache_dir = self._tts_cache_dir(resolved_path)
 
         # --- Repositories ---
         self.session_repo = SQLiteSessionRepository(self.conn)
@@ -88,13 +90,14 @@ class Container:
         self.variation_generator = GeminiVariationAdapter()
         self.retry_judge = GeminiRetryJudgmentAdapter()
         self.review_judge = GeminiReviewJudgmentAdapter()
-        self.tts_generator = ElevenLabsTTSAdapter()
+        self.tts_generator = ElevenLabsTTSAdapter(cache_dir=tts_cache_dir)
         self.pronunciation_assessor = AzurePronunciationAdapter()
         self.lag_detector = GeminiOverlappingLagAdapter()
 
         # --- Config ---
         self.session_config = SessionConfig()
         self.srs_config = SRSConfig()
+        self.skip_to_phase: str | None = None
 
         # --- Command Services ---
         self.settings_service = SettingsService(
@@ -185,6 +188,13 @@ class Container:
             review_attempt_repo=self.attempt_repo,
         )
 
+    def reset_state(self) -> None:
+        """Reset all application state: DB tables and audio files. TTS cache is preserved."""
+        reset_db(self.conn)
+        for f in self._audio_dir_path.iterdir():
+            if f.is_file():
+                f.unlink()
+
     def close(self) -> None:
         """Close database connection."""
         self.conn.close()
@@ -202,3 +212,10 @@ class Container:
         audio = (_DEFAULT_DATA_DIR / "audio") if str(db_path) == ":memory:" else (db_path.parent / "audio")
         audio.mkdir(parents=True, exist_ok=True)
         return audio
+
+    @staticmethod
+    def _tts_cache_dir(db_path: str | Path) -> Path:
+        db_path = Path(db_path)
+        d = (_DEFAULT_DATA_DIR / "tts_cache") if str(db_path) == ":memory:" else (db_path.parent / "tts_cache")
+        d.mkdir(parents=True, exist_ok=True)
+        return d

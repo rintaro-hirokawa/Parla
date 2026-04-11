@@ -31,7 +31,12 @@ from parla.event_bus import EventBus
 from parla.ports.feedback_repository import FeedbackRepository
 from parla.ports.overlapping_lag_detection import OverlappingLagDetectionPort
 from parla.ports.practice_repository import PracticeRepository
-from parla.ports.pronunciation_assessment import PronunciationAssessmentPort, RawAssessedWord
+from parla.ports.pronunciation_assessment import (
+    PronunciationAssessmentPort,
+    RawAssessedWord,
+    RawAssessmentResult,
+    StreamingAssessmentSession,
+)
 from parla.ports.source_repository import SourceRepository
 from parla.ports.tts_generation import TTSGenerationPort
 
@@ -69,6 +74,13 @@ class PracticeService:
 
     async def handle_model_audio_requested(self, event: ModelAudioRequested) -> None:
         """Async handler: collect model answers, generate TTS, cache result."""
+        # Return cached audio if already generated
+        existing = self._practice_repo.get_model_audio(event.passage_id)
+        if existing is not None:
+            logger.info("model_audio_cache_hit", passage_id=str(event.passage_id))
+            self._bus.emit(ModelAudioReady(passage_id=event.passage_id))
+            return
+
         passage = self._source_repo.get_passage(event.passage_id)
         if passage is None:
             logger.error("passage_not_found", passage_id=str(event.passage_id))
@@ -107,6 +119,7 @@ class PracticeService:
                     WordTimestamp(word=wt.word, start_seconds=wt.start_seconds, end_seconds=wt.end_seconds)
                     for wt in raw_tts.word_timestamps
                 ),
+                sentence_texts=tuple(model_answers),
             )
             self._practice_repo.save_model_audio(model_audio)
             self._bus.emit(ModelAudioReady(passage_id=event.passage_id))
@@ -114,6 +127,57 @@ class PracticeService:
         except Exception as exc:
             logger.exception("model_audio_generation_failed", passage_id=str(event.passage_id))
             self._bus.emit(ModelAudioFailed(passage_id=event.passage_id, error_message=str(exc)))
+
+    def start_overlapping_stream(self, passage_id: UUID) -> StreamingAssessmentSession | None:
+        """Start a streaming assessment session for overlapping practice.
+
+        Returns None if model audio is not yet available.
+        """
+        model_audio = self._practice_repo.get_model_audio(passage_id)
+        if model_audio is None:
+            return None
+        reference_text = " ".join(wt.word for wt in model_audio.word_timestamps)
+        return self._pronunciation_assessor.start_streaming(reference_text)
+
+    async def finalize_overlapping_stream(
+        self, passage_id: UUID, session: StreamingAssessmentSession
+    ) -> OverlappingResult:
+        """Finalize a streaming session and process overlapping results."""
+        model_audio = self._practice_repo.get_model_audio(passage_id)
+        if model_audio is None:
+            msg = f"Model audio not found for passage {passage_id}"
+            raise ValueError(msg)
+
+        raw_result = await session.finalize()
+
+        words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
+
+        user_offsets = [w.offset_seconds for w in words if w.error_type != "Omission" and w.offset_seconds >= 0]
+        ref_offsets = [wt.start_seconds for wt in model_audio.word_timestamps]
+        n = min(len(user_offsets), len(ref_offsets))
+        deviations = calculate_timing_deviations(user_offsets[:n], ref_offsets[:n], baseline_correction=False)
+
+        result = OverlappingResult(
+            passage_id=passage_id,
+            words=words,
+            timing_deviations=tuple(deviations),
+            accuracy_score=raw_result.accuracy_score,
+            fluency_score=raw_result.fluency_score,
+            prosody_score=raw_result.prosody_score,
+            pronunciation_score=raw_result.pronunciation_score,
+        )
+        self._practice_repo.save_overlapping_result(result)
+
+        self._bus.emit(
+            OverlappingCompleted(
+                passage_id=passage_id,
+                pronunciation_score=raw_result.pronunciation_score,
+            )
+        )
+
+        await self.detect_lag(passage_id, result)
+
+        return result
 
     def should_skip(self, new_item_count: int, wpm: float, cefr_level: str) -> bool:
         """Check if Phase C should be skipped (0 new items AND WPM in target)."""
@@ -156,6 +220,8 @@ class PracticeService:
             )
         )
 
+        await self.detect_lag(passage_id, result)
+
         return result
 
     async def detect_lag(self, passage_id: UUID, result: OverlappingResult) -> LagDetectionResult | None:
@@ -197,19 +263,72 @@ class PracticeService:
 
     # --- Live Delivery ---
 
+    def start_live_delivery_stream(self, passage_id: UUID) -> StreamingAssessmentSession | None:
+        """Start a streaming assessment session for live delivery practice.
+
+        Returns None if passage or feedback is not available.
+        """
+        reference_text = self._build_live_delivery_reference(passage_id)
+        if reference_text is None:
+            return None
+        return self._pronunciation_assessor.start_streaming(reference_text)
+
+    async def finalize_live_delivery_stream(
+        self,
+        passage_id: UUID,
+        session: StreamingAssessmentSession,
+        duration_seconds: float,
+    ) -> LiveDeliveryResult:
+        """Finalize a streaming session and process live delivery results."""
+        reference_text = self._build_live_delivery_reference(passage_id)
+        if reference_text is None:
+            msg = f"Cannot build reference for passage {passage_id}"
+            raise ValueError(msg)
+
+        raw_result = await session.finalize()
+        return self._process_live_delivery_result(passage_id, raw_result, duration_seconds)
+
     async def evaluate_live_delivery(
         self,
         passage_id: UUID,
         user_audio: AudioData,
         duration_seconds: float,
     ) -> LiveDeliveryResult:
-        """Evaluate live delivery against model answers."""
+        """Evaluate live delivery against model answers (batch mode)."""
+        reference_text = self._build_live_delivery_reference(passage_id)
+        if reference_text is None:
+            msg = f"Passage not found: {passage_id}"
+            raise ValueError(msg)
+
+        raw_result = await self._pronunciation_assessor.assess(user_audio, reference_text)
+        return self._process_live_delivery_result(passage_id, raw_result, duration_seconds)
+
+    def _build_live_delivery_reference(self, passage_id: UUID) -> str | None:
+        """Build the full reference text for live delivery from model answers."""
+        passage = self._source_repo.get_passage(passage_id)
+        if passage is None:
+            return None
+        sentence_model_texts: list[str] = []
+        for sentence in passage.sentences:
+            feedback = self._feedback_repo.get_feedback_by_sentence(sentence.id)
+            if feedback is None:
+                sentence_model_texts.append(sentence.en)
+            else:
+                sentence_model_texts.append(feedback.model_answer)
+        return " ".join(sentence_model_texts)
+
+    def _process_live_delivery_result(
+        self,
+        passage_id: UUID,
+        raw_result: RawAssessmentResult,
+        duration_seconds: float,
+    ) -> LiveDeliveryResult:
+        """Process raw assessment into LiveDeliveryResult, save, and emit events."""
         passage = self._source_repo.get_passage(passage_id)
         if passage is None:
             msg = f"Passage not found: {passage_id}"
             raise ValueError(msg)
 
-        # Collect model answer texts per sentence
         sentence_model_texts: list[str] = []
         for sentence in passage.sentences:
             feedback = self._feedback_repo.get_feedback_by_sentence(sentence.id)
@@ -218,13 +337,7 @@ class PracticeService:
             else:
                 sentence_model_texts.append(feedback.model_answer)
 
-        full_reference = " ".join(sentence_model_texts)
-
-        raw_result = await self._pronunciation_assessor.assess(user_audio, full_reference)
-
         words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
-
-        # Map words to sentences and calculate per-sentence status
         sentence_statuses = self._map_words_to_sentences(sentence_model_texts, words)
 
         status_strings = [s.status for s in sentence_statuses]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
 
@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from parla.services.query_models import SessionSummary
+    from parla.services.session_query_service import SessionQueryService
 
 
 class SessionSummaryViewModel(QObject):
@@ -19,7 +20,7 @@ class SessionSummaryViewModel(QObject):
     navigate_to_menu = Signal()
     error = Signal(str)
 
-    def __init__(self, *, session_query_service: Any, parent: QObject | None = None) -> None:
+    def __init__(self, *, session_query_service: SessionQueryService, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._query = session_query_service
         self._summary: SessionSummary | None = None

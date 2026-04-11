@@ -246,3 +246,41 @@ class ActiveSourceOption(BaseModel, frozen=True):
     title: str
     cefr_level: CEFRLevel
     remaining_passages: int = 0
+
+
+# --- Overlapping summary DTOs ---
+
+
+class OverlappingWordResult(BaseModel, frozen=True):
+    """Per-word pronunciation result for overlapping display."""
+
+    word: str
+    error_type: str
+    accuracy_score: float
+
+
+class OverlappingSummary(BaseModel, frozen=True):
+    """Overlapping evaluation summary for Phase C display."""
+
+    pronunciation_score: float
+    sentence_words: tuple[tuple[OverlappingWordResult, ...], ...]
+
+
+# --- Live delivery summary DTOs ---
+
+
+class LiveDeliverySentenceResult(BaseModel, frozen=True):
+    """Per-sentence live delivery result for display."""
+
+    model_text: str
+    recognized_text: str
+    status: str  # "correct" / "paraphrase" / "error"
+    similarity: float
+
+
+class LiveDeliverySummary(BaseModel, frozen=True):
+    """Live delivery evaluation summary for Phase C display."""
+
+    passed: bool
+    wpm: float
+    sentences: tuple[LiveDeliverySentenceResult, ...]

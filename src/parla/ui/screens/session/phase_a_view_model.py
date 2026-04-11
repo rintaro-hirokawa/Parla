@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
     from parla.domain.audio import AudioData
     from parla.domain.passage import Passage
+    from parla.services.feedback_service import FeedbackService
 
 
 class PhaseAViewModel(QObject):
@@ -25,7 +26,7 @@ class PhaseAViewModel(QObject):
     def __init__(
         self,
         *,
-        feedback_service: Any,
+        feedback_service: FeedbackService,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
