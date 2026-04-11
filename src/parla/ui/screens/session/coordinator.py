@@ -420,8 +420,13 @@ class SessionCoordinator(QObject):
     def _show_item_edit(self) -> None:
         from parla.ui.screens.session.item_edit_view import ItemEditView
         from parla.ui.screens.session.item_edit_view_model import ItemEditViewModel
+        from parla.ui.screens.session.phase_b_view_model import PhaseBViewModel
+
+        if not isinstance(self._current_vm, PhaseBViewModel):
+            return
 
         vm = ItemEditViewModel(item_repo=self._c.item_repo)
+        vm.load_items(self._current_vm.current_sentence_id)
         view = ItemEditView(vm)
         view.exec()
 
