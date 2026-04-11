@@ -6,7 +6,9 @@ TDD — these tests define the specification for deterministic session compositi
 from uuid import uuid4
 
 from parla.domain.session import (
+    BlockType,
     SessionConfig,
+    SessionPattern,
     compose_blocks,
     select_next_unlearned_passage,
     select_pattern,
@@ -16,31 +18,31 @@ from parla.domain.session import (
 class TestSelectPattern:
     """Pattern selection based on pending review count."""
 
-    def test_zero_reviews_returns_c(self) -> None:
+    def test_zero_reviews_returns_new_only(self) -> None:
         config = SessionConfig()
-        assert select_pattern(0, config) == "c"
+        assert select_pattern(0, config) == SessionPattern.NEW_ONLY
 
-    def test_above_threshold_returns_b(self) -> None:
+    def test_above_threshold_returns_review_only(self) -> None:
         config = SessionConfig(review_overflow_threshold=30)
-        assert select_pattern(31, config) == "b"
+        assert select_pattern(31, config) == SessionPattern.REVIEW_ONLY
 
-    def test_at_threshold_returns_a(self) -> None:
-        """At the threshold (not above) → pattern a."""
+    def test_at_threshold_returns_review_and_new(self) -> None:
+        """At the threshold (not above) → REVIEW_AND_NEW."""
         config = SessionConfig(review_overflow_threshold=30)
-        assert select_pattern(30, config) == "a"
+        assert select_pattern(30, config) == SessionPattern.REVIEW_AND_NEW
 
-    def test_below_threshold_returns_a(self) -> None:
+    def test_below_threshold_returns_review_and_new(self) -> None:
         config = SessionConfig(review_overflow_threshold=30)
-        assert select_pattern(15, config) == "a"
+        assert select_pattern(15, config) == SessionPattern.REVIEW_AND_NEW
 
-    def test_one_review_returns_a(self) -> None:
+    def test_one_review_returns_review_and_new(self) -> None:
         config = SessionConfig()
-        assert select_pattern(1, config) == "a"
+        assert select_pattern(1, config) == SessionPattern.REVIEW_AND_NEW
 
     def test_custom_threshold(self) -> None:
         config = SessionConfig(review_overflow_threshold=10)
-        assert select_pattern(11, config) == "b"
-        assert select_pattern(10, config) == "a"
+        assert select_pattern(11, config) == SessionPattern.REVIEW_ONLY
+        assert select_pattern(10, config) == SessionPattern.REVIEW_AND_NEW
 
 
 class TestComposeBlocks:
@@ -49,57 +51,57 @@ class TestComposeBlocks:
     def _item_ids(self, n: int) -> tuple[str, ...]:
         return tuple(uuid4() for _ in range(n))
 
-    def test_pattern_a_has_three_blocks(self) -> None:
+    def test_review_and_new_has_three_blocks(self) -> None:
         config = SessionConfig()
         review_ids = self._item_ids(5)
         passage_ids = self._item_ids(2)
         blocks = compose_blocks(
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             review_item_ids=review_ids,
             passage_ids=passage_ids,
             config=config,
         )
         assert len(blocks) == 3
-        assert blocks[0].block_type == "review"
+        assert blocks[0].block_type == BlockType.REVIEW
         assert blocks[0].items == review_ids
-        assert blocks[1].block_type == "new_material"
+        assert blocks[1].block_type == BlockType.NEW_MATERIAL
         assert blocks[1].items == passage_ids
-        assert blocks[2].block_type == "consolidation"
+        assert blocks[2].block_type == BlockType.CONSOLIDATION
         assert blocks[2].items == ()
 
-    def test_pattern_b_has_one_block(self) -> None:
+    def test_review_only_has_one_block(self) -> None:
         config = SessionConfig()
         review_ids = self._item_ids(20)
         blocks = compose_blocks(
-            pattern="b",
+            pattern=SessionPattern.REVIEW_ONLY,
             review_item_ids=review_ids,
             passage_ids=(),
             config=config,
         )
         assert len(blocks) == 1
-        assert blocks[0].block_type == "review"
+        assert blocks[0].block_type == BlockType.REVIEW
         assert blocks[0].items == review_ids
 
-    def test_pattern_c_has_two_blocks(self) -> None:
+    def test_new_only_has_two_blocks(self) -> None:
         config = SessionConfig()
         passage_ids = self._item_ids(3)
         blocks = compose_blocks(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             review_item_ids=(),
             passage_ids=passage_ids,
             config=config,
         )
         assert len(blocks) == 2
-        assert blocks[0].block_type == "new_material"
+        assert blocks[0].block_type == BlockType.NEW_MATERIAL
         assert blocks[0].items == passage_ids
-        assert blocks[1].block_type == "consolidation"
+        assert blocks[1].block_type == BlockType.CONSOLIDATION
         assert blocks[1].items == ()
 
     def test_estimated_time_review(self) -> None:
         config = SessionConfig(estimated_minutes_per_review=2.0)
         review_ids = self._item_ids(10)
         blocks = compose_blocks(
-            pattern="b",
+            pattern=SessionPattern.REVIEW_ONLY,
             review_item_ids=review_ids,
             passage_ids=(),
             config=config,
@@ -110,7 +112,7 @@ class TestComposeBlocks:
         config = SessionConfig(estimated_minutes_per_passage=10.0)
         passage_ids = self._item_ids(2)
         blocks = compose_blocks(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             review_item_ids=(),
             passage_ids=passage_ids,
             config=config,
@@ -121,26 +123,26 @@ class TestComposeBlocks:
         """Block 3 (consolidation) items are unknown at composition time."""
         config = SessionConfig()
         blocks = compose_blocks(
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             review_item_ids=self._item_ids(5),
             passage_ids=self._item_ids(1),
             config=config,
         )
         consolidation = blocks[2]
-        assert consolidation.block_type == "consolidation"
+        assert consolidation.block_type == BlockType.CONSOLIDATION
         assert consolidation.items == ()
         assert consolidation.estimated_minutes == 0.0
 
-    def test_empty_review_items_pattern_a(self) -> None:
-        """Pattern a with empty review — review block has 0 items, 0 time."""
+    def test_empty_review_items_review_and_new(self) -> None:
+        """REVIEW_AND_NEW with empty review — review block has 0 items, 0 time."""
         config = SessionConfig()
         blocks = compose_blocks(
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             review_item_ids=(),
             passage_ids=self._item_ids(1),
             config=config,
         )
-        assert blocks[0].block_type == "review"
+        assert blocks[0].block_type == BlockType.REVIEW
         assert blocks[0].items == ()
         assert blocks[0].estimated_minutes == 0.0
 

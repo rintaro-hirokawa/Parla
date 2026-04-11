@@ -29,7 +29,7 @@ from parla.domain.events import (
 from parla.domain.feedback import SentenceFeedback
 from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.domain.session import SessionConfig
+from parla.domain.session import BlockType, SessionConfig, SessionPattern
 from parla.domain.source import Source
 from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
@@ -197,13 +197,13 @@ class TestSessionCompositionFlow:
             source_id=source.id,
             today=date(2026, 4, 10),
         )
-        assert menu.pattern == "a"
+        assert menu.pattern == SessionPattern.REVIEW_AND_NEW
         assert menu.pending_review_count == 15  # 5 items * 3 sentences
 
         # 2. Verify menu saved to SQLite
         saved = session_repo.get_menu(menu.id)
         assert saved is not None
-        assert saved.blocks[0].block_type == "review"
+        assert saved.blocks[0].block_type == BlockType.REVIEW
         assert len(saved.blocks[0].items) <= 20
 
         # 3. Confirm menu — triggers async background generation
@@ -236,9 +236,9 @@ class TestSessionCompositionFlow:
             source_id=source.id,
             today=date(2026, 4, 10),
         )
-        assert menu.pattern == "b"
+        assert menu.pattern == SessionPattern.REVIEW_ONLY
         assert len(menu.blocks) == 1
-        assert menu.blocks[0].block_type == "review"
+        assert menu.blocks[0].block_type == BlockType.REVIEW
         assert menu.source_id is None
 
     async def test_pattern_c_no_reviews(self) -> None:
@@ -249,9 +249,9 @@ class TestSessionCompositionFlow:
             source_id=source.id,
             today=date(2026, 4, 10),
         )
-        assert menu.pattern == "c"
+        assert menu.pattern == SessionPattern.NEW_ONLY
         assert len(menu.blocks) == 2
-        assert menu.blocks[0].block_type == "new_material"
+        assert menu.blocks[0].block_type == BlockType.NEW_MATERIAL
         assert menu.blocks[0].items == (passages[0].id,)
 
 

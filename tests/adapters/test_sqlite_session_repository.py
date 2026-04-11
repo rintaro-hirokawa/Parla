@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from parla.adapters.sqlite_db import create_connection, init_schema
 from parla.adapters.sqlite_session_repository import SQLiteSessionRepository
-from parla.domain.session import SessionBlock, SessionMenu, SessionState
+from parla.domain.session import BlockType, SessionBlock, SessionMenu, SessionPattern, SessionState
 
 
 def _setup():
@@ -21,20 +21,20 @@ def _make_menu(
 ) -> SessionMenu:
     return SessionMenu(
         target_date=target_date,
-        pattern="a",
+        pattern=SessionPattern.REVIEW_AND_NEW,
         blocks=(
             SessionBlock(
-                block_type="review",
+                block_type=BlockType.REVIEW,
                 items=(uuid4(), uuid4()),
                 estimated_minutes=4.0,
             ),
             SessionBlock(
-                block_type="new_material",
+                block_type=BlockType.NEW_MATERIAL,
                 items=(uuid4(),),
                 estimated_minutes=10.0,
             ),
             SessionBlock(
-                block_type="consolidation",
+                block_type=BlockType.CONSOLIDATION,
                 items=(),
                 estimated_minutes=0.0,
             ),
@@ -55,12 +55,12 @@ class TestMenuPersistence:
         assert loaded is not None
         assert loaded.id == menu.id
         assert loaded.target_date == date(2026, 4, 11)
-        assert loaded.pattern == "a"
+        assert loaded.pattern == SessionPattern.REVIEW_AND_NEW
         assert len(loaded.blocks) == 3
-        assert loaded.blocks[0].block_type == "review"
+        assert loaded.blocks[0].block_type == BlockType.REVIEW
         assert len(loaded.blocks[0].items) == 2
-        assert loaded.blocks[1].block_type == "new_material"
-        assert loaded.blocks[2].block_type == "consolidation"
+        assert loaded.blocks[1].block_type == BlockType.NEW_MATERIAL
+        assert loaded.blocks[2].block_type == BlockType.CONSOLIDATION
         assert loaded.source_id == menu.source_id
         assert loaded.confirmed is False
         assert loaded.pending_review_count == 15
@@ -73,8 +73,8 @@ class TestMenuPersistence:
         repo = _setup()
         menu = SessionMenu(
             target_date=date(2026, 4, 11),
-            pattern="b",
-            blocks=(SessionBlock(block_type="review", items=(uuid4(),), estimated_minutes=2.0),),
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),),
             source_id=None,
             confirmed=False,
             pending_review_count=31,
@@ -84,7 +84,7 @@ class TestMenuPersistence:
         loaded = repo.get_menu(menu.id)
         assert loaded is not None
         assert loaded.source_id is None
-        assert loaded.pattern == "b"
+        assert loaded.pattern == SessionPattern.REVIEW_ONLY
 
     def test_save_replaces_existing(self) -> None:
         repo = _setup()

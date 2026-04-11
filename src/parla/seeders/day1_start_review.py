@@ -9,7 +9,7 @@ import structlog
 
 from parla.domain.feedback import SentenceFeedback
 from parla.domain.learning_item import LearningItem
-from parla.domain.session import SessionConfig, SessionMenu, compose_blocks
+from parla.domain.session import SessionConfig, SessionMenu, SessionPattern, compose_blocks
 from parla.seeders.day1 import seed as seed_day1
 
 if TYPE_CHECKING:
@@ -69,16 +69,16 @@ def seed(container: Container) -> None:
     ]
     container._item_repo.save_items(items)
 
-    # 5. Compose pattern "a" menu (review → new_material → consolidation)
+    # 5. Compose REVIEW_AND_NEW menu (review → new_material → consolidation)
     blocks = compose_blocks(
-        pattern="a",
+        pattern=SessionPattern.REVIEW_AND_NEW,
         review_item_ids=[items[0].id, items[1].id],
         passage_ids=[passage_2.id],
         config=SessionConfig(),
     )
     menu = SessionMenu(
         target_date=today,
-        pattern="a",
+        pattern=SessionPattern.REVIEW_AND_NEW,
         blocks=blocks,
         source_id=source.id,
         confirmed=True,

@@ -3,6 +3,7 @@
 from collections import defaultdict
 from datetime import date
 
+from parla.domain.session import BlockType
 from parla.ports.learning_item_repository import LearningItemRepository
 from parla.ports.practice_repository import PracticeRepository
 from parla.ports.review_attempt_repository import ReviewAttemptRepository
@@ -54,7 +55,7 @@ class HistoryQueryService:
             menu = self._session_repo.get_menu(state.menu_id)
             if menu is not None:
                 passage_count += sum(
-                    len(b.items) for b in menu.blocks if b.block_type == "new_material"
+                    len(b.items) for b in menu.blocks if b.block_type == BlockType.NEW_MATERIAL
                 )
 
         all_items = self._item_repo.get_stocked_items()

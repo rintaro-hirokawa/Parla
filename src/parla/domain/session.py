@@ -6,14 +6,29 @@ Pattern selection and block assembly are pure functions driven by config.
 
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import Literal
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-type BlockType = Literal["review", "new_material", "consolidation"]
-type SessionPattern = Literal["a", "b", "c"]
-type SessionStatus = Literal["not_started", "in_progress", "completed", "interrupted"]
+
+class BlockType(StrEnum):
+    REVIEW = "review"
+    NEW_MATERIAL = "new_material"
+    CONSOLIDATION = "consolidation"
+
+
+class SessionPattern(StrEnum):
+    REVIEW_AND_NEW = "review_and_new"
+    REVIEW_ONLY = "review_only"
+    NEW_ONLY = "new_only"
+
+
+class SessionStatus(StrEnum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    INTERRUPTED = "interrupted"
 
 
 class SessionConfig(BaseModel, frozen=True):
@@ -51,7 +66,7 @@ class SessionState(BaseModel):
 
     id: UUID = Field(default_factory=uuid4)
     menu_id: UUID
-    status: SessionStatus = "not_started"
+    status: SessionStatus = SessionStatus.NOT_STARTED
     current_block_index: int = 0
     started_at: datetime | None = None
     completed_at: datetime | None = None
@@ -75,15 +90,15 @@ def select_next_unlearned_passage(
 def select_pattern(pending_review_count: int, config: SessionConfig) -> SessionPattern:
     """Deterministic pattern selection based on pending review count.
 
-    - 0 pending → pattern c (new material only)
-    - Above overflow threshold → pattern b (review only)
-    - Otherwise → pattern a (review + new + consolidation)
+    - 0 pending → NEW_ONLY (new material only)
+    - Above overflow threshold → REVIEW_ONLY (review only)
+    - Otherwise → REVIEW_AND_NEW (review + new + consolidation)
     """
     if pending_review_count == 0:
-        return "c"
+        return SessionPattern.NEW_ONLY
     if pending_review_count > config.review_overflow_threshold:
-        return "b"
-    return "a"
+        return SessionPattern.REVIEW_ONLY
+    return SessionPattern.REVIEW_AND_NEW
 
 
 def compose_blocks(
@@ -101,26 +116,26 @@ def compose_blocks(
     """
     blocks: list[SessionBlock] = []
 
-    if pattern in ("a", "b"):
+    if pattern in (SessionPattern.REVIEW_AND_NEW, SessionPattern.REVIEW_ONLY):
         blocks.append(
             SessionBlock(
-                block_type="review",
+                block_type=BlockType.REVIEW,
                 items=tuple(review_item_ids),
                 estimated_minutes=len(review_item_ids) * config.estimated_minutes_per_review,
             )
         )
 
-    if pattern in ("a", "c"):
+    if pattern in (SessionPattern.REVIEW_AND_NEW, SessionPattern.NEW_ONLY):
         blocks.append(
             SessionBlock(
-                block_type="new_material",
+                block_type=BlockType.NEW_MATERIAL,
                 items=tuple(passage_ids),
                 estimated_minutes=len(passage_ids) * config.estimated_minutes_per_passage,
             )
         )
         blocks.append(
             SessionBlock(
-                block_type="consolidation",
+                block_type=BlockType.CONSOLIDATION,
                 items=(),
                 estimated_minutes=0.0,
             )

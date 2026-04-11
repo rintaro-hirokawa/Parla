@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from parla.domain.session import SessionMenu, SessionState
+from parla.domain.session import SessionMenu, SessionPattern, SessionState
 from parla.domain.user_settings import UserSettings
 from parla.services.app_state_query_service import AppStateQueryService
 
@@ -88,7 +88,7 @@ class TestResumableSession:
         session_repo = FakeSessionRepository()
         menu = SessionMenu(
             target_date=date(2026, 4, 10),
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(),
             confirmed=True,
         )
@@ -126,7 +126,7 @@ class TestTodayMenu:
         session_repo = FakeSessionRepository()
         menu = SessionMenu(
             target_date=date(2026, 4, 10),
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(),
             confirmed=True,
         )
@@ -144,7 +144,7 @@ class TestTodayMenu:
         session_repo = FakeSessionRepository()
         menu = SessionMenu(
             target_date=date(2026, 4, 10),
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(),
             confirmed=False,
         )

@@ -12,7 +12,9 @@ from PySide6.QtWidgets import (
 from parla.services.query_models import TodayDashboard
 from parla.ui.screens.today.view_model import TodayViewModel
 
-BLOCK_TYPE_LABELS = {"review": "復習", "new_material": "新規素材", "consolidation": "定着"}
+from parla.domain.session import BlockType
+
+BLOCK_TYPE_LABELS = {BlockType.REVIEW: "復習", BlockType.NEW_MATERIAL: "新規素材", BlockType.CONSOLIDATION: "定着"}
 
 
 class TodayView(QWidget):

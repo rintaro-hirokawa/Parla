@@ -2,6 +2,7 @@
 
 from uuid import uuid4
 
+from parla.domain.session import SessionPattern
 from parla.services.query_models import SessionSummary
 from parla.ui.screens.session.session_summary_view_model import SessionSummaryViewModel
 
@@ -17,7 +18,7 @@ class FakeSessionQueryService:
 def _make_summary() -> SessionSummary:
     return SessionSummary(
         session_id=uuid4(),
-        pattern="a",
+        pattern=SessionPattern.REVIEW_AND_NEW,
         passage_count=2,
         new_item_count=5,
         review_count=10,
@@ -36,7 +37,7 @@ class TestLoad:
         with qtbot.waitSignal(vm.summary_loaded, timeout=1000):
             vm.load(summary.session_id)
 
-        assert vm.pattern == "a"
+        assert vm.pattern == SessionPattern.REVIEW_AND_NEW
         assert vm.duration_minutes == 30.0
         assert vm.average_wpm == 125.0
 

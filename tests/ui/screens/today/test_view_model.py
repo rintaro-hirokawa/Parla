@@ -4,6 +4,7 @@ from datetime import date
 from uuid import uuid4
 
 from parla.domain.events import MenuConfirmed, PassageGenerationCompleted, SessionCompleted
+from parla.domain.session import BlockType, SessionPattern
 from parla.event_bus import EventBus
 from parla.services.query_models import MenuBlockSummary, TodayDashboard
 from parla.ui.screens.today.view_model import TodayViewModel
@@ -29,10 +30,10 @@ def _confirmed_dashboard() -> TodayDashboard:
         has_menu=True,
         menu_confirmed=True,
         menu_id=menu_id,
-        pattern="a",
+        pattern=SessionPattern.REVIEW_AND_NEW,
         blocks=(
-            MenuBlockSummary(block_type="review", item_count=10, estimated_minutes=20.0),
-            MenuBlockSummary(block_type="new_material", item_count=2, estimated_minutes=20.0),
+            MenuBlockSummary(block_type=BlockType.REVIEW, item_count=10, estimated_minutes=20.0),
+            MenuBlockSummary(block_type=BlockType.NEW_MATERIAL, item_count=2, estimated_minutes=20.0),
         ),
         total_estimated_minutes=40.0,
         source_title="Test Source",
@@ -44,8 +45,8 @@ def _unconfirmed_dashboard() -> TodayDashboard:
         has_menu=True,
         menu_confirmed=False,
         menu_id=uuid4(),
-        pattern="b",
-        blocks=(MenuBlockSummary(block_type="review", item_count=5, estimated_minutes=10.0),),
+        pattern=SessionPattern.REVIEW_ONLY,
+        blocks=(MenuBlockSummary(block_type=BlockType.REVIEW, item_count=5, estimated_minutes=10.0),),
         total_estimated_minutes=10.0,
     )
 

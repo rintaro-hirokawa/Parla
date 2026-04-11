@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 from parla.domain.events import LearningItemStocked
 from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.domain.session import SessionBlock, SessionMenu, SessionState
+from parla.domain.session import BlockType, SessionBlock, SessionMenu, SessionPattern, SessionState
 from parla.domain.source import Source
 from parla.event_bus import EventBus
 from parla.ui.screens.session.coordinator import SessionCoordinator
@@ -62,16 +62,16 @@ def _make_source(source_id: UUID | None = None) -> Source:
 
 def _make_menu(
     *,
-    pattern: str = "a",
+    pattern: SessionPattern = SessionPattern.REVIEW_AND_NEW,
     blocks: tuple[SessionBlock, ...] | None = None,
     source_id: UUID | None = None,
     confirmed: bool = True,
 ) -> SessionMenu:
     if blocks is None:
         blocks = (
-            SessionBlock(block_type="review", items=(uuid4(),), estimated_minutes=2.0),
-            SessionBlock(block_type="new_material", items=(uuid4(),), estimated_minutes=10.0),
-            SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+            SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
+            SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(uuid4(),), estimated_minutes=10.0),
+            SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
         )
     return SessionMenu(
         target_date=date.today(),
@@ -409,7 +409,7 @@ class TestMicCheckDone:
 
         menu = _make_menu(
             blocks=(
-                SessionBlock(block_type="review", items=(item_id,), estimated_minutes=2.0),
+                SessionBlock(block_type=BlockType.REVIEW, items=(item_id,), estimated_minutes=2.0),
             ),
         )
         coord, nav, container = _build_coordinator(
@@ -436,8 +436,8 @@ class TestReviewBlock:
         item_repo.add_item(item)
 
         menu = _make_menu(
-            pattern="b",
-            blocks=(SessionBlock(block_type="review", items=(item_id,), estimated_minutes=2.0),),
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(SessionBlock(block_type=BlockType.REVIEW, items=(item_id,), estimated_minutes=2.0),),
         )
         coord, nav, container = _build_coordinator(
             menu, source_repo=source_repo, item_repo=item_repo
@@ -458,8 +458,8 @@ class TestReviewBlock:
         item_repo.add_item(item)
 
         menu = _make_menu(
-            pattern="b",
-            blocks=(SessionBlock(block_type="review", items=(item_id,), estimated_minutes=2.0),),
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(SessionBlock(block_type=BlockType.REVIEW, items=(item_id,), estimated_minutes=2.0),),
         )
         coord, nav, container = _build_coordinator(
             menu, source_repo=source_repo, item_repo=item_repo
@@ -480,10 +480,10 @@ class TestNewMaterialBlock:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
@@ -499,10 +499,10 @@ class TestNewMaterialBlock:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
@@ -521,10 +521,10 @@ class TestNewMaterialBlock:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
@@ -543,10 +543,10 @@ class TestNewMaterialBlock:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
@@ -570,14 +570,14 @@ class TestMultiplePassages:
         source_repo.add_passage(p2)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
                 SessionBlock(
-                    block_type="new_material",
+                    block_type=BlockType.NEW_MATERIAL,
                     items=(p1.id, p2.id),
                     estimated_minutes=20.0,
                 ),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
@@ -612,10 +612,10 @@ class TestConsolidation:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(
@@ -647,10 +647,10 @@ class TestConsolidation:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="c",
+            pattern=SessionPattern.NEW_ONLY,
             blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
@@ -678,8 +678,8 @@ class TestPatternFlows:
         item_repo.add_item(item)
 
         menu = _make_menu(
-            pattern="b",
-            blocks=(SessionBlock(block_type="review", items=(item_id,), estimated_minutes=2.0),),
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(SessionBlock(block_type=BlockType.REVIEW, items=(item_id,), estimated_minutes=2.0),),
         )
         coord, nav, container = _build_coordinator(
             menu, source_repo=source_repo, item_repo=item_repo
@@ -698,8 +698,8 @@ class TestPatternFlows:
 
 class TestSessionSummaryAndMenu:
     def test_session_summary_stops_timer(self, qtbot: Any) -> None:
-        menu = _make_menu(pattern="b", blocks=(
-            SessionBlock(block_type="review", items=(uuid4(),), estimated_minutes=2.0),
+        menu = _make_menu(pattern=SessionPattern.REVIEW_ONLY, blocks=(
+            SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
         ))
         item_id = menu.blocks[0].items[0]
         source = _make_source()
@@ -721,8 +721,8 @@ class TestSessionSummaryAndMenu:
         assert not coord._session_context.is_running
 
     def test_tomorrow_menu_confirmed_exits(self, qtbot: Any) -> None:
-        menu = _make_menu(pattern="b", blocks=(
-            SessionBlock(block_type="review", items=(uuid4(),), estimated_minutes=2.0),
+        menu = _make_menu(pattern=SessionPattern.REVIEW_ONLY, blocks=(
+            SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
         ))
         item_id = menu.blocks[0].items[0]
         source = _make_source()
@@ -780,8 +780,8 @@ class TestResume:
         item_repo.add_item(item)
 
         menu = _make_menu(
-            pattern="b",
-            blocks=(SessionBlock(block_type="review", items=(item_id,), estimated_minutes=2.0),),
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(SessionBlock(block_type=BlockType.REVIEW, items=(item_id,), estimated_minutes=2.0),),
         )
         coord, nav, container = _build_coordinator(
             menu, source_repo=source_repo, item_repo=item_repo
@@ -804,11 +804,11 @@ class TestResume:
         source_repo.add_passage(passage)
 
         menu = _make_menu(
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(
-                SessionBlock(block_type="review", items=(uuid4(),), estimated_minutes=2.0),
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(passage.id,), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
         )
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)

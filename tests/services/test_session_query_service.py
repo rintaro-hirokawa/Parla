@@ -8,7 +8,7 @@ from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
 from parla.domain.practice import LiveDeliveryResult
 from parla.domain.review import ReviewAttempt
-from parla.domain.session import SessionBlock, SessionMenu, SessionState
+from parla.domain.session import BlockType, SessionBlock, SessionMenu, SessionPattern, SessionState
 from parla.domain.source import Source
 from parla.services.session_query_service import SessionQueryService
 
@@ -223,11 +223,11 @@ class TestGetTodayDashboard:
         passage_ids = (uuid4(),)
         menu = SessionMenu(
             target_date=date(2026, 4, 10),
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(
-                SessionBlock(block_type="review", items=review_items, estimated_minutes=4.0),
-                SessionBlock(block_type="new_material", items=passage_ids, estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.REVIEW, items=review_items, estimated_minutes=4.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=passage_ids, estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
             source_id=source.id,
             confirmed=True,
@@ -246,9 +246,9 @@ class TestGetTodayDashboard:
         assert dash.has_menu is True
         assert dash.menu_confirmed is True
         assert dash.menu_id == menu.id
-        assert dash.pattern == "a"
+        assert dash.pattern == SessionPattern.REVIEW_AND_NEW
         assert len(dash.blocks) == 3
-        assert dash.blocks[0].block_type == "review"
+        assert dash.blocks[0].block_type == BlockType.REVIEW
         assert dash.blocks[0].item_count == 2
         assert dash.total_estimated_minutes == 14.0
         assert dash.source_title == "My Source"
@@ -256,7 +256,7 @@ class TestGetTodayDashboard:
     def test_resumable_session(self) -> None:
         session_repo = FakeSessionRepository()
         menu = SessionMenu(
-            target_date=date(2026, 4, 10), pattern="a", blocks=(), confirmed=True,
+            target_date=date(2026, 4, 10), pattern=SessionPattern.REVIEW_AND_NEW, blocks=(), confirmed=True,
         )
         session_repo.save_menu(menu)
         state = SessionState(
@@ -332,11 +332,11 @@ class TestGetSessionSummary:
 
         review_items = (uuid4(), uuid4())
         menu = SessionMenu(
-            target_date=date(2026, 4, 10), pattern="a",
+            target_date=date(2026, 4, 10), pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(
-                SessionBlock(block_type="review", items=review_items, estimated_minutes=4.0),
-                SessionBlock(block_type="new_material", items=(), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
+                SessionBlock(block_type=BlockType.REVIEW, items=review_items, estimated_minutes=4.0),
+                SessionBlock(block_type=BlockType.NEW_MATERIAL, items=(), estimated_minutes=10.0),
+                SessionBlock(block_type=BlockType.CONSOLIDATION, items=(), estimated_minutes=0.0),
             ),
             confirmed=True,
         )
@@ -358,7 +358,7 @@ class TestGetSessionSummary:
         summary = service.get_session_summary(state.id)
         assert summary is not None
         assert summary.session_id == state.id
-        assert summary.pattern == "a"
+        assert summary.pattern == SessionPattern.REVIEW_AND_NEW
         assert summary.duration_minutes == 90.0
 
 
@@ -370,9 +370,9 @@ class TestGetMenuPreview:
         source_repo.save_source(source)
 
         menu = SessionMenu(
-            target_date=date(2026, 4, 11), pattern="a",
+            target_date=date(2026, 4, 11), pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(
-                SessionBlock(block_type="review", items=(uuid4(),), estimated_minutes=2.0),
+                SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
             ),
             source_id=source.id, confirmed=False, pending_review_count=5,
         )
@@ -388,7 +388,7 @@ class TestGetMenuPreview:
         preview = service.get_menu_preview(menu.id)
         assert preview is not None
         assert preview.target_date == date(2026, 4, 11)
-        assert preview.pattern == "a"
+        assert preview.pattern == SessionPattern.REVIEW_AND_NEW
         assert preview.source_title == "Preview Source"
         assert preview.pending_review_count == 5
         assert len(preview.blocks) == 1

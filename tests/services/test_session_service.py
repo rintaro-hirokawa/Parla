@@ -19,7 +19,7 @@ from parla.domain.events import (
 )
 from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.domain.session import SessionConfig, SessionMenu, SessionState
+from parla.domain.session import BlockType, SessionConfig, SessionMenu, SessionPattern, SessionState
 from parla.domain.source import Source
 from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
@@ -299,11 +299,11 @@ class TestComposeMenu:
 
         menu = service.compose_menu(target_date=date(2026, 4, 11), source_id=source.id, today=date(2026, 4, 10))
 
-        assert menu.pattern == "a"
+        assert menu.pattern == SessionPattern.REVIEW_AND_NEW
         assert len(menu.blocks) == 3
-        assert menu.blocks[0].block_type == "review"
-        assert menu.blocks[1].block_type == "new_material"
-        assert menu.blocks[2].block_type == "consolidation"
+        assert menu.blocks[0].block_type == BlockType.REVIEW
+        assert menu.blocks[1].block_type == BlockType.NEW_MATERIAL
+        assert menu.blocks[2].block_type == BlockType.CONSOLIDATION
         assert menu.source_id == source.id
 
         saved = session_repo.get_menu(menu.id)
@@ -315,9 +315,9 @@ class TestComposeMenu:
 
         menu = service.compose_menu(target_date=date(2026, 4, 11), source_id=source.id, today=date(2026, 4, 10))
 
-        assert menu.pattern == "b"
+        assert menu.pattern == SessionPattern.REVIEW_ONLY
         assert len(menu.blocks) == 1
-        assert menu.blocks[0].block_type == "review"
+        assert menu.blocks[0].block_type == BlockType.REVIEW
         assert menu.source_id is None
 
     async def test_pattern_c_no_reviews(self) -> None:
@@ -325,9 +325,9 @@ class TestComposeMenu:
 
         menu = service.compose_menu(target_date=date(2026, 4, 11), source_id=source.id, today=date(2026, 4, 10))
 
-        assert menu.pattern == "c"
+        assert menu.pattern == SessionPattern.NEW_ONLY
         assert len(menu.blocks) == 2
-        assert menu.blocks[0].block_type == "new_material"
+        assert menu.blocks[0].block_type == BlockType.NEW_MATERIAL
 
     async def test_emits_menu_composed(self) -> None:
         service, _, _, _, _, collector, source, _, _ = _setup(item_count=5)
@@ -337,7 +337,7 @@ class TestComposeMenu:
         assert MenuComposed in collector.types()
         composed = next(e for e in collector.events if isinstance(e, MenuComposed))
         assert composed.menu_id == menu.id
-        assert composed.pattern == "a"
+        assert composed.pattern == SessionPattern.REVIEW_AND_NEW
 
     async def test_pending_review_count_stored(self) -> None:
         service, _, _, _, _, _, source, _, _ = _setup(item_count=5)
@@ -354,7 +354,7 @@ class TestComposeMenu:
 
         menu = service.compose_menu(target_date=date(2026, 4, 11), source_id=source.id, today=date(2026, 4, 10))
 
-        assert menu.pattern == "a"
+        assert menu.pattern == SessionPattern.REVIEW_AND_NEW
         assert len(menu.blocks[0].items) <= 20
 
 

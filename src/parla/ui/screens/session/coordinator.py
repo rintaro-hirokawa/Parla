@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     from parla.event_bus import EventBus
     from parla.ui.navigation import NavigationController
 
+from parla.domain.session import BlockType, SessionStatus
+
 logger = structlog.get_logger()
 
 
@@ -121,12 +123,12 @@ class SessionCoordinator(QObject):
             return
 
         match block.block_type:
-            case "review":
+            case BlockType.REVIEW:
                 items = self._resolve_review_items(list(block.items))
                 self._start_review_block(items, "復習")
-            case "new_material":
+            case BlockType.NEW_MATERIAL:
                 self._start_new_material_block(block)
-            case "consolidation":
+            case BlockType.CONSOLIDATION:
                 self._start_consolidation_block()
 
     def _current_block(self) -> SessionBlock | None:
@@ -339,7 +341,7 @@ class SessionCoordinator(QObject):
         state = self._c.session_service.advance_block(self._session_state.id)
         self._session_state = state
 
-        if state.status == "completed":
+        if state.status == SessionStatus.COMPLETED:
             self._show_session_summary()
         else:
             self._start_current_block()

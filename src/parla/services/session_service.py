@@ -18,9 +18,12 @@ from parla.domain.events import (
     SessionStarted,
 )
 from parla.domain.session import (
+    BlockType,
     SessionConfig,
     SessionMenu,
+    SessionPattern,
     SessionState,
+    SessionStatus,
     compose_blocks,
     select_next_unlearned_passage,
     select_pattern,
@@ -97,20 +100,20 @@ class SessionService:
         pattern = select_pattern(pending_count, self._config)
 
         review_item_ids: list[UUID] = []
-        if pattern in ("a", "b"):
+        if pattern in (SessionPattern.REVIEW_AND_NEW, SessionPattern.REVIEW_ONLY):
             due_items = self._item_repo.get_due_items(today, limit=self._srs_config.review_limit)
             review_item_ids = [item.id for item in due_items]
 
         passage_ids: list[UUID] = []
         menu_source_id: UUID | None = None
-        if pattern in ("a", "c"):
+        if pattern in (SessionPattern.REVIEW_AND_NEW, SessionPattern.NEW_ONLY):
             passage_ids = self._select_next_passages(source_id)
             if passage_ids:
                 menu_source_id = source_id
-            elif pattern == "a":
-                pattern = "b"  # downgrade: review only
+            elif pattern == SessionPattern.REVIEW_AND_NEW:
+                pattern = SessionPattern.REVIEW_ONLY  # downgrade: review only
             else:
-                # pattern "c" with no passages and no reviews = nothing to do
+                # NEW_ONLY with no passages and no reviews = nothing to do
                 return None
 
         blocks = compose_blocks(
@@ -216,7 +219,7 @@ class SessionService:
             logger.error("menu_not_found", menu_id=str(event.menu_id))
             return
 
-        review_block = next((b for b in menu.blocks if b.block_type == "review"), None)
+        review_block = next((b for b in menu.blocks if b.block_type == BlockType.REVIEW), None)
         if review_block is None or len(review_block.items) == 0:
             self._bus.emit(
                 BackgroundGenerationCompleted(
@@ -285,7 +288,7 @@ class SessionService:
 
         state = SessionState(
             menu_id=menu_id,
-            status="in_progress",
+            status=SessionStatus.IN_PROGRESS,
             started_at=datetime.now(),
         )
         self._session_repo.save_state(state)
@@ -302,7 +305,7 @@ class SessionService:
     def interrupt_session(self, session_id: UUID) -> None:
         """Record interruption at current block."""
         state = self._get_state(session_id)
-        updated = state.model_copy(update={"status": "interrupted", "interrupted_at": datetime.now()})
+        updated = state.model_copy(update={"status": SessionStatus.INTERRUPTED, "interrupted_at": datetime.now()})
         self._session_repo.update_state(updated)
 
         self._bus.emit(
@@ -315,11 +318,11 @@ class SessionService:
     def resume_session(self, session_id: UUID) -> SessionState:
         """Resume an interrupted session at the same block."""
         state = self._get_state(session_id)
-        if state.status != "interrupted":
+        if state.status != SessionStatus.INTERRUPTED:
             msg = f"Session is not interrupted: {session_id}"
             raise ValueError(msg)
 
-        updated = state.model_copy(update={"status": "in_progress", "interrupted_at": None})
+        updated = state.model_copy(update={"status": SessionStatus.IN_PROGRESS, "interrupted_at": None})
         self._session_repo.update_state(updated)
 
         self._bus.emit(
@@ -343,7 +346,7 @@ class SessionService:
         next_index = state.current_block_index + 1
 
         if next_index >= len(menu.blocks):
-            updated = state.model_copy(update={"status": "completed", "completed_at": datetime.now()})
+            updated = state.model_copy(update={"status": SessionStatus.COMPLETED, "completed_at": datetime.now()})
             self._session_repo.update_state(updated)
             self._bus.emit(SessionCompleted(session_id=session_id))
         else:

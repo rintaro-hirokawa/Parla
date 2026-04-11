@@ -16,7 +16,7 @@ from parla.domain.audio import AudioData
 from parla.domain.feedback import SentenceFeedback
 from parla.domain.passage import Hint, Passage, Sentence
 from parla.domain.practice import ModelAudio, WordTimestamp
-from parla.domain.session import SessionConfig, SessionMenu, compose_blocks
+from parla.domain.session import SessionConfig, SessionMenu, SessionPattern, compose_blocks
 from parla.domain.source import CEFRLevel, EnglishVariant, Source
 from parla.domain.user_settings import UserSettings
 
@@ -103,17 +103,17 @@ def seed(
         for passage in passages:
             _seed_model_audio_for_passage(passage, container)
 
-    # 4. Session menu (pattern "c" — new material only, no reviews on day 1)
+    # 4. Session menu (NEW_ONLY — new material only, no reviews on day 1)
     today = date.today()
     blocks = compose_blocks(
-        pattern="c",
+        pattern=SessionPattern.NEW_ONLY,
         review_item_ids=[],
         passage_ids=[passages[0].id],
         config=SessionConfig(),
     )
     menu = SessionMenu(
         target_date=today,
-        pattern="c",
+        pattern=SessionPattern.NEW_ONLY,
         blocks=blocks,
         source_id=source.id,
         confirmed=True,

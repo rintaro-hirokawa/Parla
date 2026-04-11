@@ -3,6 +3,7 @@
 from datetime import date
 from uuid import uuid4
 
+from parla.domain.session import BlockType, SessionPattern
 from parla.event_bus import EventBus
 from parla.services.query_models import MenuBlockSummary, TodayDashboard
 from parla.ui.screens.today.view import TodayView
@@ -59,10 +60,10 @@ class TestConfirmedMenuDisplay:
             has_menu=True,
             menu_confirmed=True,
             menu_id=uuid4(),
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(
-                MenuBlockSummary(block_type="review", item_count=10, estimated_minutes=20.0),
-                MenuBlockSummary(block_type="new_material", item_count=2, estimated_minutes=20.0),
+                MenuBlockSummary(block_type=BlockType.REVIEW, item_count=10, estimated_minutes=20.0),
+                MenuBlockSummary(block_type=BlockType.NEW_MATERIAL, item_count=2, estimated_minutes=20.0),
             ),
             total_estimated_minutes=40.0,
             source_title="Test Source",
@@ -78,8 +79,8 @@ class TestConfirmedMenuDisplay:
             has_menu=True,
             menu_confirmed=True,
             menu_id=uuid4(),
-            pattern="a",
-            blocks=(MenuBlockSummary(block_type="review", item_count=5, estimated_minutes=10.0),),
+            pattern=SessionPattern.REVIEW_AND_NEW,
+            blocks=(MenuBlockSummary(block_type=BlockType.REVIEW, item_count=5, estimated_minutes=10.0),),
             total_estimated_minutes=10.0,
         )
         view, *_ = _make_view(qtbot, dash)
@@ -92,8 +93,8 @@ class TestUnconfirmedMenuDisplay:
             has_menu=True,
             menu_confirmed=False,
             menu_id=uuid4(),
-            pattern="b",
-            blocks=(MenuBlockSummary(block_type="review", item_count=5, estimated_minutes=10.0),),
+            pattern=SessionPattern.REVIEW_ONLY,
+            blocks=(MenuBlockSummary(block_type=BlockType.REVIEW, item_count=5, estimated_minutes=10.0),),
             total_estimated_minutes=10.0,
         )
         view, *_ = _make_view(qtbot, dash)
@@ -139,8 +140,8 @@ class TestDashboardStateTransition:
             has_menu=True,
             menu_confirmed=True,
             menu_id=uuid4(),
-            pattern="c",
-            blocks=(MenuBlockSummary(block_type="new_material", item_count=2, estimated_minutes=15.0),),
+            pattern=SessionPattern.NEW_ONLY,
+            blocks=(MenuBlockSummary(block_type=BlockType.NEW_MATERIAL, item_count=2, estimated_minutes=15.0),),
             total_estimated_minutes=15.0,
         )
         query._dashboard = dash2
@@ -158,8 +159,8 @@ class TestStartButton:
             has_menu=True,
             menu_confirmed=True,
             menu_id=uuid4(),
-            pattern="a",
-            blocks=(MenuBlockSummary(block_type="review", item_count=5, estimated_minutes=10.0),),
+            pattern=SessionPattern.REVIEW_AND_NEW,
+            blocks=(MenuBlockSummary(block_type=BlockType.REVIEW, item_count=5, estimated_minutes=10.0),),
             total_estimated_minutes=10.0,
         )
         view, vm, _ = _make_view(qtbot, dash)

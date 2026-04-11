@@ -11,7 +11,7 @@ from parla.domain.events import (
 )
 from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.domain.session import SessionConfig, SessionMenu
+from parla.domain.session import SessionConfig, SessionMenu, SessionPattern
 from parla.domain.source import Source
 from parla.domain.srs import SRSConfig
 from parla.event_bus import Event, EventBus
@@ -210,7 +210,7 @@ class TestHandleFirstSourceReady:
         )
 
         menu_event = next(e for e in collector.events if isinstance(e, MenuComposed))
-        assert menu_event.pattern == "c"
+        assert menu_event.pattern == SessionPattern.NEW_ONLY
 
     def test_idempotent_when_menu_already_exists(self) -> None:
         """既にメニューが存在する場合は何もしない。"""

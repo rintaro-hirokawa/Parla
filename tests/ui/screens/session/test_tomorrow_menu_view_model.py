@@ -7,6 +7,7 @@ from parla.domain.events import (
     BackgroundGenerationCompleted,
     BackgroundGenerationStarted,
 )
+from parla.domain.session import BlockType, SessionPattern
 from parla.event_bus import EventBus
 from parla.services.query_models import MenuBlockSummary, MenuPreview
 from parla.ui.screens.session.session_context import SessionContext
@@ -17,10 +18,10 @@ def _make_preview() -> MenuPreview:
     return MenuPreview(
         menu_id=uuid4(),
         target_date=date(2026, 4, 11),
-        pattern="a",
+        pattern=SessionPattern.REVIEW_AND_NEW,
         blocks=(
-            MenuBlockSummary(block_type="review", item_count=10, estimated_minutes=20),
-            MenuBlockSummary(block_type="new_material", item_count=1, estimated_minutes=10),
+            MenuBlockSummary(block_type=BlockType.REVIEW, item_count=10, estimated_minutes=20),
+            MenuBlockSummary(block_type=BlockType.NEW_MATERIAL, item_count=1, estimated_minutes=10),
         ),
         total_estimated_minutes=30.0,
         source_title="Test Source",

@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from parla.domain.learning_item import LearningItem
 from parla.domain.practice import LiveDeliveryResult
 from parla.domain.review import ReviewAttempt
-from parla.domain.session import SessionMenu, SessionState
+from parla.domain.session import SessionMenu, SessionPattern, SessionState
 from parla.services.history_query_service import HistoryQueryService
 
 
@@ -177,7 +177,7 @@ class TestGetDailySummary:
         session_repo = FakeSessionRepository()
         menu = SessionMenu(
             target_date=date(2026, 4, 5),
-            pattern="a",
+            pattern=SessionPattern.REVIEW_AND_NEW,
             blocks=(),
             confirmed=True,
         )
