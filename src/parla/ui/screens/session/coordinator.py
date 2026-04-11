@@ -279,6 +279,7 @@ class SessionCoordinator(QObject):
         vm = PhaseCViewModel(
             event_bus=self._bus,
             practice_service=self._c.practice_service,
+            practice_repo=self._c.practice_repo,
             audio_player=AudioPlayer(),
             session_context=self._session_context,
         )

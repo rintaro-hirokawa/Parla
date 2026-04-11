@@ -22,6 +22,11 @@ def _make_audio() -> AudioData:
     return make_wav_audio()
 
 
+class FakePracticeRepo:
+    def get_model_audio(self, passage_id: UUID):
+        return None
+
+
 class FakePracticeService:
     def __init__(self) -> None:
         self.overlapping_calls: list[dict] = []
@@ -79,11 +84,13 @@ def _make_vm(
 ) -> tuple[PhaseCViewModel, EventBus, FakePracticeService, FakeAudioPlayer, SessionContext]:
     bus = EventBus()
     svc = FakePracticeService()
+    repo = FakePracticeRepo()
     player = FakeAudioPlayer()
     ctx = SessionContext()
     vm = PhaseCViewModel(
         event_bus=bus,
         practice_service=svc,
+        practice_repo=repo,
         audio_player=player,
         session_context=ctx,
     )

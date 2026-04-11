@@ -64,6 +64,8 @@ class PhaseCView(QWidget):
 
         # --- Connections ---
         self._mode_combo.currentIndexChanged.connect(self._on_mode_selected)
+        self._play_button.clicked.connect(self._vm.play_model)
+        self._play_button.setEnabled(False)
         self._speed_slider.valueChanged.connect(self._on_speed_changed)
         self._complete_button.clicked.connect(self._vm.complete)
 
@@ -74,6 +76,10 @@ class PhaseCView(QWidget):
         self._vm.overlapping_result.connect(self._on_overlapping)
         self._vm.lag_detected.connect(self._on_lag)
         self._vm.live_delivery_result.connect(self._on_delivery)
+
+        # Model audio may already be ready (generated during Phase B)
+        if self._vm.is_model_audio_loaded:
+            self._on_audio_ready()
 
     def showEvent(self, event) -> None:  # noqa: ANN001
         super().showEvent(event)

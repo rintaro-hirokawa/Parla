@@ -263,6 +263,11 @@ class FakePracticeService:
         pass
 
 
+class FakePracticeRepo:
+    def get_model_audio(self, passage_id: UUID) -> None:
+        return None
+
+
 class FakeFeedbackRepo:
     def get_feedback_by_sentence(self, sentence_id: UUID) -> None:
         return None
@@ -307,6 +312,7 @@ class FakeContainer:
         self.review_service = FakeReviewService()
         self.feedback_service = FakeFeedbackService()
         self.practice_service = FakePracticeService()
+        self.practice_repo = FakePracticeRepo()
         self.feedback_repo = FakeFeedbackRepo()
         self.variation_repo = FakeVariationRepo()
         self.session_query = FakeSessionQuery()

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
     from parla.domain.audio import AudioData
     from parla.event_bus import EventBus
+    from parla.ports.practice_repository import PracticeRepository
     from parla.ui.screens.session.session_context import SessionContext
 
 type PracticeMode = Literal["listening", "overlapping", "live_delivery"]
@@ -45,11 +46,13 @@ class PhaseCViewModel(BaseViewModel):
         *,
         event_bus: EventBus,
         practice_service: Any,
+        practice_repo: PracticeRepository,
         audio_player: Any,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)
         self._practice_service = practice_service
+        self._practice_repo = practice_repo
         self._player = audio_player
         self._ctx = session_context
 
@@ -88,6 +91,11 @@ class PhaseCViewModel(BaseViewModel):
         self._current_mode = "listening"
         self._model_audio_loaded = False
 
+        # Model audio may already be ready (generated during Phase B)
+        existing = self._practice_repo.get_model_audio(passage_id)
+        if existing is not None:
+            self._model_audio_loaded = True
+
     def switch_mode(self, mode: PracticeMode) -> None:
         if mode not in _ALL_MODES:
             return
@@ -97,8 +105,14 @@ class PhaseCViewModel(BaseViewModel):
     def set_speed(self, rate: float) -> None:
         self._player.set_speed(rate)
 
-    def play_model(self, audio_data: AudioData) -> None:
-        self._player.play_audio_data(audio_data)
+    def play_model(self) -> None:
+        if self._passage_id is None:
+            return
+        model_audio = self._practice_repo.get_model_audio(self._passage_id)
+        if model_audio is None:
+            self.model_audio_failed.emit("モデル音声が見つかりません")
+            return
+        self._player.play_audio_data(model_audio.audio)
 
     def submit_overlapping(self, audio: AudioData) -> None:
         if self._passage_id is None:
