@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parla - Phase A Speaking Screen Mockup</title>
+<style>
+  /* ========================================================
+     Phase A 発話画面 デザインモックアップ
+     PySide6 + QSS で再現可能な範囲
+     ======================================================== */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Noto Sans JP", "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif;
+    background: #f4f6fb;
+    color: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* --- Window --- */
+  .window {
+    width: 1024px;
+    height: 768px;
+    background: #f4f6fb;
+    border: 1px solid #e0e4ed;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- Top Bar --- */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 28px;
+    background: #ffffff;
+    border-bottom: 1px solid #e8eaf0;
+  }
+
+  .top-bar .back-label {
+    font-size: 13px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .top-bar .back-label:hover {
+    color: #4f6ef7;
+  }
+
+  .top-bar .progress-text {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .top-bar .timer {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+    transition: color 0.3s;
+  }
+
+  .top-bar .timer.warning {
+    color: #ef4444;
+  }
+
+  /* --- Time Bar (under top-bar) --- */
+  .time-bar-track {
+    height: 3px;
+    background: #eef0f5;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .time-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: #4f6ef7;
+    transform-origin: left center;
+    transition: transform 0.3s linear, background 0.5s ease, height 0.3s ease;
+  }
+
+  .time-bar-fill.caution {
+    background: #f59e0b;
+    height: 4px;
+  }
+
+  .time-bar-fill.danger {
+    background: #ef4444;
+    height: 5px;
+    animation: bar-pulse 0.6s ease-in-out infinite;
+  }
+
+  @keyframes bar-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+  }
+
+  /* --- Sentence Progress (horizontal dots) --- */
+  .sentence-progress {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 28px 8px;
+  }
+
+  .progress-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #dfe3ec;
+    transition: all 0.3s ease;
+  }
+
+  .progress-dot.done {
+    background: #4f6ef7;
+  }
+
+  .progress-dot.current {
+    background: #4f6ef7;
+    box-shadow: 0 0 0 4px rgba(79, 110, 247, 0.18);
+    transform: scale(1.2);
+  }
+
+  .progress-dot.upcoming {
+    background: #e8eaf0;
+  }
+
+  /* --- Sentence Carousel --- */
+  .sentence-carousel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 48px;
+    text-align: center;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .sentence-carousel-item {
+    max-width: 700px;
+    transition: all 0.35s ease;
+    padding: 6px 0;
+  }
+
+  .sentence-carousel-item.prev {
+    font-size: 14px;
+    color: #c0c5d0;
+    line-height: 1.5;
+  }
+
+  .sentence-carousel-item.current {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    padding: 20px 0;
+  }
+
+  .sentence-carousel-item.next {
+    font-size: 14px;
+    color: #d0d4de;
+    line-height: 1.5;
+  }
+
+  .sentence-carousel-item.hidden {
+    opacity: 0;
+    font-size: 0;
+    padding: 0;
+    line-height: 0;
+  }
+
+  /* --- Hint Area --- */
+  .hint-area {
+    text-align: center;
+    min-height: 80px;
+    padding: 0 48px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Button + dots in a row */
+  .hint-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+
+  .hint-trigger.exhausted {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hint-button {
+    background: transparent;
+    border: 1px solid #d1d5e0;
+    color: #6b7280;
+    border-radius: 20px;
+    padding: 6px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .hint-button:hover {
+    border-color: #4f6ef7;
+    color: #4f6ef7;
+    background: #f0f2ff;
+  }
+
+  .hint-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .hint-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d1d5e0;
+    transition: background 0.25s ease;
+  }
+
+  .hint-dot.filled {
+    background: #4f6ef7;
+  }
+
+  /* Hint content cards stacking below */
+  .hint-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .hint-card {
+    padding: 8px 20px;
+    border-radius: 8px;
+    animation: hint-fade-in 0.3s ease;
+  }
+
+  .hint-card.level1 {
+    background: #f0f2ff;
+    color: #4f6ef7;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .hint-card.level2 {
+    background: #f8f9fc;
+    color: #4b5563;
+    font-size: 13px;
+    border: 1px solid #e8eaf0;
+  }
+
+  @keyframes hint-fade-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* (sentence strip removed - replaced by carousel) */
+
+  /* --- Recording Section --- */
+  .recording-section {
+    padding: 0 28px 28px;
+  }
+
+  .recording-card {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.3s;
+  }
+
+  .recording-card.active {
+    border-color: #c7d0f7;
+    box-shadow: 0 2px 16px rgba(79, 110, 247, 0.08);
+  }
+
+  .recording-layout {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* --- Waveform --- */
+  .waveform-area {
+    flex: 1;
+    height: 64px;
+    background: #f8f9fc;
+    border-radius: 10px;
+    border: 1px solid #eef0f5;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .waveform-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Center line */
+  .waveform-area::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e0e4ed;
+    pointer-events: none;
+  }
+
+  /* --- Record Button --- */
+  .record-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid #e0e4ed;
+    background: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .record-button:hover {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+  }
+
+  .record-button .inner-shape {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    transition: all 0.2s;
+  }
+
+  /* Recording state */
+  .record-button.recording {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+    animation: pulse-ring 1.5s ease-in-out infinite;
+  }
+
+  .record-button.recording .inner-shape {
+    border-radius: 4px;
+    width: 18px;
+    height: 18px;
+  }
+
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+    50%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.06); }
+    100% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+  }
+
+  /* --- Status Label (below recording card) --- */
+  .status-label {
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+    padding: 10px 0 0;
+    min-height: 26px;
+    transition: color 0.2s;
+  }
+
+  .status-label.recording {
+    color: #ef4444;
+  }
+</style>
+</head>
+<body>
+
+<div class="window">
+
+  <!-- ===== Top Bar ===== -->
+  <div class="top-bar">
+    <span class="back-label">&#8592; Back</span>
+    <span class="progress-text">Speaking</span>
+    <span class="timer" id="timer">00:00</span>
+  </div>
+
+  <!-- ===== Time Bar ===== -->
+  <div class="time-bar-track">
+    <div class="time-bar-fill" id="timeBarFill"></div>
+  </div>
+
+  <!-- ===== Sentence Progress Dots ===== -->
+  <div class="sentence-progress" id="progressDots"></div>
+
+  <!-- ===== Sentence Carousel ===== -->
+  <div class="sentence-carousel" id="sentenceCarousel"></div>
+
+  <!-- ===== Hint Area ===== -->
+  <div class="hint-area">
+    <div class="hint-trigger" id="hintTrigger">
+      <button class="hint-button" id="hintButton">Hint</button>
+      <div class="hint-dots">
+        <div class="hint-dot" id="hintDot0"></div>
+        <div class="hint-dot" id="hintDot1"></div>
+      </div>
+    </div>
+    <div class="hint-stack" id="hintStack"></div>
+  </div>
+
+  <!-- ===== Recording Section ===== -->
+  <div class="recording-section">
+    <div class="recording-card" id="recordingCard">
+      <div class="recording-layout">
+        <div class="waveform-area">
+          <canvas class="waveform-canvas" id="waveformCanvas"></canvas>
+        </div>
+        <div class="record-button" id="recordButton">
+          <div class="inner-shape"></div>
+        </div>
+      </div>
+    </div>
+    <div class="status-label" id="statusLabel">録音ボタンを押して発話してください</div>
+  </div>
+
+</div>
+
+<script>
+// ================================================================
+// Phase A Mock - Interactive Demo
+// ================================================================
+
+const SENTENCES = [
+  {
+    ja: '豊田章男氏は、日本の有名な企業であるトヨタ自動車の会長です。',
+    hint1: 'Akio ... chairman / corporation',
+    hint2: '主語 + be動詞 + 補語, 同格名詞句'
+  },
+  {
+    ja: '現在69歳ですが、彼は今でも自社の車を自らテストしています。',
+    hint1: 'Although ... still / by himself',
+    hint2: 'although節[主語 + be動詞 + 補語 + 副詞], 主語 + 副詞 + 動詞(現在形) + 目的語 + 前置詞句'
+  },
+  {
+    ja: '特別なテストコースで車を運転するために、彼はよくレーシングスーツとヘルメットを着用します。',
+    hint1: 'He ... wears / helmet',
+    hint2: '主語 + 副詞 + 動詞(現在形) + 目的語 + to不定詞[動詞(原形) + 目的語 + 前置詞句]'
+  },
+  {
+    ja: 'そのコースは急な坂や急カーブがあるため、非常に厳しいです。',
+    hint1: 'The ... extremely / steep / sharp',
+    hint2: '主語 + be動詞 + 副詞 + 補語 + because節[主語 + 動詞(現在形) + 目的語]'
+  },
+  {
+    ja: '彼の基本的な哲学は、車が完全に壊れるまでテストすることです。',
+    hint1: 'His ... philosophy / completely',
+    hint2: '主語 + be動詞 + 補語(to不定詞)[動詞(原形) + 目的語 + 前置詞句[主語 + 副詞 + 動詞(現在形)]]'
+  }
+];
+
+// --- State ---
+let currentIndex = 0;
+let hintLevel = 0;       // 0 = none, 1 = hint1, 2 = hint1+hint2
+let isRecording = false;
+let timerRemaining = 0;  // seconds left for current sentence
+let timerLimit = 0;      // total limit for current sentence
+let timerInterval = null;
+let waveformAnim = null;
+
+// --- DOM refs ---
+const timerEl         = document.getElementById('timer');
+const progressDots    = document.getElementById('progressDots');
+const carousel        = document.getElementById('sentenceCarousel');
+const hintTrigger     = document.getElementById('hintTrigger');
+const hintButton      = document.getElementById('hintButton');
+const hintDot0        = document.getElementById('hintDot0');
+const hintDot1        = document.getElementById('hintDot1');
+const hintStack       = document.getElementById('hintStack');
+const recordButton    = document.getElementById('recordButton');
+const recordingCard   = document.getElementById('recordingCard');
+const statusLabel     = document.getElementById('statusLabel');
+const timeBarFill     = document.getElementById('timeBarFill');
+const waveformCanvas  = document.getElementById('waveformCanvas');
+const ctx             = waveformCanvas.getContext('2d');
+
+// --- Waveform setup ---
+let waveformBuf = new Float32Array(128).fill(0);
+
+function resizeCanvas() {
+  const rect = waveformCanvas.parentElement.getBoundingClientRect();
+  waveformCanvas.width  = rect.width * devicePixelRatio;
+  waveformCanvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function drawWaveform() {
+  const w = waveformCanvas.width / devicePixelRatio;
+  const h = waveformCanvas.height / devicePixelRatio;
+  ctx.clearRect(0, 0, w, h);
+
+  const barW = 3;
+  const gap  = 2;
+  const step = barW + gap;
+  const bars = Math.floor(w / step);
+  const startX = (w - bars * step) / 2;
+  const midY = h / 2;
+
+  for (let i = 0; i < bars; i++) {
+    const idx = Math.floor(i * waveformBuf.length / bars);
+    const val = waveformBuf[idx] || 0;
+    const barH = Math.max(2, val * (h - 8));
+    const x = startX + i * step;
+
+    ctx.fillStyle = isRecording ? '#4f6ef7' : '#c7d0f7';
+    ctx.beginPath();
+    ctx.roundRect(x, midY - barH / 2, barW, barH, 1.5);
+    ctx.fill();
+  }
+
+  waveformAnim = requestAnimationFrame(drawWaveform);
+}
+
+function feedWaveform() {
+  if (!isRecording) {
+    // Decay to silence
+    for (let i = 0; i < waveformBuf.length; i++) {
+      waveformBuf[i] *= 0.92;
+    }
+    return;
+  }
+  // Shift left, push new random sample
+  for (let i = 0; i < waveformBuf.length - 1; i++) {
+    waveformBuf[i] = waveformBuf[i + 1];
+  }
+  // Simulate voice: mix of sine + noise
+  const t = performance.now() / 200;
+  const voice = 0.3 + 0.25 * Math.sin(t) + 0.2 * Math.sin(t * 2.7) + Math.random() * 0.25;
+  waveformBuf[waveformBuf.length - 1] = Math.min(1, Math.max(0, voice));
+}
+setInterval(feedWaveform, 50);
+
+// --- Timer ---
+// Estimate time limit: ~3 seconds per 10 chars of Japanese text, min 15s
+function calcTimeLimit(ja) {
+  return Math.max(15, Math.ceil(ja.length / 10) * 3 + 10);
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  if (currentIndex < SENTENCES.length) {
+    timerLimit = calcTimeLimit(SENTENCES[currentIndex].ja);
+    timerRemaining = timerLimit;
+  } else {
+    timerRemaining = 0;
+    timerLimit = 0;
+  }
+  renderTimer();
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    timerRemaining = Math.max(0, timerRemaining - 1);
+    renderTimer();
+    if (timerRemaining <= 0) {
+      // Time's up — auto-stop recording
+      if (isRecording) toggleRecording();
+    }
+  }, 1000);
+}
+
+function renderTimer() {
+  const m = String(Math.floor(timerRemaining / 60)).padStart(2, '0');
+  const s = String(timerRemaining % 60).padStart(2, '0');
+  timerEl.textContent = `${m}:${s}`;
+
+  const ratio = timerLimit > 0 ? timerRemaining / timerLimit : 1;
+  timeBarFill.style.transform = `scaleX(${ratio})`;
+
+  // Color phases
+  if (ratio <= 0.2) {
+    timerEl.className = 'timer warning';
+    timeBarFill.className = 'time-bar-fill danger';
+  } else if (ratio <= 0.4) {
+    timerEl.className = 'timer';
+    timerEl.style.color = '#f59e0b';
+    timeBarFill.className = 'time-bar-fill caution';
+  } else {
+    timerEl.className = 'timer';
+    timerEl.style.color = '';
+    timeBarFill.className = 'time-bar-fill';
+  }
+}
+
+// --- Render functions ---
+function renderDots() {
+  progressDots.innerHTML = '';
+  SENTENCES.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
+    if (i < currentIndex)      dot.classList.add('done');
+    else if (i === currentIndex) dot.classList.add('current');
+    else                         dot.classList.add('upcoming');
+    progressDots.appendChild(dot);
+  });
+}
+
+function renderCarousel() {
+  carousel.innerHTML = '';
+
+  if (currentIndex >= SENTENCES.length) {
+    const done = document.createElement('div');
+    done.className = 'sentence-carousel-item current';
+    done.textContent = 'All done!';
+    carousel.appendChild(done);
+    return;
+  }
+
+  // Show: prev 1, current, next 1 (others hidden)
+  SENTENCES.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'sentence-carousel-item';
+    el.textContent = s.ja;
+
+    const diff = i - currentIndex;
+    if (diff === 0)       el.classList.add('current');
+    else if (diff === -1) el.classList.add('prev');
+    else if (diff === 1)  el.classList.add('next');
+    else                  el.classList.add('hidden');
+
+    carousel.appendChild(el);
+  });
+}
+
+function renderHint() {
+  const s = SENTENCES[currentIndex];
+  if (!s) return;
+
+  // Dots
+  hintDot0.className = hintLevel >= 1 ? 'hint-dot filled' : 'hint-dot';
+  hintDot1.className = hintLevel >= 2 ? 'hint-dot filled' : 'hint-dot';
+
+  // Trigger visibility
+  hintTrigger.className = hintLevel >= 2 ? 'hint-trigger exhausted' : 'hint-trigger';
+
+  // Stack
+  hintStack.innerHTML = '';
+  if (hintLevel >= 1) {
+    const card1 = document.createElement('div');
+    card1.className = 'hint-card level1';
+    card1.textContent = s.hint1;
+    hintStack.appendChild(card1);
+  }
+  if (hintLevel >= 2) {
+    const card2 = document.createElement('div');
+    card2.className = 'hint-card level2';
+    card2.textContent = s.hint2;
+    hintStack.appendChild(card2);
+  }
+}
+
+function renderAll() {
+  renderDots();
+  renderCarousel();
+  renderHint();
+}
+
+// --- Recording toggle ---
+function toggleRecording() {
+  if (currentIndex >= SENTENCES.length) return;
+
+  isRecording = !isRecording;
+
+  if (isRecording) {
+    recordButton.classList.add('recording');
+    recordingCard.classList.add('active');
+    statusLabel.textContent = '録音中...';
+    statusLabel.className = 'status-label recording';
+    startTimer();
+  } else {
+    recordButton.classList.remove('recording');
+    recordingCard.classList.remove('active');
+    statusLabel.className = 'status-label';
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    // Simulate "recording done" → advance sentence
+    setTimeout(() => {
+      currentIndex++;
+      hintLevel = 0;
+
+      if (currentIndex >= SENTENCES.length) {
+        statusLabel.textContent = '全文完了!';
+        renderDots();
+        renderCarousel();
+        resetTimer();
+        hintTrigger.style.display = 'none';
+        hintStack.innerHTML = '';
+      } else {
+        statusLabel.textContent = '録音ボタンを押して発話してください';
+        resetTimer();
+        renderAll();
+      }
+    }, 400);
+  }
+}
+
+// --- Hint click ---
+function onHintClick() {
+  if (currentIndex >= SENTENCES.length) return;
+  if (hintLevel >= 2) return;
+  hintLevel++;
+  renderHint();
+}
+
+// --- Event listeners ---
+recordButton.addEventListener('click', toggleRecording);
+hintButton.addEventListener('click', onHintClick);
+
+// --- Init ---
+resizeCanvas();
+resetTimer();
+renderAll();
+drawWaveform();
+</script>
+
+</body>
+</html>

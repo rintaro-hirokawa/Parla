@@ -268,7 +268,7 @@ class GeminiFeedbackAdapter:
 
     def __init__(
         self,
-        stage1_model: str = "gemini/gemini-3.1-flash-lite-preview",
+        stage1_model: str = "gemini/gemini-3-flash-preview",
         stage2_model: str = "gemini/gemini-3-flash-preview",
     ) -> None:
         self._stage1_model = stage1_model

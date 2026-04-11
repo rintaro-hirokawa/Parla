@@ -77,7 +77,8 @@ class SessionService:
             return
 
         menu = self.compose_menu(target_date=today, source_id=source.id, today=today)
-        self.confirm_menu(menu.id)
+        if menu is not None:
+            self.confirm_menu(menu.id)
 
     # --- Menu Composition ---
 
@@ -86,8 +87,11 @@ class SessionService:
         target_date: date,
         source_id: UUID,
         today: date,
-    ) -> SessionMenu:
-        """Compose a session menu for the given date. Deterministic, no LLM."""
+    ) -> SessionMenu | None:
+        """Compose a session menu for the given date. Deterministic, no LLM.
+
+        Returns None when no content is available (no passages and no reviews).
+        """
         pending_count = self._item_repo.count_due_items(today)
         pattern = select_pattern(pending_count, self._config)
 
@@ -100,7 +104,13 @@ class SessionService:
         menu_source_id: UUID | None = None
         if pattern in ("a", "c"):
             passage_ids = self._select_next_passages(source_id)
-            menu_source_id = source_id
+            if passage_ids:
+                menu_source_id = source_id
+            elif pattern == "a":
+                pattern = "b"  # downgrade: review only
+            else:
+                # pattern "c" with no passages and no reviews = nothing to do
+                return None
 
         blocks = compose_blocks(
             pattern=pattern,
@@ -135,14 +145,19 @@ class SessionService:
         new_source_id: UUID,
         target_date: date,
         today: date,
-    ) -> SessionMenu:
-        """Recompose menu with a different source."""
+    ) -> SessionMenu | None:
+        """Recompose menu with a different source.
+
+        Returns None when the new source has no remaining passages and no reviews.
+        """
         old_menu = self._session_repo.get_menu(menu_id)
         if old_menu is None:
             msg = f"Menu not found: {menu_id}"
             raise ValueError(msg)
 
         new_menu = self.compose_menu(target_date=target_date, source_id=new_source_id, today=today)
+        if new_menu is None:
+            return None
 
         self._bus.emit(
             MenuRecomposed(
@@ -154,7 +169,10 @@ class SessionService:
         return new_menu
 
     def _select_next_passages(self, source_id: UUID) -> list[UUID]:
-        """Select the next unlearned passage from the source."""
+        """Select the next unlearned passage from the source.
+
+        Returns an empty list when all passages have been learned.
+        """
         passages = self._source_repo.get_passages_by_source(source_id)
         for passage in passages:
             has_feedback = any(
@@ -162,8 +180,6 @@ class SessionService:
             )
             if not has_feedback:
                 return [passage.id]
-        if passages:
-            return [passages[0].id]
         return []
 
     # --- Menu Confirmation ---

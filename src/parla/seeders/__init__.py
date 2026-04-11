@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 _REGISTRY: dict[str, str] = {
     "day1": "parla.seeders.day1",
     "day1.short": "parla.seeders.day1_short",
+    "day1.start_review": "parla.seeders.day1_start_review",
     "phase_c": "parla.seeders.phase_c",
 }
 

@@ -167,12 +167,22 @@ class ReviewViewModel(BaseViewModel):
     # ------------------------------------------------------------------
 
     def _on_variation_ready(self, event: VariationReady) -> None:
+        import structlog
+        _logger = structlog.get_logger()
+        _logger.info(
+            "review_vm_variation_ready",
+            event_item_id=str(event.learning_item_id),
+            waiting_for=str(self._waiting_for_item_id),
+            active=self._active,
+        )
         if event.learning_item_id != self._waiting_for_item_id:
+            _logger.warning("review_vm_id_mismatch")
             return
         variation = self._variation_repo.get_variation(event.variation_id)
         if variation is None:
             self.error.emit(f"Variation not found: {event.variation_id}")
             return
+        _logger.info("review_vm_question_ready", ja=variation.ja[:30])
         self._current_variation = variation
         self.question_ready.emit()
 

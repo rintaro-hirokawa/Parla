@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Signal
@@ -10,6 +10,7 @@ from PySide6.QtCore import Signal
 from parla.domain.events import (
     BackgroundGenerationCompleted,
     BackgroundGenerationStarted,
+    PassageGenerationCompleted,
 )
 from parla.ui.base_view_model import BaseViewModel
 
@@ -30,6 +31,8 @@ class TomorrowMenuViewModel(BaseViewModel):
     generation_started = Signal(int)  # item_count
     generation_complete = Signal(int, int)  # success_count, failure_count
     confirmed = Signal()
+    material_exhausted = Signal()
+    navigate_to_source_registration = Signal()
     error = Signal(str)
 
     def __init__(
@@ -47,9 +50,11 @@ class TomorrowMenuViewModel(BaseViewModel):
 
         self._menu_id: UUID | None = None
         self._preview: MenuPreview | None = None
+        self._has_menu = False
 
         self._register_sync(BackgroundGenerationStarted, self._on_gen_started)
         self._register_sync(BackgroundGenerationCompleted, self._on_gen_completed)
+        self._register_sync(PassageGenerationCompleted, self._on_new_source_ready)
 
     # ------------------------------------------------------------------
     # Properties
@@ -77,21 +82,37 @@ class TomorrowMenuViewModel(BaseViewModel):
 
     def load(self, menu_id: UUID) -> None:
         self._menu_id = menu_id
+        self._has_menu = True
         self._preview = self._query.get_menu_preview(menu_id)
         if self._preview is None:
             self.error.emit("Menu preview not found")
             return
         self.preview_loaded.emit()
+        if all(s.remaining_passages == 0 for s in self._preview.active_sources):
+            self.material_exhausted.emit()
+
+    def show_no_material(self) -> None:
+        """Signal that no menu could be composed due to exhausted material."""
+        self._has_menu = False
+        self.material_exhausted.emit()
 
     def change_source(self, new_source_id: UUID) -> None:
         if self._menu_id is None or self._preview is None:
             return
-        self._session_service.recompose_menu(
+        result = self._session_service.recompose_menu(
             self._menu_id,
             new_source_id,
             self._preview.target_date,
             date.today(),
         )
+        if result is None:
+            self.material_exhausted.emit()
+        else:
+            self.load(result.id)
+
+    def go_to_source_registration(self) -> None:
+        """Request navigation to source registration screen."""
+        self.navigate_to_source_registration.emit()
 
     def confirm(self) -> None:
         if self._menu_id is None:
@@ -112,3 +133,11 @@ class TomorrowMenuViewModel(BaseViewModel):
         if event.menu_id != self._menu_id:
             return
         self.generation_complete.emit(event.success_count, event.failure_count)
+
+    def _on_new_source_ready(self, event: PassageGenerationCompleted) -> None:
+        """A new source finished generating — recompose the menu."""
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        new_menu = self._session_service.compose_menu(tomorrow, event.source_id, today)
+        if new_menu is not None:
+            self.load(new_menu.id)

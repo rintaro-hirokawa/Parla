@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parla - Phase C Practice Screen Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Noto Sans JP", "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif;
+    background: #f4f6fb;
+    color: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .window {
+    width: 1024px;
+    height: 768px;
+    background: #f4f6fb;
+    border: 1px solid #e0e4ed;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === Top Bar === */
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 28px; background: #ffffff; border-bottom: 1px solid #e8eaf0;
+  }
+  .top-bar .back-label { font-size: 13px; color: #6b7280; cursor: pointer; }
+  .top-bar .back-label:hover { color: #4f6ef7; }
+  .top-bar .phase-label { font-size: 12px; color: #9ca3af; font-weight: 500; }
+  .top-bar .spacer { width: 60px; }
+
+  /* === Mode Segment === */
+  .mode-bar { padding: 16px 28px 12px; display: flex; justify-content: center; }
+  .mode-segment {
+    display: flex; background: #ffffff; border: 1px solid #e8eaf0;
+    border-radius: 12px; padding: 4px; gap: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .mode-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 22px; border: none; border-radius: 9px;
+    background: transparent; color: #6b7280; font-size: 13px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+    font-family: inherit; white-space: nowrap;
+  }
+  .mode-btn:hover { background: #f8f9fc; color: #1a1a2e; }
+  .mode-btn.active {
+    background: #4f6ef7; color: #ffffff;
+    box-shadow: 0 2px 8px rgba(79,110,247,0.25);
+  }
+  .mode-step {
+    font-size: 10px; font-weight: 700; width: 18px; height: 18px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: #e8eaf0; color: #9ca3af; flex-shrink: 0; transition: all 0.2s;
+  }
+  .mode-btn.active .mode-step { background: rgba(255,255,255,0.3); color: #fff; }
+
+  /* === Content === */
+  .content-area {
+    flex: 1; overflow-y: auto; padding: 16px 32px 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  /* === Text Card === */
+  .text-card {
+    background: #ffffff; border: 1px solid #e8eaf0; border-radius: 14px;
+    padding: 20px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    line-height: 1.8; font-size: 16px; color: #1a1a2e; min-height: 80px;
+  }
+  .text-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .text-card-title { font-size: 12px; color: #9ca3af; font-weight: 500; }
+
+  /* IPA toggle */
+  .ipa-toggle {
+    padding: 4px 10px; border: 1px solid #e8eaf0; border-radius: 6px;
+    background: #fff; font-size: 11px; font-weight: 600; color: #9ca3af;
+    cursor: pointer; transition: all 0.15s; font-family: inherit;
+  }
+  .ipa-toggle:hover { border-color: #c7d0f7; color: #4f6ef7; }
+  .ipa-toggle.active {
+    background: #eef1fe; border-color: #c7d0f7; color: #4f6ef7;
+  }
+
+  .sentence { padding: 2px 0; transition: background 0.2s; border-radius: 4px; }
+  .sentence.highlight { background: #fff3cd; padding: 2px 6px; margin: 0 -6px; }
+
+  /* IPA annotations */
+  .word-with-ipa {
+    display: inline-flex; flex-direction: column; align-items: center;
+    margin-right: 5px; vertical-align: top;
+  }
+  .ipa-text {
+    font-size: 10px; color: #8b9cf7; font-style: italic;
+    line-height: 1.2; margin-top: 1px; font-family: serif;
+  }
+
+  /* Overlap per-word coloring */
+  .word-correct { color: #059669; }
+  .word-error { color: #dc2626; font-weight: 600; }
+  .word-omission { color: #9ca3af; text-decoration: line-through; }
+
+  /* Japanese hero (live delivery) */
+  .text-card.ja-hero {
+    font-size: 20px; font-weight: 600; text-align: center;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 6px; padding: 28px;
+  }
+  .ja-line { padding: 3px 0; }
+
+  /* === Playback Card === */
+  .playback-card {
+    background: #ffffff; border: 1px solid #e8eaf0; border-radius: 14px;
+    padding: 16px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+  }
+  .seek-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .seek-time {
+    font-size: 11px; color: #9ca3af; font-variant-numeric: tabular-nums;
+    width: 36px; text-align: center;
+  }
+  .seek-track {
+    flex: 1; height: 4px; background: #e8eaf0; border-radius: 2px;
+    position: relative; cursor: pointer;
+  }
+  .seek-fill {
+    position: absolute; top: 0; left: 0; height: 100%;
+    background: #4f6ef7; border-radius: 2px; transition: width 0.1s linear;
+  }
+  .seek-thumb {
+    position: absolute; top: 50%; width: 12px; height: 12px;
+    background: #4f6ef7; border: 2px solid #fff; border-radius: 50%;
+    transform: translate(-50%,-50%); box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    transition: left 0.1s linear;
+  }
+  .transport-row {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .transport-btn {
+    width: 36px; height: 36px; border: 1px solid #e8eaf0; background: #fff;
+    border-radius: 8px; color: #6b7280; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .transport-btn:hover { border-color: #c7d0f7; color: #4f6ef7; background: #f8f9ff; }
+  .play-btn {
+    width: 48px; height: 48px; border-radius: 50%; background: #4f6ef7;
+    border: none; color: #fff; font-size: 18px;
+    box-shadow: 0 2px 8px rgba(79,110,247,0.25); cursor: pointer;
+  }
+  .play-btn:hover { background: #3b5de7; }
+
+  /* Speed slider row */
+  .speed-section {
+    display: flex; align-items: center; gap: 12px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid #f1f3f8;
+  }
+  .speed-slider-label { font-size: 11px; color: #9ca3af; flex-shrink: 0; }
+  .speed-slider {
+    flex: 1; -webkit-appearance: none; height: 4px; background: #e8eaf0;
+    border-radius: 2px; outline: none;
+  }
+  .speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    background: #4f6ef7; border-radius: 50%; cursor: pointer;
+    border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .speed-value {
+    font-size: 12px; font-weight: 600; color: #4f6ef7;
+    min-width: 36px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .speed-wpm {
+    font-size: 11px; color: #9ca3af; min-width: 80px; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* === Overlap start button === */
+  .overlap-start-btn {
+    width: 100%; padding: 14px; background: #4f6ef7; color: #fff;
+    border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .overlap-start-btn:hover { background: #3b5de7; }
+  .overlap-start-btn.stop { background: #ef4444; }
+  .overlap-start-btn.stop:hover { background: #dc2626; }
+
+  /* === Recording Card === */
+  .recording-card {
+    background: #ffffff; border: 1px solid #e8eaf0; border-radius: 14px;
+    padding: 16px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    transition: border-color 0.3s;
+  }
+  .recording-card.active {
+    border-color: #c7d0f7; box-shadow: 0 2px 16px rgba(79,110,247,0.08);
+  }
+  .recording-layout { display: flex; align-items: center; gap: 16px; }
+  .waveform-area {
+    flex: 1; height: 56px; background: #f8f9fc; border-radius: 10px;
+    border: 1px solid #eef0f5; position: relative; overflow: hidden;
+  }
+  .waveform-canvas { width: 100%; height: 100%; display: block; }
+  .waveform-area::after {
+    content: ''; position: absolute; top: 50%; left: 0; right: 0;
+    height: 1px; background: #e0e4ed; pointer-events: none;
+  }
+  .record-button {
+    width: 48px; height: 48px; border-radius: 50%; border: 3px solid #e0e4ed;
+    background: #fff; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: all 0.2s; flex-shrink: 0;
+  }
+  .record-button:hover { border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
+  .record-button .inner-shape {
+    width: 18px; height: 18px; border-radius: 50%; background: #ef4444; transition: all 0.2s;
+  }
+  .record-button.recording {
+    border-color: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,0.15);
+    animation: pulse-ring 1.5s ease-in-out infinite;
+  }
+  .record-button.recording .inner-shape { border-radius: 3px; width: 14px; height: 14px; }
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 4px rgba(239,68,68,0.15); }
+    50%  { box-shadow: 0 0 0 8px rgba(239,68,68,0.06); }
+    100% { box-shadow: 0 0 0 4px rgba(239,68,68,0.15); }
+  }
+
+  /* === Speak Results === */
+  .result-card {
+    background: #ffffff; border: 1px solid #e8eaf0; border-radius: 14px;
+    padding: 20px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+    animation: fade-in 0.35s ease;
+  }
+  .result-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f3f8;
+  }
+  .result-title { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+  .result-metrics { display: flex; gap: 8px; }
+  .result-badge {
+    font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+  }
+  .result-badge.pass { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+  .result-badge.fail { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .result-badge.wpm { background: #eef1fe; color: #4f6ef7; border: 1px solid #c7d0f7; }
+
+  .result-sentence {
+    margin-bottom: 12px; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid #eef0f5; background: #fafbfd;
+  }
+  .result-sentence:last-child { margin-bottom: 0; }
+  .result-sentence.has-issue { border-color: #fde68a; background: #fffdf5; }
+
+  .result-ja {
+    font-size: 13px; color: #6b7280; margin-bottom: 6px;
+  }
+  .result-model {
+    font-size: 15px; color: #1a1a2e; line-height: 1.6;
+  }
+  .result-model .diff-word {
+    background: #fef3c7; color: #b45309; padding: 1px 3px;
+    border-radius: 3px; font-weight: 600;
+  }
+  .result-user {
+    font-size: 13px; color: #9ca3af; margin-top: 4px;
+    padding-left: 12px; border-left: 2px solid #e8eaf0;
+  }
+  .result-user .user-diff {
+    color: #dc2626; font-weight: 500;
+  }
+  .result-advice {
+    margin-top: 8px; padding: 8px 12px; background: #f0f2ff;
+    border-radius: 8px; border: 1px solid #dde3fc;
+    font-size: 12px; color: #4b5563; line-height: 1.6;
+  }
+  .result-advice-label {
+    font-size: 10px; font-weight: 700; color: #4f6ef7;
+    letter-spacing: 0.06em; margin-bottom: 3px;
+  }
+  .result-sentence-status {
+    font-size: 11px; font-weight: 600; margin-bottom: 6px;
+  }
+  .result-sentence-status.ok { color: #059669; }
+  .result-sentence-status.ng { color: #dc2626; }
+
+  /* === Status === */
+  .status-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; min-height: 28px;
+  }
+  .status-text { font-size: 13px; color: #6b7280; }
+  .status-badge {
+    font-size: 12px; font-weight: 600; padding: 4px 14px; border-radius: 20px;
+  }
+  .status-badge.score { background: #eef1fe; color: #4f6ef7; border: 1px solid #c7d0f7; }
+
+  /* === Bottom === */
+  .bottom-actions { padding: 0 32px 24px; }
+  .btn-primary {
+    width: 100%; padding: 12px; background: #4f6ef7; color: #fff;
+    border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .btn-primary:hover { background: #3b5de7; }
+  .btn-primary:disabled { background: #e0e4ed; color: #9ca3af; cursor: default; }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="window">
+  <div class="top-bar">
+    <span class="back-label">&#8592; Back</span>
+    <span class="phase-label">Practice</span>
+    <span class="spacer"></span>
+  </div>
+
+  <div class="mode-bar">
+    <div class="mode-segment" id="modeSegment">
+      <button class="mode-btn active" data-mode="listening">
+        <span class="mode-step">1</span> Listen
+      </button>
+      <button class="mode-btn" data-mode="overlapping">
+        <span class="mode-step">2</span> Overlap
+      </button>
+      <button class="mode-btn" data-mode="live_delivery">
+        <span class="mode-step">3</span> Speak
+      </button>
+    </div>
+  </div>
+
+  <div class="content-area" id="contentArea"></div>
+
+  <div class="bottom-actions">
+    <button class="btn-primary" id="completeBtn" disabled>完了</button>
+  </div>
+</div>
+
+<script>
+const EN = [
+  'Akio Toyoda is the chairman of Toyota Motor Corporation, a famous Japanese company.',
+  'Although he is 69 years old now, he still tests his company\'s cars by himself.',
+  'He often wears a racing suit and a helmet to drive cars on a special test course.',
+  'The course is extremely tough because it has steep hills and sharp curves.',
+  'His basic philosophy is to test cars until they completely break.',
+];
+const JA = [
+  '豊田章男氏は、日本の有名な企業であるトヨタ自動車の会長です。',
+  '現在69歳ですが、彼は今でも自社の車を自らテストしています。',
+  '特別なテストコースで車を運転するために、彼はよくレーシングスーツとヘルメットを着用します。',
+  'そのコースは急な坂や急カーブがあるため、非常に厳しいです。',
+  '彼の基本的な哲学は、車が完全に壊れるまでテストすることです。',
+];
+// IPA for first 2 sentences (demo)
+const IPA_DATA = [
+  [['Akio','/ˈɑːkioʊ/'],['Toyoda','/toʊˈjoʊdə/'],['is','/ɪz/'],['the','/ðə/'],['chairman','/ˈtʃɛrmən/'],['of','/ʌv/'],['Toyota','/toʊˈjoʊtə/'],['Motor','/ˈmoʊtər/'],['Corporation,','/ˌkɔːrpəˈreɪʃn/'],['a','/ə/'],['famous','/ˈfeɪməs/'],['Japanese','/ˌdʒæpəˈniːz/'],['company.','/ˈkʌmpəni/']],
+  [['Although','/ɔːlˈðoʊ/'],['he','/hiː/'],['is','/ɪz/'],['69','/sɪksti naɪn/'],['years','/jɪrz/'],['old','/oʊld/'],['now,','/naʊ/'],['he','/hiː/'],['still','/stɪl/'],['tests','/tɛsts/'],['his','/hɪz/'],["company's",'/ˈkʌmpəniz/'],['cars','/kɑːrz/'],['by','/baɪ/'],['himself.','/hɪmˈsɛlf/']],
+];
+
+const BASE_WPM = 128;
+let currentMode = 'listening';
+let isPlaying = false, isRecording = false;
+let playbackPos = 0, playbackDuration = 45, highlightIdx = -1;
+let speed = 1.0, ipaVisible = false;
+let playInterval = null, waveformAnim = null;
+let overlapRunning = false;
+
+const contentArea = document.getElementById('contentArea');
+const modeSegment = document.getElementById('modeSegment');
+const completeBtn = document.getElementById('completeBtn');
+
+// --- Waveform ---
+let waveformBuf = new Float32Array(128).fill(0);
+let wfCanvas = null, wfCtx = null;
+function initWf() {
+  wfCanvas = document.getElementById('wfCanvas');
+  if (!wfCanvas) return;
+  wfCtx = wfCanvas.getContext('2d');
+  const r = wfCanvas.parentElement.getBoundingClientRect();
+  wfCanvas.width = r.width * devicePixelRatio;
+  wfCanvas.height = r.height * devicePixelRatio;
+  wfCtx.scale(devicePixelRatio, devicePixelRatio);
+}
+function drawWf() {
+  if (!wfCanvas||!wfCtx){waveformAnim=requestAnimationFrame(drawWf);return;}
+  const w=wfCanvas.width/devicePixelRatio,h=wfCanvas.height/devicePixelRatio;
+  wfCtx.clearRect(0,0,w,h);
+  const bw=3,g=2,step=bw+g,bars=Math.floor(w/step),sx=(w-bars*step)/2,my=h/2;
+  for(let i=0;i<bars;i++){
+    const idx=Math.floor(i*waveformBuf.length/bars);
+    const v=waveformBuf[idx]||0,bh=Math.max(2,v*(h-8));
+    wfCtx.fillStyle=isRecording?'#4f6ef7':'#c7d0f7';
+    wfCtx.beginPath();wfCtx.roundRect(sx+i*step,my-bh/2,bw,bh,1.5);wfCtx.fill();
+  }
+  waveformAnim=requestAnimationFrame(drawWf);
+}
+setInterval(()=>{
+  if(!isRecording){for(let i=0;i<waveformBuf.length;i++)waveformBuf[i]*=0.92;return;}
+  for(let i=0;i<waveformBuf.length-1;i++)waveformBuf[i]=waveformBuf[i+1];
+  const t=performance.now()/200;
+  waveformBuf[waveformBuf.length-1]=Math.min(1,Math.max(0,0.3+0.25*Math.sin(t)+0.2*Math.sin(t*2.7)+Math.random()*0.25));
+},50);
+
+// --- Playback ---
+function startPlay(){
+  if(playInterval)return;
+  isPlaying=true;
+  playInterval=setInterval(()=>{
+    playbackPos+=0.5;
+    if(playbackPos>=playbackDuration){playbackPos=playbackDuration;stopPlay();
+      if(currentMode==='overlapping')finishOverlap();
+    }
+    updateSeek();updateHighlight();
+  },500);
+}
+function stopPlay(){
+  isPlaying=false;clearInterval(playInterval);playInterval=null;
+  const pb=document.getElementById('playBtn');if(pb)pb.textContent='▶';
+}
+function togglePlay(){
+  if(isPlaying){stopPlay();}
+  else{
+    if(playbackPos>=playbackDuration)playbackPos=0;
+    startPlay();
+    const pb=document.getElementById('playBtn');if(pb)pb.textContent='⏸';
+  }
+}
+function updateSeek(){
+  const f=document.getElementById('seekFill'),th=document.getElementById('seekThumb'),p=document.getElementById('seekPos');
+  if(!f)return;
+  const pct=(playbackPos/playbackDuration)*100;
+  f.style.width=pct+'%';th.style.left=pct+'%';p.textContent=fmtT(playbackPos);
+}
+function updateHighlight(){
+  const idx=Math.min(Math.floor(playbackPos/(playbackDuration/EN.length)),EN.length-1);
+  if(idx===highlightIdx)return;highlightIdx=idx;
+  document.querySelectorAll('.sentence').forEach((s,i)=>s.classList.toggle('highlight',i===idx));
+}
+function fmtT(s){return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+
+// --- IPA ---
+function toggleIpa(){
+  ipaVisible=!ipaVisible;
+  const btn=document.getElementById('ipaToggle');
+  if(btn)btn.classList.toggle('active',ipaVisible);
+  renderTextContent();
+}
+
+function renderTextContent(){
+  const card=document.getElementById('textCard');if(!card)return;
+  let html='';
+  EN.forEach((s,si)=>{
+    if(ipaVisible && IPA_DATA[si]){
+      const words=IPA_DATA[si].map(([w,ipa])=>
+        `<span class="word-with-ipa"><span>${w}</span><span class="ipa-text">${ipa}</span></span>`
+      ).join(' ');
+      html+=`<div class="sentence">${words}</div>`;
+    } else {
+      html+=`<div class="sentence">${s}</div>`;
+    }
+  });
+  card.innerHTML=html;
+}
+
+// --- Speed ---
+function onSpeedChange(val){
+  speed=val/10;
+  const sv=document.getElementById('speedVal');if(sv)sv.textContent=speed.toFixed(1)+'x';
+  const wpm=Math.round(BASE_WPM*speed);
+  const sw=document.getElementById('speedWpm');if(sw)sw.textContent=`${wpm} wpm`;
+}
+
+// --- Overlap ---
+function toggleOverlap(){
+  if(!overlapRunning){
+    overlapRunning=true;isRecording=true;
+    if(playbackPos>=playbackDuration)playbackPos=0;
+    startPlay();
+    const btn=document.getElementById('overlapBtn');
+    btn.textContent='⏹ Stop';btn.classList.add('stop');
+    const rc=document.getElementById('recCard');if(rc)rc.classList.add('active');
+  } else {
+    overlapRunning=false;isRecording=false;stopPlay();
+    const rc=document.getElementById('recCard');if(rc)rc.classList.remove('active');
+    finishOverlap();
+  }
+}
+function finishOverlap(){
+  overlapRunning=false;isRecording=false;
+  const btn=document.getElementById('overlapBtn');
+  if(btn){btn.textContent='▶ Start Overlap';btn.classList.remove('stop');}
+  // Show word results
+  const card=document.getElementById('textCard');
+  const WORDS=[
+    [{w:'Akio',e:'None'},{w:'Toyoda',e:'None'},{w:'is',e:'None'},{w:'the',e:'None'},{w:'chairman',e:'Mispronunciation'},{w:'of',e:'None'},{w:'Toyota',e:'None'},{w:'Motor',e:'None'},{w:'Corporation,',e:'None'},{w:'a',e:'None'},{w:'famous',e:'None'},{w:'Japanese',e:'None'},{w:'company.',e:'None'}],
+    [{w:'Although',e:'None'},{w:'he',e:'None'},{w:'is',e:'None'},{w:'69',e:'None'},{w:'years',e:'None'},{w:'old',e:'None'},{w:'now,',e:'None'},{w:'he',e:'None'},{w:'still',e:'None'},{w:'tests',e:'Omission'},{w:'his',e:'None'},{w:"company's",e:'Mispronunciation'},{w:'cars',e:'None'},{w:'by',e:'None'},{w:'himself.',e:'None'}],
+  ];
+  let html='';
+  WORDS.forEach(sent=>{
+    html+='<div class="sentence">'+sent.map(wd=>{
+      if(wd.e==='Mispronunciation')return `<span class="word-error">${wd.w}</span>`;
+      if(wd.e==='Omission')return `<span class="word-omission">${wd.w}</span>`;
+      return `<span class="word-correct">${wd.w}</span>`;
+    }).join(' ')+'</div>';
+  });
+  for(let i=WORDS.length;i<EN.length;i++) html+=`<div class="sentence">${EN[i]}</div>`;
+  card.innerHTML=html;
+  const st=document.getElementById('statusBar');
+  if(st) st.innerHTML='<span class="status-badge score">発音スコア: 78.5</span><span class="status-text">遅延箇所: 2</span>';
+}
+
+// --- Live delivery ---
+function toggleLiveRec(){
+  isRecording=!isRecording;
+  const rb=document.getElementById('recBtn'),rc=document.getElementById('recCard');
+  if(isRecording){rb.classList.add('recording');rc.classList.add('active');}
+  else{rb.classList.remove('recording');rc.classList.remove('active');setTimeout(showSpeakResults,800);}
+}
+function showSpeakResults(){
+  completeBtn.disabled=false;
+  const ca=document.getElementById('contentArea');
+  const results=[
+    {ja:JA[0],model:EN[0],user:EN[0],status:'ok',diff:null,advice:null},
+    {ja:JA[1],model:EN[1],
+     user:'Although he is 69 years old now, he still test his company cars by himself.',
+     status:'ng',
+     diff:[{idx:9,model:'tests',user:'test'},{idx:11,model:"company's",user:'company'}],
+     advice:'三単現の -s が抜けています（"test" → "tests"）。また所有格の \'s も忘れずに。主語が三人称単数のとき、現在形の動詞には -s を付けましょう。'},
+    {ja:JA[2],model:EN[2],user:EN[2],status:'ok',diff:null,advice:null},
+    {ja:JA[3],model:EN[3],
+     user:'The course is very tough because it has steep hills and sharp turns.',
+     status:'ok',
+     diff:[{idx:3,model:'extremely',user:'very'},{idx:11,model:'curves',user:'turns'}],
+     advice:'意味は通じますが、模範では "extremely"（より強い強調）と "curves"（カーブ）を使っています。語彙の幅を広げるために模範表現も覚えましょう。'},
+    {ja:JA[4],model:EN[4],user:EN[4],status:'ok',diff:null,advice:null},
+  ];
+
+  let html='<div class="result-card"><div class="result-header"><span class="result-title">Results</span><div class="result-metrics"><span class="result-badge pass">合格</span><span class="result-badge wpm">132 WPM</span></div></div>';
+  results.forEach(r=>{
+    const hasIssue=r.diff&&r.diff.length>0;
+    html+=`<div class="result-sentence${hasIssue?' has-issue':''}">`;
+    html+=`<div class="result-sentence-status ${r.status}">${r.status==='ok'?'✓ OK':'✗ 要確認'}</div>`;
+    html+=`<div class="result-ja">${r.ja}</div>`;
+    // Model with diff highlights
+    if(hasIssue){
+      const modelWords=r.model.split(' ');
+      const highlighted=modelWords.map((w,i)=>{
+        const d=r.diff.find(x=>x.idx===i);
+        return d?`<span class="diff-word">${w}</span>`:w;
+      }).join(' ');
+      html+=`<div class="result-model">${highlighted}</div>`;
+      // User utterance
+      const userWords=r.user.split(' ');
+      const userHL=userWords.map((w,i)=>{
+        const d=r.diff.find(x=>x.idx===i);
+        return d?`<span class="user-diff">${w}</span>`:w;
+      }).join(' ');
+      html+=`<div class="result-user">${userHL}</div>`;
+      // LLM advice
+      html+=`<div class="result-advice"><div class="result-advice-label">ADVICE</div>${r.advice}</div>`;
+    } else {
+      html+=`<div class="result-model">${r.model}</div>`;
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  ca.innerHTML=html;
+}
+
+// --- Mode switch ---
+function switchMode(mode){
+  if(mode===currentMode)return;
+  stopPlay();isRecording=false;overlapRunning=false;
+  playbackPos=0;highlightIdx=-1;ipaVisible=false;
+  currentMode=mode;
+  modeSegment.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  renderMode();
+}
+
+// --- Render ---
+function renderMode(){
+  let html='';
+
+  if(currentMode==='listening'){
+    html+=`<div class="text-card" id="textCard">
+      <div class="text-card-header">
+        <span class="text-card-title">Model Text</span>
+        <button class="ipa-toggle" id="ipaToggle" onclick="toggleIpa()">IPA</button>
+      </div>`;
+    EN.forEach(s=>html+=`<div class="sentence">${s}</div>`);
+    html+='</div>';
+    html+=renderPlaybackCard(true);
+  }
+
+  if(currentMode==='overlapping'){
+    const wpm=Math.round(BASE_WPM*speed);
+    html+=`<div class="text-card" id="textCard">
+      <div class="text-card-header">
+        <span class="text-card-title">Model Text</span>
+        <button class="ipa-toggle" id="ipaToggle" onclick="toggleIpa()">IPA</button>
+      </div>`;
+    EN.forEach(s=>html+=`<div class="sentence">${s}</div>`);
+    html+=`</div>
+    <div class="playback-card">
+      <div class="speed-section" style="border-top:none;margin-top:0;padding-top:0;">
+        <span class="speed-slider-label">Speed</span>
+        <input type="range" class="speed-slider" min="5" max="20" value="${Math.round(speed*10)}" oninput="onSpeedChange(this.value)">
+        <span class="speed-value" id="speedVal">${speed.toFixed(1)}x</span>
+        <span class="speed-wpm" id="speedWpm">${wpm} wpm</span>
+      </div>
+    </div>
+    <button class="overlap-start-btn" id="overlapBtn" onclick="toggleOverlap()">▶ Start Overlap</button>
+    <div class="recording-card" id="recCard"><div class="recording-layout">
+      <div class="waveform-area"><canvas class="waveform-canvas" id="wfCanvas"></canvas></div>
+    </div></div>`;
+  }
+
+  if(currentMode==='live_delivery'){
+    html+='<div class="text-card ja-hero" id="textCard">';
+    JA.forEach(s=>html+=`<div class="ja-line">${s}</div>`);
+    html+='</div>';
+    html+=`<div class="recording-card" id="recCard"><div class="recording-layout">
+      <div class="waveform-area"><canvas class="waveform-canvas" id="wfCanvas"></canvas></div>
+      <div class="record-button" id="recBtn" onclick="toggleLiveRec()"><div class="inner-shape"></div></div>
+    </div></div>`;
+  }
+
+  html+='<div class="status-bar" id="statusBar"><span class="status-text">モデル音声準備完了</span></div>';
+  contentArea.innerHTML=html;
+  setTimeout(()=>{initWf();if(!waveformAnim)drawWf();},50);
+}
+
+function renderPlaybackCard(showSkip){
+  const wpm=Math.round(BASE_WPM*speed);
+  let h=`<div class="playback-card">
+    <div class="seek-row">
+      <span class="seek-time" id="seekPos">0:00</span>
+      <div class="seek-track"><div class="seek-fill" id="seekFill" style="width:0%"></div><div class="seek-thumb" id="seekThumb" style="left:0%"></div></div>
+      <span class="seek-time">${fmtT(playbackDuration)}</span>
+    </div>
+    <div class="transport-row">`;
+  if(showSkip) h+=`<button class="transport-btn" onclick="playbackPos=0;updateSeek()">⏮</button>
+    <button class="transport-btn" onclick="playbackPos=Math.max(0,playbackPos-2);updateSeek()">-2s</button>`;
+  h+=`<button class="play-btn" id="playBtn" onclick="togglePlay()">▶</button>`;
+  if(showSkip) h+=`<button class="transport-btn" onclick="playbackPos=Math.min(playbackDuration,playbackPos+2);updateSeek()">+2s</button>`;
+  h+=`</div>
+    <div class="speed-section">
+      <span class="speed-slider-label">Speed</span>
+      <input type="range" class="speed-slider" min="5" max="20" value="${Math.round(speed*10)}" oninput="onSpeedChange(this.value)">
+      <span class="speed-value" id="speedVal">${speed.toFixed(1)}x</span>
+      <span class="speed-wpm" id="speedWpm">${wpm} wpm</span>
+    </div>
+  </div>`;
+  return h;
+}
+
+modeSegment.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>switchMode(b.dataset.mode)));
+
+renderMode();
+</script>
+</body>
+</html>

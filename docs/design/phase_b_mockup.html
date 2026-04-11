@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parla - Phase B Feedback Screen Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Noto Sans JP", "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif;
+    background: #f4f6fb;
+    color: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .window {
+    width: 1024px;
+    height: 768px;
+    background: #f4f6fb;
+    border: 1px solid #e0e4ed;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === Top Bar (shared with Phase A) === */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 28px;
+    background: #ffffff;
+    border-bottom: 1px solid #e8eaf0;
+  }
+  .top-bar .back-label {
+    font-size: 13px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .top-bar .back-label:hover { color: #4f6ef7; }
+  .top-bar .phase-label {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .top-bar .progress-counter {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* === Time Bar (retry countdown) === */
+  .time-bar-track {
+    height: 3px;
+    background: #eef0f5;
+    position: relative;
+    overflow: hidden;
+  }
+  .time-bar-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%; width: 100%;
+    background: #4f6ef7;
+    transform-origin: left center;
+    transition: transform 0.3s linear, background 0.5s ease, height 0.3s ease;
+  }
+  .time-bar-fill.caution {
+    background: #f59e0b;
+    height: 4px;
+  }
+  .time-bar-fill.danger {
+    background: #ef4444;
+    height: 5px;
+    animation: bar-pulse 0.6s ease-in-out infinite;
+  }
+  .time-bar-fill.hidden {
+    transform: scaleX(0) !important;
+    transition: none;
+  }
+  @keyframes bar-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+  }
+
+  /* === Progress dots === */
+  .sentence-progress {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 28px 8px;
+  }
+  .progress-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #e8eaf0;
+    transition: all 0.3s ease;
+  }
+  .progress-dot.done { background: #4f6ef7; }
+  .progress-dot.current {
+    background: #4f6ef7;
+    box-shadow: 0 0 0 4px rgba(79, 110, 247, 0.18);
+    transform: scale(1.2);
+  }
+
+  /* === Main content scroll area === */
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* === Feedback Card === */
+  .feedback-card {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 14px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Header row: sentence label + badge */
+  .fb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .fb-sentence-label {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+
+  /* Status badge */
+  .status-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+  }
+  .status-badge.correct {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+  }
+  .status-badge.needs-review {
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fde68a;
+  }
+  .status-badge.loading {
+    background: #f1f3f8;
+    color: #9ca3af;
+    border: 1px solid #e8eaf0;
+  }
+
+  /* Utterance vs Model answer rows */
+  .fb-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .fb-row:last-child { margin-bottom: 0; }
+
+  .fb-row-label {
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 4px;
+  }
+  .fb-row-label.yours { color: #6b7280; }
+  .fb-row-label.model { color: #4f6ef7; }
+
+  .fb-row-text {
+    flex: 1;
+    font-size: 16px;
+    line-height: 1.7;
+    padding: 8px 16px;
+    border-radius: 10px;
+  }
+  .fb-row-text.yours {
+    background: #f8f9fc;
+    color: #374151;
+    border: 1px solid #eef0f5;
+  }
+  .fb-row-text.model {
+    background: #f0f2ff;
+    color: #1a1a2e;
+    border: 1px solid #dde3fc;
+    font-weight: 500;
+  }
+
+  /* Question (Japanese) */
+  .fb-question {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1.6;
+    text-align: center;
+    padding: 12px 8px 20px;
+    border-bottom: 1px solid #f1f3f8;
+    margin-bottom: 18px;
+  }
+
+  /* English rows — hideable during retry */
+  .fb-english-rows {
+    transition: opacity 0.3s ease, max-height 0.4s ease;
+    overflow: hidden;
+  }
+  .fb-english-rows.hidden {
+    opacity: 0;
+    max-height: 0 !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Loading state (replaces card content) */
+  .fb-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    gap: 12px;
+  }
+  .fb-loading-text {
+    font-size: 13px;
+    color: #9ca3af;
+  }
+  .spinner {
+    width: 24px; height: 24px;
+    border: 3px solid #e8eaf0;
+    border-top-color: #4f6ef7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* === Stocked Items === */
+  .items-card {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s;
+  }
+  .items-card.editing {
+    border-color: #c7d0f7;
+  }
+
+  .items-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .items-title {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .items-count {
+    background: #eef1fe;
+    color: #4f6ef7;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+  }
+  .items-edit-btn {
+    margin-left: auto;
+    width: 26px; height: 26px;
+    border: 1px solid #e8eaf0;
+    background: #ffffff;
+    border-radius: 6px;
+    color: #9ca3af;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .items-edit-btn:hover {
+    border-color: #c7d0f7;
+    color: #4f6ef7;
+    background: #f8f9ff;
+  }
+
+  .items-empty {
+    font-size: 12px;
+    color: #c0c4cc;
+    padding: 4px 0;
+  }
+
+  /* View mode item row */
+  .item-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.15s;
+    animation: hint-fade-in 0.3s ease;
+  }
+  .item-row:hover { background: #f8f9fc; }
+
+  .item-pattern {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    white-space: nowrap;
+  }
+  .item-reappear {
+    font-size: 10px;
+    font-weight: 600;
+    color: #f59e0b;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    padding: 1px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .item-explanation {
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  /* Edit mode item row */
+  .edit-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    background: #f8f9fc;
+    border: 1px solid #eef0f5;
+    transition: border-color 0.15s;
+  }
+  .edit-item:focus-within {
+    border-color: #c7d0f7;
+    background: #fafbff;
+  }
+  .edit-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .edit-pattern {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    padding: 2px 0;
+    font-family: inherit;
+  }
+  .edit-explanation {
+    font-size: 12px;
+    color: #6b7280;
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    padding: 2px 0;
+    font-family: inherit;
+  }
+  .edit-dismiss-btn {
+    width: 24px; height: 24px;
+    border: 1px solid #e8eaf0;
+    background: #ffffff;
+    border-radius: 5px;
+    color: #c0c4cc;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .edit-dismiss-btn:hover {
+    border-color: #fca5a5;
+    color: #ef4444;
+    background: #fef2f2;
+  }
+
+  /* Add item (subtle) */
+  .add-item-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px dashed #d1d5e0;
+    border-radius: 8px;
+    margin-top: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #b0b5c0;
+    font-size: 12px;
+  }
+  .add-item-row:hover {
+    border-color: #4f6ef7;
+    color: #4f6ef7;
+    background: #fafbff;
+  }
+  .new-item-form {
+    padding: 10px;
+    border: 1px solid #c7d0f7;
+    border-radius: 8px;
+    background: #fafbff;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: hint-fade-in 0.2s ease;
+  }
+  .new-item-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #e0e4ed;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    background: #ffffff;
+    color: #1a1a2e;
+  }
+  .new-item-input:focus { border-color: #4f6ef7; }
+  .new-item-input::placeholder { color: #c0c4cc; }
+  .new-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .new-item-cancel, .new-item-save {
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .new-item-cancel {
+    border: 1px solid #e0e4ed;
+    background: #ffffff;
+    color: #6b7280;
+  }
+  .new-item-save {
+    border: none;
+    background: #4f6ef7;
+    color: #ffffff;
+    font-weight: 600;
+  }
+  .new-item-save:hover { background: #3b5de7; }
+
+  @keyframes hint-fade-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes card-reveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === Retry Section === */
+  .retry-section {
+    background: #ffffff;
+    border: 1px solid #e8eaf0;
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  }
+  .retry-title {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    margin-bottom: 14px;
+  }
+  .retry-layout {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Waveform (shared style) */
+  .waveform-area {
+    flex: 1;
+    height: 56px;
+    background: #f8f9fc;
+    border-radius: 10px;
+    border: 1px solid #eef0f5;
+    position: relative;
+    overflow: hidden;
+  }
+  .waveform-canvas {
+    width: 100%; height: 100%;
+    display: block;
+  }
+  .waveform-area::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 1px;
+    background: #e0e4ed;
+    pointer-events: none;
+  }
+
+  /* Record button (shared style) */
+  .record-button {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 3px solid #e0e4ed;
+    background: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .record-button:hover {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+  }
+  .record-button .inner-shape {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #ef4444;
+    transition: all 0.2s;
+  }
+  .record-button.recording {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+    animation: pulse-ring 1.5s ease-in-out infinite;
+  }
+  .record-button.recording .inner-shape {
+    border-radius: 3px;
+    width: 14px; height: 14px;
+  }
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+    50%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.06); }
+    100% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+  }
+
+  .retry-status {
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+    padding-top: 8px;
+    min-height: 24px;
+  }
+  .retry-status.rec { color: #ef4444; }
+
+  /* Countdown (full-width in retry section) */
+  .countdown-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 72px;
+  }
+  .countdown-number {
+    font-size: 36px;
+    font-weight: 700;
+    color: #4f6ef7;
+    animation: countdown-pop 0.5s ease;
+  }
+  @keyframes countdown-pop {
+    0%   { transform: scale(1.6); opacity: 0; }
+    50%  { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Retry result detail */
+  .retry-reason {
+    text-align: center;
+    font-size: 12px;
+    color: #6b7280;
+    padding-top: 4px;
+  }
+  .retry-model-answer {
+    margin-top: 10px;
+    padding: 10px 16px;
+    background: #f0f2ff;
+    border: 1px solid #dde3fc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1a1a2e;
+    line-height: 1.6;
+    animation: hint-fade-in 0.3s ease;
+  }
+  .retry-model-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #4f6ef7;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+
+  /* Retry start button */
+  .retry-start-btn {
+    width: 100%;
+    padding: 11px;
+    background: #ffffff;
+    color: #4f6ef7;
+    border: 1px solid #dde3fc;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .retry-start-btn:hover {
+    background: #f0f2ff;
+    border-color: #c7d0f7;
+  }
+  .retry-start-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* (modal removed — inline editing on items card) */
+
+  /* === Bottom Actions === */
+  .bottom-actions {
+    padding: 0 32px 24px;
+    display: flex;
+  }
+  .btn-primary {
+    padding: 12px;
+    background: #4f6ef7;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: #3b5de7; }
+  .btn-primary:disabled {
+    background: #e0e4ed;
+    color: #9ca3af;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+
+<div class="window">
+
+  <!-- ===== Top Bar ===== -->
+  <div class="top-bar">
+    <span class="back-label">&#8592; Back</span>
+    <span class="phase-label">Feedback</span>
+    <span class="progress-counter" id="progressCounter">1 / 5</span>
+  </div>
+
+  <!-- ===== Time Bar ===== -->
+  <div class="time-bar-track">
+    <div class="time-bar-fill hidden" id="timeBarFill"></div>
+  </div>
+
+  <!-- ===== Progress Dots ===== -->
+  <div class="sentence-progress" id="progressDots"></div>
+
+  <!-- ===== Scrollable Content ===== -->
+  <div class="content-area" id="contentArea">
+
+    <!-- Feedback Card -->
+    <div class="feedback-card" id="feedbackCard"></div>
+
+    <!-- Stocked Items -->
+    <div class="items-card" id="itemsCard">
+      <div class="items-header">
+        <div class="items-title">
+          Auto-stocked Items
+          <span class="items-count" id="itemsCount">0</span>
+        </div>
+        <button class="items-edit-btn" id="itemsEditBtn" title="編集">&#9998;</button>
+      </div>
+      <div id="itemsList"></div>
+    </div>
+
+    <!-- Retry Section -->
+    <div class="retry-section" id="retrySection" style="display:none">
+      <div class="retry-title">Retry</div>
+
+      <!-- Phase 1: start button -->
+      <button class="retry-start-btn" id="retryStartBtn">再チャレンジ</button>
+
+      <!-- Phase 2: countdown (centered, full width) -->
+      <div class="countdown-area" id="countdownArea" style="display:none"></div>
+
+      <!-- Phase 3: recording UI -->
+      <div id="retryRecordingArea" style="display:none">
+        <div class="retry-layout">
+          <div class="waveform-area" id="waveformWrap">
+            <canvas class="waveform-canvas" id="waveformCanvas"></canvas>
+          </div>
+          <div class="record-button recording" id="recordButton">
+            <div class="inner-shape"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="retry-status" id="retryStatus"></div>
+      <div class="retry-reason" id="retryReason"></div>
+      <div id="retryModelArea"></div>
+    </div>
+
+  </div>
+
+  <!-- ===== Bottom Actions ===== -->
+  <div class="bottom-actions">
+    <button class="btn-primary" id="nextButton" disabled style="flex:1">次へ</button>
+  </div>
+
+</div>
+
+<script>
+// ================================================================
+// Phase B Feedback - Interactive Demo
+// ================================================================
+
+// Feedback data (from v1_passage_generation Passage 1)
+const FEEDBACK = [
+  {
+    ja: '豊田章男氏は、日本の有名な企業であるトヨタ自動車の会長です。',
+    userUtterance: 'Akio Toyoda is the chairman of Toyota Motor Corporation, a famous Japanese company.',
+    modelAnswer: 'Akio Toyoda is the chairman of Toyota Motor Corporation, a famous Japanese company.',
+    isAcceptable: true,
+    items: [
+      { pattern: 'chairman of ~', explanation: '~の会長・議長', reappear: false }
+    ],
+    ready: true  // already generated during Phase A
+  },
+  {
+    ja: '現在69歳ですが、彼は今でも自社の車を自らテストしています。',
+    userUtterance: 'Although he is 69 years old now, he still test his company cars by himself.',
+    modelAnswer: 'Although he is 69 years old now, he still tests his company\'s cars by himself.',
+    isAcceptable: false,
+    reason: '三単現のsが欠落',
+    items: [
+      { pattern: 'by himself', explanation: '自分自身で（独力で）', reappear: false },
+      { pattern: 'although S + V', explanation: '~にもかかわらず（譲歩の接続詞）', reappear: true }
+    ],
+    ready: false,  // still generating — arrives after 2s
+    delay: 2000
+  },
+  {
+    ja: '特別なテストコースで車を運転するために、彼はよくレーシングスーツとヘルメットを着用します。',
+    userUtterance: 'He often wears a racing suit and a helmet to drive cars on a special test course.',
+    modelAnswer: 'He often wears a racing suit and a helmet to drive cars on a special test course.',
+    isAcceptable: true,
+    items: [],
+    ready: true
+  },
+  {
+    ja: 'そのコースは急な坂や急カーブがあるため、非常に厳しいです。',
+    userUtterance: 'The course is extremely tough because it has steep hills and sharp curves.',
+    modelAnswer: 'The course is extremely tough because it has steep hills and sharp curves.',
+    isAcceptable: true,
+    items: [
+      { pattern: 'steep hills', explanation: '急な坂', reappear: false },
+      { pattern: 'sharp curves', explanation: '急カーブ', reappear: false }
+    ],
+    ready: false,  // still generating — arrives after 3s
+    delay: 3000
+  },
+  {
+    ja: '彼の基本的な哲学は、車が完全に壊れるまでテストすることです。',
+    userUtterance: 'His basic philosophy is testing cars until they completely break.',
+    modelAnswer: 'His basic philosophy is to test cars until they completely break.',
+    isAcceptable: false,
+    reason: 'to不定詞が必要',
+    items: [
+      { pattern: 'until S + V', explanation: '~するまで（時の副詞節）', reappear: true }
+    ],
+    ready: true
+  }
+];
+
+// --- State ---
+let currentIndex = 0;
+let isRecording = false;
+let retryCount = 0;
+let passed = new Set();
+let revealed = new Set();  // indices where feedback has been revealed
+let retryMode = false;     // true while retrying — hides English
+let editingItems = false;  // inline edit mode for items card
+let pendingTimer = null;   // timer for delayed feedback
+let waveformAnim = null;
+let retryTimerInterval = null;
+let retryTimeRemaining = 0;
+let retryTimeLimit = 0;
+
+// Pre-mark passed & revealed for ready items
+FEEDBACK.forEach((fb, i) => {
+  if (fb.ready) {
+    revealed.add(i);
+    if (fb.isAcceptable) passed.add(i);
+  }
+});
+
+// --- DOM ---
+const progressCounter = document.getElementById('progressCounter');
+const progressDots    = document.getElementById('progressDots');
+const feedbackCard    = document.getElementById('feedbackCard');
+const itemsCard       = document.getElementById('itemsCard');
+const itemsCount      = document.getElementById('itemsCount');
+const itemsList       = document.getElementById('itemsList');
+const retrySection    = document.getElementById('retrySection');
+const retryStartBtn   = document.getElementById('retryStartBtn');
+const retryRecArea    = document.getElementById('retryRecordingArea');
+const retryStatus     = document.getElementById('retryStatus');
+const recordButton    = document.getElementById('recordButton');
+const waveformWrap    = document.getElementById('waveformWrap');
+const countdownArea   = document.getElementById('countdownArea');
+const retryReason     = document.getElementById('retryReason');
+const retryModelArea  = document.getElementById('retryModelArea');
+const timeBarFill     = document.getElementById('timeBarFill');
+const nextButton      = document.getElementById('nextButton');
+const itemsEditBtn    = document.getElementById('itemsEditBtn');
+const waveformCanvas  = document.getElementById('waveformCanvas');
+const ctx             = waveformCanvas.getContext('2d');
+
+// --- Waveform ---
+let waveformBuf = new Float32Array(128).fill(0);
+
+function resizeCanvas() {
+  const rect = waveformCanvas.parentElement.getBoundingClientRect();
+  waveformCanvas.width  = rect.width * devicePixelRatio;
+  waveformCanvas.height = rect.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function drawWaveform() {
+  const w = waveformCanvas.width / devicePixelRatio;
+  const h = waveformCanvas.height / devicePixelRatio;
+  ctx.clearRect(0, 0, w, h);
+  const barW = 3, gap = 2, step = barW + gap;
+  const bars = Math.floor(w / step);
+  const startX = (w - bars * step) / 2;
+  const midY = h / 2;
+  for (let i = 0; i < bars; i++) {
+    const idx = Math.floor(i * waveformBuf.length / bars);
+    const val = waveformBuf[idx] || 0;
+    const barH = Math.max(2, val * (h - 8));
+    ctx.fillStyle = isRecording ? '#4f6ef7' : '#c7d0f7';
+    ctx.beginPath();
+    ctx.roundRect(startX + i * step, midY - barH / 2, barW, barH, 1.5);
+    ctx.fill();
+  }
+  waveformAnim = requestAnimationFrame(drawWaveform);
+}
+
+function feedWaveform() {
+  if (!isRecording) {
+    for (let i = 0; i < waveformBuf.length; i++) waveformBuf[i] *= 0.92;
+    return;
+  }
+  for (let i = 0; i < waveformBuf.length - 1; i++) waveformBuf[i] = waveformBuf[i + 1];
+  const t = performance.now() / 200;
+  waveformBuf[waveformBuf.length - 1] = Math.min(1, Math.max(0,
+    0.3 + 0.25 * Math.sin(t) + 0.2 * Math.sin(t * 2.7) + Math.random() * 0.25));
+}
+setInterval(feedWaveform, 50);
+
+// --- Render ---
+function renderDots() {
+  progressDots.innerHTML = '';
+  FEEDBACK.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'progress-dot';
+    if (i < currentIndex)       d.classList.add('done');
+    else if (i === currentIndex) d.classList.add('current');
+    progressDots.appendChild(d);
+  });
+}
+
+function showLoading() {
+  const fb = FEEDBACK[currentIndex];
+  feedbackCard.innerHTML = `
+    <div class="fb-header">
+      <span class="fb-sentence-label">Sentence ${currentIndex + 1}</span>
+      <span class="status-badge loading">生成中...</span>
+    </div>
+    <div class="fb-question">${fb.ja}</div>
+    <div class="fb-loading">
+      <div class="spinner"></div>
+      <div class="fb-loading-text">フィードバックを生成しています</div>
+    </div>
+  `;
+  itemsCard.style.display = 'none';
+  retrySection.style.display = 'none';
+  nextButton.disabled = true;
+}
+
+function revealFeedback() {
+  const fb = FEEDBACK[currentIndex];
+  revealed.add(currentIndex);
+  if (fb.isAcceptable) passed.add(currentIndex);
+
+  itemsCard.style.display = '';
+  renderFeedbackCard();
+  renderItems();
+  renderRetrySection();
+  renderNextButton();
+}
+
+function renderFeedbackCard() {
+  const fb = FEEDBACK[currentIndex];
+  const isPassed = passed.has(currentIndex);
+  const inRetry = retryMode;
+
+  const badgeClass = isPassed ? 'correct' : 'needs-review';
+  const badgeText  = isPassed ? '正解' : '要復習';
+  const reason = fb.reason && !isPassed ? ` — ${fb.reason}` : '';
+
+  feedbackCard.innerHTML = `
+    <div class="fb-header">
+      <span class="fb-sentence-label">Sentence ${currentIndex + 1}</span>
+      <span class="status-badge ${badgeClass}" id="statusBadge">${badgeText}${reason}</span>
+    </div>
+    <div class="fb-question">${fb.ja}</div>
+    <div class="fb-english-rows${inRetry ? ' hidden' : ''}" id="englishRows">
+      <div class="fb-row">
+        <span class="fb-row-label yours">You</span>
+        <div class="fb-row-text yours">${fb.userUtterance}</div>
+      </div>
+      <div class="fb-row">
+        <span class="fb-row-label model">Model</span>
+        <div class="fb-row-text model">${fb.modelAnswer}</div>
+      </div>
+    </div>
+  `;
+  feedbackCard.style.animation = 'none';
+  feedbackCard.offsetHeight; // reflow
+  feedbackCard.style.animation = 'card-reveal 0.35s ease';
+}
+
+function renderItems() {
+  const fb = FEEDBACK[currentIndex];
+  const activeItems = fb.items.filter(it => !it._dismissed);
+
+  itemsCount.textContent = activeItems.length;
+  itemsCard.classList.toggle('editing', editingItems);
+
+  // Toggle icon: pencil ↔ check
+  itemsEditBtn.innerHTML = editingItems ? '&#10003;' : '&#9998;';
+
+  if (editingItems) {
+    renderItemsEditMode(fb);
+  } else {
+    renderItemsViewMode(activeItems);
+  }
+}
+
+function renderItemsViewMode(activeItems) {
+  if (activeItems.length === 0) {
+    itemsList.innerHTML = '<div class="items-empty">自動ストックされた項目はありません</div>';
+    return;
+  }
+  itemsList.innerHTML = '';
+  activeItems.forEach((item, i) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.style.animationDelay = `${i * 0.1}s`;
+    row.innerHTML = `
+      <span class="item-pattern">${item.pattern}</span>
+      ${item.reappear ? '<span class="item-reappear">再出</span>' : ''}
+      <span class="item-explanation">${item.explanation}</span>
+    `;
+    itemsList.appendChild(row);
+  });
+}
+
+function renderItemsEditMode(fb) {
+  itemsList.innerHTML = '';
+  const activeItems = fb.items.filter(it => !it._dismissed);
+
+  activeItems.forEach((item) => {
+    // Find real index in fb.items
+    const realIdx = fb.items.indexOf(item);
+    const row = document.createElement('div');
+    row.className = 'edit-item';
+    row.innerHTML = `
+      <div class="edit-fields">
+        <input class="edit-pattern" value="${item.pattern}" data-idx="${realIdx}" data-field="pattern">
+        <input class="edit-explanation" value="${item.explanation}" data-idx="${realIdx}" data-field="explanation" placeholder="説明">
+      </div>
+      ${item.reappear ? '<span class="item-reappear">再出</span>' : ''}
+      <button class="edit-dismiss-btn" data-idx="${realIdx}" title="除外">&#10005;</button>
+    `;
+    itemsList.appendChild(row);
+  });
+
+  // Inline edit: sync on change
+  itemsList.querySelectorAll('.edit-pattern, .edit-explanation').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      fb.items[idx][e.target.dataset.field] = e.target.value;
+    });
+  });
+
+  // Dismiss
+  itemsList.querySelectorAll('.edit-dismiss-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt(e.currentTarget.dataset.idx);
+      fb.items[idx]._dismissed = true;
+      renderItems();
+    });
+  });
+
+  // Add row
+  const addRow = document.createElement('div');
+  addRow.className = 'add-item-row';
+  addRow.innerHTML = '+ 項目を追加';
+  addRow.addEventListener('click', () => showAddForm(fb));
+  itemsList.appendChild(addRow);
+}
+
+function showAddForm(fb) {
+  // Replace add row with form
+  const addRow = itemsList.querySelector('.add-item-row');
+  if (!addRow) return;
+
+  const form = document.createElement('div');
+  form.className = 'new-item-form';
+  form.innerHTML = `
+    <input class="new-item-input" id="newPattern" placeholder="パターン（例: look forward to ~ing）">
+    <input class="new-item-input" id="newExplanation" placeholder="説明（例: ~を楽しみにする）">
+    <div class="new-item-actions">
+      <button class="new-item-cancel">キャンセル</button>
+      <button class="new-item-save">追加</button>
+    </div>
+  `;
+  addRow.replaceWith(form);
+
+  form.querySelector('#newPattern').focus();
+
+  form.querySelector('.new-item-cancel').addEventListener('click', () => renderItems());
+  form.querySelector('.new-item-save').addEventListener('click', () => {
+    const pattern = form.querySelector('#newPattern').value.trim();
+    const explanation = form.querySelector('#newExplanation').value.trim();
+    if (!pattern) return;
+    fb.items.push({ pattern, explanation: explanation || '', reappear: false, _dismissed: false });
+    renderItems();
+  });
+}
+
+function renderRetrySection() {
+  const isPassed = passed.has(currentIndex);
+  retrySection.style.display = isPassed ? 'none' : '';
+  retryCount = 0;
+  retryMode = !isPassed;
+
+  // Reset all sub-elements
+  retryStartBtn.style.display = isPassed ? 'none' : '';
+  retryStartBtn.disabled = false;
+  countdownArea.style.display = 'none';
+  retryRecArea.style.display = 'none';
+  retryStatus.textContent = '';
+  retryStatus.className = 'retry-status';
+  retryReason.textContent = '';
+  retryModelArea.innerHTML = '';
+}
+
+function renderNextButton() {
+  const isPassed = passed.has(currentIndex);
+  nextButton.disabled = !isPassed;
+  nextButton.textContent = currentIndex >= FEEDBACK.length - 1 ? '完了' : '次へ';
+}
+
+function scheduleFeedback() {
+  // Clear any pending timer from previous sentence
+  if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+
+  const fb = FEEDBACK[currentIndex];
+
+  if (revealed.has(currentIndex)) {
+    // Already revealed (ready, or previously visited)
+    itemsCard.style.display = '';
+    renderFeedbackCard();
+    renderItems();
+    renderRetrySection();
+    renderNextButton();
+  } else {
+    // Not ready yet — show loading, then reveal after delay
+    showLoading();
+    pendingTimer = setTimeout(() => {
+      pendingTimer = null;
+      revealFeedback();
+    }, fb.delay || 2000);
+  }
+}
+
+function renderAll() {
+  progressCounter.textContent = `${currentIndex + 1} / ${FEEDBACK.length}`;
+  renderDots();
+  scheduleFeedback();
+}
+
+// --- Retry flow: button → hide English → countdown → record → stop → judge ---
+
+function startRetryFlow() {
+  // 1. Hide English immediately, hide button
+  retryMode = true;
+  const rows = document.getElementById('englishRows');
+  if (rows) rows.classList.add('hidden');
+  retryStartBtn.style.display = 'none';
+  retryReason.textContent = '';
+  retryModelArea.innerHTML = '';
+  retryStatus.textContent = '';
+
+  // 2. Show centered countdown
+  countdownArea.style.display = '';
+  countdownArea.innerHTML = '<span class="countdown-number">2</span>';
+
+  let count = 2;
+  const tick = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownArea.innerHTML = `<span class="countdown-number">${count}</span>`;
+    } else {
+      clearInterval(tick);
+      countdownArea.style.display = 'none';
+      // 3. Start recording
+      retryRecArea.style.display = '';
+      startRecording();
+    }
+  }, 1000);
+}
+
+function calcRetryTimeLimit(ja) {
+  return Math.max(12, Math.ceil(ja.length / 10) * 3 + 8);
+}
+
+function startRetryTimer() {
+  const fb = FEEDBACK[currentIndex];
+  retryTimeLimit = calcRetryTimeLimit(fb.ja);
+  retryTimeRemaining = retryTimeLimit;
+  timeBarFill.classList.remove('hidden');
+  updateTimeBar();
+
+  retryTimerInterval = setInterval(() => {
+    retryTimeRemaining = Math.max(0, retryTimeRemaining - 1);
+    updateTimeBar();
+    if (retryTimeRemaining <= 0 && isRecording) {
+      stopRecording();
+    }
+  }, 1000);
+}
+
+function stopRetryTimer() {
+  clearInterval(retryTimerInterval);
+  retryTimerInterval = null;
+  timeBarFill.classList.add('hidden');
+  timeBarFill.className = 'time-bar-fill hidden';
+}
+
+function updateTimeBar() {
+  const ratio = retryTimeLimit > 0 ? retryTimeRemaining / retryTimeLimit : 1;
+  timeBarFill.style.transform = `scaleX(${ratio})`;
+
+  // Remove old state classes, keep base
+  timeBarFill.className = 'time-bar-fill';
+  if (ratio <= 0.2) {
+    timeBarFill.classList.add('danger');
+  } else if (ratio <= 0.4) {
+    timeBarFill.classList.add('caution');
+  }
+}
+
+function startRecording() {
+  isRecording = true;
+  recordButton.classList.add('recording');
+  retryStatus.textContent = '録音中...';
+  retryStatus.className = 'retry-status rec';
+  startRetryTimer();
+}
+
+function stopRecording() {
+  isRecording = false;
+  recordButton.classList.remove('recording');
+  retryCount++;
+  stopRetryTimer();
+
+  retryStatus.textContent = '判定中...';
+  retryStatus.className = 'retry-status';
+  retryRecArea.style.display = 'none';
+
+  const fb = FEEDBACK[currentIndex];
+
+  // Simulate retry judgment (500ms)
+  setTimeout(() => {
+    const success = retryCount >= 2; // Pass on 2nd retry for demo
+    if (success) passed.add(currentIndex);
+
+    // Update badge
+    const badge = document.getElementById('statusBadge');
+    if (badge) {
+      badge.textContent = success ? `リトライ${retryCount}: 正解` : `リトライ${retryCount}: 不正解`;
+      badge.className = success ? 'status-badge correct' : 'status-badge needs-review';
+    }
+
+    if (success) {
+      retryMode = false;
+      retryStatus.textContent = '正解!';
+      retryReason.textContent = '';
+      retryModelArea.innerHTML = '';
+
+      // Reveal English & hide retry after a beat
+      setTimeout(() => {
+        const rows = document.getElementById('englishRows');
+        if (rows) rows.classList.remove('hidden');
+        retrySection.style.display = 'none';
+      }, 600);
+    } else {
+      retryStatus.textContent = `不正解 (${retryCount}/3)`;
+      retryReason.textContent = fb.reason || '';
+
+      // Show model answer
+      retryModelArea.innerHTML = `
+        <div class="retry-model-answer">
+          <div class="retry-model-label">MODEL</div>
+          ${fb.modelAnswer}
+        </div>
+      `;
+
+      // Reset: show start button again after a pause
+      setTimeout(() => {
+        retryStartBtn.style.display = '';
+        retryStartBtn.disabled = false;
+      }, 1500);
+    }
+
+    renderNextButton();
+  }, 500);
+}
+
+// --- Next ---
+function advanceSentence() {
+  if (!passed.has(currentIndex)) return;
+  if (currentIndex >= FEEDBACK.length - 1) {
+    feedbackCard.innerHTML = `
+      <div style="text-align:center; padding:40px 0;">
+        <div style="font-size:22px; font-weight:600; color:#1a1a2e; margin-bottom:8px;">
+          Feedback Complete
+        </div>
+        <div style="font-size:14px; color:#6b7280;">
+          全文のフィードバックが完了しました
+        </div>
+      </div>
+    `;
+    itemsCard.style.display = 'none';
+    retrySection.style.display = 'none';
+    nextButton.disabled = true;
+    return;
+  }
+  currentIndex++;
+  editingItems = false;
+  renderAll();
+}
+
+// --- Events ---
+retryStartBtn.addEventListener('click', startRetryFlow);
+recordButton.addEventListener('click', () => { if (isRecording) stopRecording(); });
+nextButton.addEventListener('click', advanceSentence);
+itemsEditBtn.addEventListener('click', () => {
+  editingItems = !editingItems;
+  renderItems();
+});
+
+// --- Init ---
+resizeCanvas();
+renderAll();
+drawWaveform();
+</script>
+
+</body>
+</html>

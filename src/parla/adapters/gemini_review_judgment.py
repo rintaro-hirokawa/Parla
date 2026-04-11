@@ -93,7 +93,7 @@ class GeminiReviewJudgmentAdapter:
 
     def __init__(
         self,
-        transcription_model: str = "gemini/gemini-3-flash-lite-preview",
+        transcription_model: str = "gemini/gemini-3.1-flash-lite-preview",
         judgment_model: str = "gemini/gemini-3-flash-preview",
     ) -> None:
         self._transcription_model = transcription_model
