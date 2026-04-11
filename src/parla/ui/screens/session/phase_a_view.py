@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QLabel,
     QListWidget,
     QListWidgetItem,
@@ -34,6 +36,8 @@ class PhaseAView(QWidget):
 
         # --- Widgets ---
         self._sentence_list = QListWidget()
+        self._sentence_list.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self._sentence_list.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._current_label = QLabel("")
         self._timer = TimerWidget(parent=self)
         self._recording = RecordingControlsWidget(recorder, parent=self)
@@ -56,23 +60,26 @@ class PhaseAView(QWidget):
 
         # --- Connections ---
         self._vm.current_sentence_changed.connect(self._on_sentence_changed)
+        self._vm.hint_revealed.connect(self._on_hint)
         self._recording.recording_finished.connect(self._on_recording_finished)
-        self._hint_button.clicked.connect(self._on_hint_clicked)
+        self._hint_button.clicked.connect(self._vm.reveal_hint)
 
     def _highlight_current(self) -> None:
         idx = self._vm.current_index
-        self._sentence_list.setCurrentRow(idx)
+        for i in range(self._sentence_list.count()):
+            item = self._sentence_list.item(i)
+            if item is not None:
+                font = item.font()
+                font.setBold(i == idx)
+                item.setFont(font)
         self._current_label.setText(self._vm.current_ja)
-        self._hint_button.setVisible(self._vm.has_hint_for_current())
         self._hint_label.setText("")
 
     def _on_sentence_changed(self, index: int) -> None:
         self._highlight_current()
 
+    def _on_hint(self, _level: int, text: str) -> None:
+        self._hint_label.setText(text)
+
     def _on_recording_finished(self, audio: object) -> None:
         self._vm.submit_recording(audio)  # type: ignore[arg-type]
-
-    def _on_hint_clicked(self) -> None:
-        items = self._vm.get_hint_items()
-        texts = [getattr(item, "pattern", str(item)) for item in items]
-        self._hint_label.setText("\n".join(texts))

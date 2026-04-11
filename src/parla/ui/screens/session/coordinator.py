@@ -211,7 +211,6 @@ class SessionCoordinator(QObject):
 
         vm = PhaseAViewModel(
             feedback_service=self._c.feedback_service,
-            item_query_service=self._c.item_query,
         )
         vm.load_passage(passage)
         view = PhaseAView(vm, recorder=self._recorder)

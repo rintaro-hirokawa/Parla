@@ -1,0 +1,423 @@
+{
+  "source_summary": "トヨタ自動車の豊田章男会長、ソフトバンクグループの孫正義会長、ファーストリテイリングの柳井正会長という3人のビジネスリーダーの哲学と軌跡を紹介しています。豊田氏は現場主義と車への愛を、孫氏はAIや自動運転への巨額投資と信念を、柳井氏は世界一へのこだわりとビジネスの本質を語っています。",
+  "passages": [
+    {
+      "passage_index": 1,
+      "topic": "Akio Toyoda's Philosophy on Making Cars",
+      "passage_type": "説明型",
+      "sentences": [
+        {
+          "ja": "豊田章男氏は、日本の有名な企業であるトヨタ自動車の会長です。",
+          "en": "Akio Toyoda is the chairman of Toyota Motor Corporation, a famous Japanese company.",
+          "hints": {
+            "hint1": "Akio ... chairman / corporation",
+            "hint2": "主語 + be動詞 + 補語, 同格名詞句"
+          }
+        },
+        {
+          "ja": "現在69歳ですが、彼は今でも自社の車を自らテストしています。",
+          "en": "Although he is 69 years old now, he still tests his company's cars by himself.",
+          "hints": {
+            "hint1": "Although ... still / by himself",
+            "hint2": "although節[主語 + be動詞 + 補語 + 副詞], 主語 + 副詞 + 動詞(現在形) + 目的語 + 前置詞句"
+          }
+        },
+        {
+          "ja": "特別なテストコースで車を運転するために、彼はよくレーシングスーツとヘルメットを着用します。",
+          "en": "He often wears a racing suit and a helmet to drive cars on a special test course.",
+          "hints": {
+            "hint1": "He ... wears / helmet",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + 目的語 + to不定詞[動詞(原形) + 目的語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "そのコースは急な坂や急カーブがあるため、非常に厳しいです。",
+          "en": "The course is extremely tough because it has steep hills and sharp curves.",
+          "hints": {
+            "hint1": "The ... extremely / steep / sharp",
+            "hint2": "主語 + be動詞 + 副詞 + 補語 + because節[主語 + 動詞(現在形) + 目的語]"
+          }
+        },
+        {
+          "ja": "彼の基本的な哲学は、車が完全に壊れるまでテストすることです。",
+          "en": "His basic philosophy is to test cars until they completely break.",
+          "hints": {
+            "hint1": "His ... philosophy / completely",
+            "hint2": "主語 + be動詞 + 補語(to不定詞)[動詞(原形) + 目的語 + 前置詞句[主語 + 副詞 + 動詞(現在形)]]"
+          }
+        },
+        {
+          "ja": "彼は、壊れた部品が車の中で最も弱い場所を示していると信じています。",
+          "en": "He believes that a broken part shows the weakest place in the car.",
+          "hints": {
+            "hint1": "He ... believes / broken / weakest",
+            "hint2": "主語 + 動詞(現在形) + that節[主語 + 動詞(現在形) + 目的語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "エンジニアたちはその部品を強くすることで、一歩ずつより良い車を作ることができます。",
+          "en": "Engineers can make that part stronger to build a much better car step by step.",
+          "hints": {
+            "hint1": "Engineers ... stronger / step by step",
+            "hint2": "主語 + 助動詞 + 動詞(原形) + 目的語 + 補語 + to不定詞[動詞(原形) + 目的語 + 副詞句]"
+          }
+        },
+        {
+          "ja": "この努力の結果として、トヨタは6年連続で世界トップの自動車メーカーとなっています。",
+          "en": "As a result of this effort, Toyota has been the top car maker in the world for six years in a row.",
+          "hints": {
+            "hint1": "As ... effort / in a row",
+            "hint2": "前置詞句, 主語 + 動詞(現在完了形) + 補語 + 前置詞句 + 前置詞句"
+          }
+        }
+      ]
+    },
+    {
+      "passage_index": 2,
+      "topic": "Teaching Young People About Cars",
+      "passage_type": "説明型",
+      "sentences": [
+        {
+          "ja": "豊田氏は時々、自社の若い訓練生たちに特別な講義を行います。",
+          "en": "Toyoda sometimes gives special lectures to young trainees in his company.",
+          "hints": {
+            "hint1": "Toyoda ... sometimes / trainees",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + 目的語 + 前置詞句"
+          }
+        },
+        {
+          "ja": "彼は普段、他の人の意見を注意深く聞くよう彼らにアドバイスします。",
+          "en": "He usually advises them to listen carefully to other people's opinions.",
+          "hints": {
+            "hint1": "He ... advises / opinions",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + 目的語 + to不定詞[動詞(原形) + 副詞 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "彼はまた、過去のすべての経験が今の彼らを作っているのだと伝えます。",
+          "en": "He also tells them that all their past experiences make them who they are today.",
+          "hints": {
+            "hint1": "He ... experiences / who",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + 目的語 + that節[主語 + 動詞(現在形) + 目的語 + 補語[関係代名詞 + 主語 + be動詞 + 副詞]]"
+          }
+        },
+        {
+          "ja": "さらに彼は、車は単なる便利な移動手段ではないと強く信じています。",
+          "en": "Furthermore, he strongly believes that a car is not just a convenient way to travel.",
+          "hints": {
+            "hint1": "Furthermore ... strongly / convenient",
+            "hint2": "副詞, 主語 + 副詞 + 動詞(現在形) + that節[主語 + be動詞 + 副詞 + 補語 + to不定詞[形容詞的用法]]"
+          }
+        },
+        {
+          "ja": "彼によれば、車は人々の心を動かし、感動を与えることができるものです。",
+          "en": "According to him, a car is something that can move people's hearts and give them excitement.",
+          "hints": {
+            "hint1": "According ... something / excitement",
+            "hint2": "前置詞句, 主語 + be動詞 + 補語[関係代名詞 + 助動詞 + 動詞(原形) + 目的語 + 接続詞 + 動詞(原形) + 目的語 + 目的語]"
+          }
+        },
+        {
+          "ja": "ある講義の後、彼はある学生を自分の車の助手席に招待して驚かせました。",
+          "en": "After one of his lectures, he surprised a student by inviting him to the passenger seat of his car.",
+          "hints": {
+            "hint1": "After ... surprised / passenger",
+            "hint2": "前置詞句, 主語 + 動詞(過去形) + 目的語 + by 動名詞[目的語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "彼はテストコースで、その学生のために驚くような運転技術を披露しました。",
+          "en": "He showed some amazing driving skills for the student on the test course.",
+          "hints": {
+            "hint1": "He ... showed / amazing",
+            "hint2": "主語 + 動詞(過去形) + 目的語 + 前置詞句 + 前置詞句"
+          }
+        },
+        {
+          "ja": "興奮したその学生は、まるで夢の中にいるような気分だと言いました。",
+          "en": "The excited student said that he felt like he was in a dream.",
+          "hints": {
+            "hint1": "The ... excited / felt like",
+            "hint2": "主語 + 動詞(過去形) + that節[主語 + 動詞(過去形) + 接続詞[主語 + be動詞(過去形) + 前置詞句]]"
+          }
+        }
+      ]
+    },
+    {
+      "passage_index": 3,
+      "topic": "Masayoshi Son's Huge Investments",
+      "passage_type": "説明型",
+      "sentences": [
+        {
+          "ja": "孫正義氏は、ソフトバンクグループのよく知られた会長兼CEOです。",
+          "en": "Masayoshi Son is the well-known chairman and CEO of SoftBank Group.",
+          "hints": {
+            "hint1": "Masayoshi ... well-known / chairman",
+            "hint2": "主語 + be動詞 + 補語"
+          }
+        },
+        {
+          "ja": "会社の未来を変えるため、彼は2017年に巨大な投資ファンドを設立しました。",
+          "en": "He established a huge investment fund in 2017 to change his company's future.",
+          "hints": {
+            "hint1": "He ... established / huge / fund",
+            "hint2": "主語 + 動詞(過去形) + 目的語 + 前置詞句 + to不定詞[動詞(原形) + 目的語]"
+          }
+        },
+        {
+          "ja": "そうすることで、彼は自社の主要なビジネスモデルを完全に変えました。",
+          "en": "By doing so, he completely changed his company's main business model.",
+          "hints": {
+            "hint1": "By ... completely / model",
+            "hint2": "前置詞句, 主語 + 副詞 + 動詞(過去形) + 目的語"
+          }
+        },
+        {
+          "ja": "過去において、ソフトバンクは主に日本の携帯電話会社として知られていました。",
+          "en": "In the past, SoftBank was mainly known as a mobile phone company in Japan.",
+          "hints": {
+            "hint1": "In ... mainly / known as",
+            "hint2": "前置詞句, 主語 + be動詞(過去形) + 副詞 + 動詞(過去分詞) + 前置詞句"
+          }
+        },
+        {
+          "ja": "しかし現在では、全世界で最も大きな投資会社の一つとして認識されています。",
+          "en": "However, it is now recognized as one of the largest investment companies in the entire world.",
+          "hints": {
+            "hint1": "However ... recognized / entire",
+            "hint2": "副詞, 主語 + be動詞 + 副詞 + 動詞(過去分詞) + 前置詞句"
+          }
+        },
+        {
+          "ja": "孫氏は、困難な状況が自然と人々に生き残るための一生懸命な思考を促すと言います。",
+          "en": "Son says that difficult situations naturally make people think hard to survive.",
+          "hints": {
+            "hint1": "Son ... difficult / survive",
+            "hint2": "主語 + 動詞(現在形) + that節[主語 + 副詞 + 動詞(使役) + 目的語 + 動詞(原形) + 副詞 + to不定詞[副詞的用法]]"
+          }
+        },
+        {
+          "ja": "そのため、彼は自分の心に刺激を与えるために常に大きくて危険な決断を下します。",
+          "en": "Therefore, he always makes big and risky decisions to stimulate his mind.",
+          "hints": {
+            "hint1": "Therefore ... risky / stimulate",
+            "hint2": "副詞, 主語 + 副詞 + 動詞(現在形) + 目的語 + to不定詞[動詞(原形) + 目的語]"
+          }
+        },
+        {
+          "ja": "彼の大胆な投資のおかげで、会社の総資産は長年にわたって劇的に成長しました。",
+          "en": "Thanks to his bold investments, the total assets of his company have grown dramatically over the years.",
+          "hints": {
+            "hint1": "Thanks ... bold / assets / dramatically",
+            "hint2": "前置詞句, 主語 + 動詞(現在完了形) + 副詞 + 前置詞句"
+          }
+        }
+      ]
+    },
+    {
+      "passage_index": 4,
+      "topic": "Passion for AI and Self-Driving Cars",
+      "passage_type": "説明型",
+      "sentences": [
+        {
+          "ja": "最近、孫正義氏はAI技術に巨額の資金を投資しています。",
+          "en": "Recently, Masayoshi Son has invested a huge amount of money in AI technology.",
+          "hints": {
+            "hint1": "Recently ... invested / amount",
+            "hint2": "副詞, 主語 + 動詞(現在完了形) + 目的語 + 前置詞句"
+          }
+        },
+        {
+          "ja": "例えば、彼は自動運転車を作るイギリスの企業を資金面で支援しました。",
+          "en": "For example, he financially supported a British company that makes self-driving cars.",
+          "hints": {
+            "hint1": "For ... financially / self-driving",
+            "hint2": "副詞句, 主語 + 副詞 + 動詞(過去形) + 目的語[関係代名詞 + 動詞(現在形) + 目的語]"
+          }
+        },
+        {
+          "ja": "この会社は、高精度な地図を使用しない新しいAIシステムを開発しました。",
+          "en": "This company developed a new AI system that does not use highly accurate maps.",
+          "hints": {
+            "hint1": "This ... developed / accurate",
+            "hint2": "主語 + 動詞(過去形) + 目的語[関係代名詞 + 助動詞 + 副詞 + 動詞(原形) + 副詞 + 形容詞 + 名詞]"
+          }
+        },
+        {
+          "ja": "その代わりに、そのAIプログラムは人間のドライバーと同じように、自分で運転する方法を決定します。",
+          "en": "Instead, the AI program decides how to drive by itself, just like a human driver.",
+          "hints": {
+            "hint1": "Instead ... decides / by itself",
+            "hint2": "副詞, 主語 + 動詞(現在形) + 目的語(疑問詞 + to不定詞) + 前置詞句 + 前置詞句"
+          }
+        },
+        {
+          "ja": "業界の多くの専門家たちは、初めはこの新しい技術を信じていませんでした。",
+          "en": "Many experts in the industry did not believe in this new technology at first.",
+          "hints": {
+            "hint1": "Many ... experts / industry",
+            "hint2": "主語 + 助動詞 + 副詞 + 動詞(原形) + 前置詞句 + 前置詞句"
+          }
+        },
+        {
+          "ja": "しかし、孫氏は彼らのビジョンに強い自信を持ち、巨額の投資を決定しました。",
+          "en": "However, Son decided to make a huge investment with strong confidence in their vision.",
+          "hints": {
+            "hint1": "However ... decided / confidence",
+            "hint2": "副詞, 主語 + 動詞(過去形) + to不定詞[動詞(原形) + 目的語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "彼はその性能を試すために、実際に彼らの自動運転車の一つに乗りました。",
+          "en": "He actually rode in one of their self-driving cars to test its performance.",
+          "hints": {
+            "hint1": "He ... actually / rode / performance",
+            "hint2": "主語 + 副詞 + 動詞(過去形) + 前置詞句 + to不定詞[動詞(原形) + 目的語]"
+          }
+        },
+        {
+          "ja": "乗車中、彼はそのAIが自分のお抱え運転手よりも上手に運転すると言って微笑みました。",
+          "en": "During the ride, he smiled and said that the AI drove better than his own personal driver.",
+          "hints": {
+            "hint1": "During ... smiled / personal",
+            "hint2": "前置詞句, 主語 + 動詞(過去形) + 接続詞 + 動詞(過去形) + that節[主語 + 動詞(過去形) + 副詞(比較級) + 接続詞 + 名詞句]"
+          }
+        }
+      ]
+    },
+    {
+      "passage_index": 5,
+      "topic": "Tadashi Yanai's Goal to be Number One",
+      "passage_type": "説明型",
+      "sentences": [
+        {
+          "ja": "柳井正氏は、有名なアパレル企業であるファーストリテイリングの社長です。",
+          "en": "Tadashi Yanai is the president of Fast Retailing, which is a famous clothing company.",
+          "hints": {
+            "hint1": "Tadashi ... president / clothing",
+            "hint2": "主語 + be動詞 + 補語, 関係代名詞(非制限用法)[主語 + be動詞 + 補語]"
+          }
+        },
+        {
+          "ja": "彼の会社は、世界中でユニクロの店舗を成功裏に運営しています。",
+          "en": "His company successfully runs Uniqlo stores all over the world.",
+          "hints": {
+            "hint1": "His ... successfully / runs",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + 目的語 + 副詞句"
+          }
+        },
+        {
+          "ja": "今日、海外の店舗からの売り上げは、彼らの総売り上げの半分以上を占めています。",
+          "en": "Today, sales from their overseas stores account for more than half of their total sales.",
+          "hints": {
+            "hint1": "Today ... overseas / account for",
+            "hint2": "副詞, 主語 + 動詞(現在形) + 目的語 + 前置詞句"
+          }
+        },
+        {
+          "ja": "過去には、一生懸命努力しても会社が成長しない困難な時期がありました。",
+          "en": "In the past, there was a difficult time when his company did not grow even though they tried hard.",
+          "hints": {
+            "hint1": "In ... difficult / even though",
+            "hint2": "前置詞句, 誘導副詞 + be動詞(過去形) + 主語[関係副詞 + 主語 + 助動詞 + 副詞 + 動詞(原形) + even though節[主語 + 動詞(過去形) + 副詞]]"
+          }
+        },
+        {
+          "ja": "彼は、主な原因は明確な最終目標がないことだとついに気づきました。",
+          "en": "He finally realized that the main reason was having no clear final goal.",
+          "hints": {
+            "hint1": "He ... finally / realized",
+            "hint2": "主語 + 副詞 + 動詞(過去形) + that節[主語 + be動詞(過去形) + 動名詞[目的語]]"
+          }
+        },
+        {
+          "ja": "そのため、彼は自分の会社を世界最高のアパレルブランドにすることを固く決意しました。",
+          "en": "Therefore, he firmly decided to make his company the best clothing brand in the world.",
+          "hints": {
+            "hint1": "Therefore ... firmly / brand",
+            "hint2": "副詞, 主語 + 副詞 + 動詞(過去形) + to不定詞[動詞(原形) + 目的語 + 補語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "彼は、企業は成長し続けない限り市場で生き残れないと信じています。",
+          "en": "He believes that companies cannot survive in the market unless they keep growing.",
+          "hints": {
+            "hint1": "He ... survive / unless / keep",
+            "hint2": "主語 + 動詞(現在形) + that節[主語 + 助動詞 + 副詞 + 動詞(原形) + 前置詞句 + unless節[主語 + 動詞(現在形) + 動名詞]]"
+          }
+        },
+        {
+          "ja": "彼は、単に現状を維持しようとするだけでは決して十分ではないとよく言います。",
+          "en": "He often says that it is never enough to just try to maintain the present situation.",
+          "hints": {
+            "hint1": "He ... enough / maintain",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + that節[形式主語 + be動詞 + 副詞 + 補語 + 真主語(to不定詞)[副詞 + 動詞(原形) + to不定詞[動詞(原形) + 目的語]]]"
+          }
+        }
+      ]
+    },
+    {
+      "passage_index": 6,
+      "topic": "The True Nature of Business",
+      "passage_type": "説明型",
+      "sentences": [
+        {
+          "ja": "柳井氏は、現代の日本社会には強い同調圧力があると考えています。",
+          "en": "Yanai thinks that there is strong peer pressure in modern Japanese society.",
+          "hints": {
+            "hint1": "Yanai ... peer pressure / modern",
+            "hint2": "主語 + 動詞(現在形) + that節[誘導副詞 + be動詞 + 主語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "彼は、多くの日本企業が事業の成長よりも波風を立てない関係を好むと指摘しています。",
+          "en": "He points out that many Japanese companies prefer peaceful relationships to business growth.",
+          "hints": {
+            "hint1": "He ... points out / prefer / peaceful",
+            "hint2": "主語 + 動詞(現在形) + that節[主語 + 動詞(現在形) + 目的語 + 前置詞句]"
+          }
+        },
+        {
+          "ja": "彼らは単に事業を円滑に運営し、少しの利益を上げたいだけなのです。",
+          "en": "They simply want to run their business smoothly and make a little profit.",
+          "hints": {
+            "hint1": "They ... simply / smoothly / profit",
+            "hint2": "主語 + 副詞 + 動詞(現在形) + to不定詞[動詞(原形) + 目的語 + 副詞 + 接続詞 + 動詞(原形) + 目的語]"
+          }
+        },
+        {
+          "ja": "しかし彼は、ビジネスにおいて最も重要なのは製品の品質であると明確に述べています。",
+          "en": "However, he clearly states that the most important thing in business is the quality of the product.",
+          "hints": {
+            "hint1": "However ... clearly / states / quality",
+            "hint2": "副詞, 主語 + 副詞 + 動詞(現在形) + that節[主語 + 前置詞句 + be動詞 + 補語]"
+          }
+        },
+        {
+          "ja": "単に服の価格を下げたり、最新の流行を追ったりするのは大きな間違いです。",
+          "en": "It is a big mistake to just lower the price of clothes or follow the latest fashion trends.",
+          "hints": {
+            "hint1": "It ... mistake / lower / latest",
+            "hint2": "形式主語 + be動詞 + 補語 + 真主語(to不定詞)[副詞 + 動詞(原形) + 目的語 + 接続詞 + 動詞(原形) + 目的語]"
+          }
+        },
+        {
+          "ja": "顧客は、その服を買って本当に良かったと感じたときにだけ、再び戻ってきます。",
+          "en": "Customers will come back again only when they feel truly glad that they bought the clothes.",
+          "hints": {
+            "hint1": "Customers ... only when / truly / glad",
+            "hint2": "主語 + 助動詞 + 動詞(原形) + 副詞 + 副詞 + when節[主語 + 動詞(現在形) + 副詞 + 補語 + that節[主語 + 動詞(過去形) + 目的語]]"
+          }
+        },
+        {
+          "ja": "このシンプルで不可欠なルールが、何年にもわたって彼の会社を大成功させてきました。",
+          "en": "This simple but essential rule has made his company highly successful for many years.",
+          "hints": {
+            "hint1": "This ... essential / highly / successful",
+            "hint2": "主語 + 動詞(現在完了形) + 目的語 + 補語 + 前置詞句"
+          }
+        }
+      ]
+    }
+  ]
+}

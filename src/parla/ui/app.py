@@ -158,12 +158,17 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
 
-def main() -> None:
+def main(*, state: str | None = None) -> None:
     """Launch the Parla application."""
     _app = QApplication(sys.argv)  # noqa: F841 — must stay alive for Qt event loop
     _app.setStyleSheet(theme.build_app_qss())
 
     container = Container()
+
+    if state:
+        from parla.seeders import apply_state
+
+        apply_state(state, container)
 
     # Log EventBus handler registry (event-driven "map")
     for reg in container.event_bus.get_registry():

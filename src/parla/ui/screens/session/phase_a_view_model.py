@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
-    from uuid import UUID
-
     from parla.domain.audio import AudioData
     from parla.domain.passage import Passage
 
@@ -20,6 +18,7 @@ class PhaseAViewModel(QObject):
     """
 
     current_sentence_changed = Signal(int)  # new index
+    hint_revealed = Signal(int, str)  # hint_level, hint_text
     all_sentences_done = Signal()
     error = Signal(str)
 
@@ -27,16 +26,14 @@ class PhaseAViewModel(QObject):
         self,
         *,
         feedback_service: Any,
-        item_query_service: Any,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._feedback_service = feedback_service
-        self._item_query = item_query_service
 
         self._passage: Passage | None = None
         self._current_index = 0
-        self._hint_cache: dict[UUID, tuple] = {}
+        self._hint_level = 0
 
     # ------------------------------------------------------------------
     # Properties
@@ -45,6 +42,10 @@ class PhaseAViewModel(QObject):
     @property
     def current_index(self) -> int:
         return self._current_index
+
+    @property
+    def hint_level(self) -> int:
+        return self._hint_level
 
     @property
     def sentence_count(self) -> int:
@@ -63,23 +64,21 @@ class PhaseAViewModel(QObject):
     def load_passage(self, passage: Passage) -> None:
         self._passage = passage
         self._current_index = 0
-        self._hint_cache = {}
+        self._hint_level = 0
 
     def sentence_ja_list(self) -> list[str]:
         if self._passage is None:
             return []
         return [s.ja for s in self._passage.sentences]
 
-    def has_hint_for_current(self) -> bool:
-        return len(self.get_hint_items()) > 0
-
-    def get_hint_items(self) -> tuple:
-        if self._passage is None:
-            return ()
-        sentence = self._passage.sentences[self._current_index]
-        if sentence.id not in self._hint_cache:
-            self._hint_cache[sentence.id] = self._item_query.get_sentence_items(sentence.id)
-        return self._hint_cache[sentence.id]
+    def reveal_hint(self) -> None:
+        """Reveal the next hint level (max 2). Level 2 includes level 1 text."""
+        if self._passage is None or self._hint_level >= 2:
+            return
+        self._hint_level += 1
+        hints = self._passage.sentences[self._current_index].hints
+        text = hints.hint1 if self._hint_level == 1 else f"{hints.hint1}\n{hints.hint2}"
+        self.hint_revealed.emit(self._hint_level, text)
 
     def submit_recording(self, audio: AudioData) -> None:
         if self._passage is None:
@@ -93,6 +92,7 @@ class PhaseAViewModel(QObject):
         )
 
         self._current_index += 1
+        self._hint_level = 0
         if self._current_index >= len(self._passage.sentences):
             self.all_sentences_done.emit()
         else:

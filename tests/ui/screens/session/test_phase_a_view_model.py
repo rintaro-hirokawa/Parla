@@ -49,44 +49,30 @@ class FakeFeedbackService:
         })
 
 
-class FakeLearningItemQueryService:
-    def __init__(self) -> None:
-        self._sentence_items: dict = {}
-
-    def set_items(self, sentence_id, items) -> None:
-        self._sentence_items[sentence_id] = items
-
-    def get_sentence_items(self, sentence_id):
-        return self._sentence_items.get(sentence_id, ())
-
-
 def _make_vm(
     passage: Passage | None = None,
     feedback_service: FakeFeedbackService | None = None,
-    item_query: FakeLearningItemQueryService | None = None,
-) -> tuple[PhaseAViewModel, FakeFeedbackService, FakeLearningItemQueryService]:
+) -> tuple[PhaseAViewModel, FakeFeedbackService]:
     fb_svc = feedback_service or FakeFeedbackService()
-    iq_svc = item_query or FakeLearningItemQueryService()
     vm = PhaseAViewModel(
         feedback_service=fb_svc,
-        item_query_service=iq_svc,
     )
     if passage:
         vm.load_passage(passage)
-    return vm, fb_svc, iq_svc
+    return vm, fb_svc
 
 
 class TestLoadPassage:
     def test_sentences_loaded(self, qtbot) -> None:
         passage = _make_passage(3)
-        vm, _, _ = _make_vm(passage)
+        vm, _ = _make_vm(passage)
 
         assert vm.sentence_count == 3
         assert vm.current_index == 0
 
     def test_sentence_ja_list(self, qtbot) -> None:
         passage = _make_passage(2)
-        vm, _, _ = _make_vm(passage)
+        vm, _ = _make_vm(passage)
 
         prompts = vm.sentence_ja_list()
         assert prompts == ["日本語0", "日本語1"]
@@ -95,7 +81,7 @@ class TestLoadPassage:
 class TestSentenceProgression:
     def test_submit_advances_to_next(self, qtbot) -> None:
         passage = _make_passage(3)
-        vm, fb_svc, _ = _make_vm(passage)
+        vm, fb_svc = _make_vm(passage)
 
         with qtbot.waitSignal(vm.current_sentence_changed, timeout=1000):
             vm.submit_recording(_make_audio())
@@ -105,7 +91,7 @@ class TestSentenceProgression:
 
     def test_all_sentences_done(self, qtbot) -> None:
         passage = _make_passage(2)
-        vm, fb_svc, _ = _make_vm(passage)
+        vm, fb_svc = _make_vm(passage)
 
         vm.submit_recording(_make_audio())  # index 0 → 1
 
@@ -116,7 +102,7 @@ class TestSentenceProgression:
 
     def test_record_sentence_called_with_correct_ids(self, qtbot) -> None:
         passage = _make_passage(1)
-        vm, fb_svc, _ = _make_vm(passage)
+        vm, fb_svc = _make_vm(passage)
 
         vm.submit_recording(_make_audio())
 
@@ -125,27 +111,61 @@ class TestSentenceProgression:
 
 
 class TestHints:
-    def test_hint_available_when_items_exist(self, qtbot) -> None:
+    def test_reveal_hint1(self, qtbot) -> None:
         passage = _make_passage(1)
-        vm, _, iq_svc = _make_vm(passage)
+        vm, _ = _make_vm(passage)
 
-        # Add items for the sentence
-        iq_svc.set_items(passage.sentences[0].id, [{"pattern": "test"}])
+        with qtbot.waitSignal(vm.hint_revealed, timeout=1000) as blocker:
+            vm.reveal_hint()
 
-        assert vm.has_hint_for_current() is True
+        assert blocker.args == [1, "hint1_0"]
+        assert vm.hint_level == 1
 
-    def test_hint_not_available_when_no_items(self, qtbot) -> None:
+    def test_reveal_hint2_includes_hint1(self, qtbot) -> None:
         passage = _make_passage(1)
-        vm, _, _ = _make_vm(passage)
+        vm, _ = _make_vm(passage)
 
-        assert vm.has_hint_for_current() is False
+        vm.reveal_hint()  # hint1
 
-    def test_get_hints_returns_items(self, qtbot) -> None:
+        with qtbot.waitSignal(vm.hint_revealed, timeout=1000) as blocker:
+            vm.reveal_hint()  # hint2
+
+        assert blocker.args == [2, "hint1_0\nhint2_0"]
+        assert vm.hint_level == 2
+
+    def test_reveal_hint_caps_at_2(self, qtbot) -> None:
         passage = _make_passage(1)
-        vm, _, iq_svc = _make_vm(passage)
+        vm, _ = _make_vm(passage)
 
-        items = ({"pattern": "verb tense"}, {"pattern": "article"})
-        iq_svc.set_items(passage.sentences[0].id, items)
+        vm.reveal_hint()  # hint1
+        vm.reveal_hint()  # hint2
+        vm.reveal_hint()  # should be no-op
 
-        result = vm.get_hint_items()
-        assert len(result) == 2
+        assert vm.hint_level == 2
+
+    def test_hint_level_resets_on_next_sentence(self, qtbot) -> None:
+        passage = _make_passage(3)
+        vm, _ = _make_vm(passage)
+
+        vm.reveal_hint()  # hint_level = 1
+        assert vm.hint_level == 1
+
+        vm.submit_recording(_make_audio())  # advance to sentence 1
+
+        assert vm.hint_level == 0
+
+    def test_hint_level_resets_on_load_passage(self, qtbot) -> None:
+        passage = _make_passage(1)
+        vm, _ = _make_vm(passage)
+
+        vm.reveal_hint()
+        assert vm.hint_level == 1
+
+        vm.load_passage(_make_passage(2))
+        assert vm.hint_level == 0
+
+    def test_reveal_hint_noop_without_passage(self, qtbot) -> None:
+        vm, _ = _make_vm()
+
+        vm.reveal_hint()  # should not raise
+        assert vm.hint_level == 0
