@@ -5,9 +5,12 @@ from __future__ import annotations
 import asyncio
 import base64
 import os
-from typing import Any
+from typing import TYPE_CHECKING
 
 import structlog
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from parla.ports.tts_generation import RawTTSResult, RawWordTimestamp
@@ -32,21 +35,23 @@ def _get_api_key() -> str:
 
 
 def _chars_to_word_timestamps(
-    characters: list[dict[str, Any]],
+    characters: Sequence[str],
+    start_times: Sequence[float],
+    end_times: Sequence[float],
     text: str,
 ) -> list[RawWordTimestamp]:
     """Aggregate character-level timestamps into word-level timestamps.
 
-    ElevenLabs returns character-level data with fields:
-      character, character_start_times_seconds, character_end_times_seconds
-    We merge consecutive characters into words based on whitespace in the text.
+    Takes three parallel sequences (characters, start_times, end_times)
+    from ElevenLabs alignment data and merges them into words based on
+    whitespace in the original text.
     """
     words = text.split()
     result: list[RawWordTimestamp] = []
     char_idx = 0
 
     for word in words:
-        while char_idx < len(characters) and characters[char_idx].get("character", "") in (" ", ""):
+        while char_idx < len(characters) and characters[char_idx] in (" ", ""):
             char_idx += 1
 
         word_start = None
@@ -54,9 +59,8 @@ def _chars_to_word_timestamps(
         chars_consumed = 0
 
         while chars_consumed < len(word) and char_idx < len(characters):
-            char_data = characters[char_idx]
-            start = char_data.get("character_start_times_seconds", 0.0)
-            end = char_data.get("character_end_times_seconds", 0.0)
+            start = start_times[char_idx] if char_idx < len(start_times) else 0.0
+            end = end_times[char_idx] if char_idx < len(end_times) else 0.0
 
             if word_start is None:
                 word_start = start
@@ -109,28 +113,18 @@ class ElevenLabsTTSAdapter:
             output_format="mp3_44100_128",
         )
 
-        audio_chunks: list[bytes] = []
-        all_characters: list[dict[str, Any]] = []
+        audio_data = base64.b64decode(response.audio_base_64)
+        alignment = response.normalized_alignment or response.alignment
+        if alignment is None:
+            msg = "TTS API returned no alignment data"
+            raise ValueError(msg)
 
-        for item in response:
-            if item.get("audio_base64"):
-                audio_chunks.append(base64.b64decode(item["audio_base64"]))
-            if item.get("alignment"):
-                alignment = item["alignment"]
-                chars = alignment.get("characters", [])
-                starts = alignment.get("character_start_times_seconds", [])
-                ends = alignment.get("character_end_times_seconds", [])
-                for i, char in enumerate(chars):
-                    all_characters.append(
-                        {
-                            "character": char,
-                            "character_start_times_seconds": starts[i] if i < len(starts) else 0.0,
-                            "character_end_times_seconds": ends[i] if i < len(ends) else 0.0,
-                        }
-                    )
-
-        audio_data = b"".join(audio_chunks)
-        word_timestamps = _chars_to_word_timestamps(all_characters, text)
+        word_timestamps = _chars_to_word_timestamps(
+            alignment.characters,
+            alignment.character_start_times_seconds,
+            alignment.character_end_times_seconds,
+            text,
+        )
         duration = word_timestamps[-1].end_seconds if word_timestamps else 0.0
 
         logger.info(

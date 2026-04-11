@@ -201,6 +201,11 @@ class SessionCoordinator(QObject):
             return
 
         self._current_passage = passage
+
+        source = self._c.source_repo.get_source(passage.source_id)
+        if source is not None:
+            self._session_context.set_cefr_level(source.cefr_level)
+
         self._show_phase_a(passage)
 
     # --- Phase A (E3) ---
@@ -242,6 +247,7 @@ class SessionCoordinator(QObject):
             feedback_service=self._c.feedback_service,
             practice_service=self._c.practice_service,
             feedback_repo=self._c.feedback_repo,
+            item_repo=self._c.item_repo,
             session_context=self._session_context,
         )
         vm.start(passage.id, [s.id for s in passage.sentences])

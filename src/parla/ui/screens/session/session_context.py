@@ -23,6 +23,7 @@ class SessionContext(QObject):
         self._progress_total = 0
         self._elapsed_seconds = 0
         self._cumulative_words = 0
+        self._cefr_level: str = "B1"
 
         self._timer = QTimer(self)
         self._timer.setInterval(1000)
@@ -72,6 +73,10 @@ class SessionContext(QObject):
         return self._cumulative_words / (self._elapsed_seconds / 60)
 
     @property
+    def cefr_level(self) -> str:
+        return self._cefr_level
+
+    @property
     def is_running(self) -> bool:
         return self._timer.isActive()
 
@@ -91,6 +96,9 @@ class SessionContext(QObject):
         self._cumulative_words += count
         self.words_changed.emit(self._cumulative_words)
         self.wpm_changed.emit(self.average_wpm)
+
+    def set_cefr_level(self, level: str) -> None:
+        self._cefr_level = level
 
     def start_timer(self) -> None:
         if not self._timer.isActive():

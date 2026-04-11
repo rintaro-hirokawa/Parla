@@ -57,16 +57,20 @@ Japanese prompt: {ja_prompt}
 
 Your task:
 1. Listen carefully to the audio and transcribe what the learner actually said in English.
-2. Be generous: interpret their pronunciation charitably and reconstruct their intended English.
-3. If parts are clearly inaudible or incomprehensible, mark them as <unclear>.
-4. If the learner switches to Japanese mid-sentence (e.g., expressing confusion), \
+2. If there is no audible speech in the audio (silence, background noise only, or \
+unintelligible sounds with no recognizable words), output exactly: <no_speech>
+Do NOT guess or infer what the learner might have said based on the Japanese prompt. \
+Only transcribe speech that is actually present in the audio.
+3. Be generous: interpret their pronunciation charitably and reconstruct their intended English.
+4. If parts are clearly inaudible or incomprehensible, mark them as <unclear>.
+5. If the learner switches to Japanese mid-sentence (e.g., expressing confusion), \
 summarize what they said in Japanese (not English). \
 Example: "I think... （ここわからない）... it's important"
-5. Mark noticeable pauses (roughly 1 second or longer) with [pause]. \
+6. Mark noticeable pauses (roughly 1 second or longer) with [pause]. \
 If a pause is notably long (roughly 3 seconds or more), mark it as [long pause]. \
 Place the marker at the position where the pause occurred. \
 Example: "He surprised a student by [long pause] inviting him to the seat."
-6. Output only the transcription — do not evaluate or correct.\
+7. Output only the transcription — do not evaluate or correct.\
 """
 
 _STAGE1_USER_PROMPT = "Please transcribe this English speech audio."
@@ -392,6 +396,11 @@ class GeminiFeedbackAdapter:
     ) -> RawFeedback:
         """Full 2-stage pipeline: audio → transcription → feedback."""
         transcription = await self._transcribe(audio_data, audio_format, ja_prompt)
+
+        if transcription.strip() == "<no_speech>":
+            logger.info("no_speech_detected", ja_prompt=ja_prompt)
+            transcription = "<no_speech>"
+
         llm_feedback = await self._generate_feedback(
             user_utterance=transcription,
             ja_prompt=ja_prompt,

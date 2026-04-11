@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -16,6 +15,8 @@ from parla.ui import theme
 from parla.ui.widgets.recording_controls import RecordingControlsWidget
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QHideEvent, QShowEvent
+
     from parla.ui.screens.session.phase_b_view_model import PhaseBViewModel
 
 
@@ -26,7 +27,7 @@ class FeedbackCard(QWidget):
 
     def __init__(self, index: int, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._index = index
+        self.index = index
         self._utterance_label = QLabel("")
         self._model_label = QLabel("")
         self._status_label = QLabel("")
@@ -52,7 +53,7 @@ class FeedbackCard(QWidget):
 
 
 class PhaseBView(QWidget):
-    """Phase B — progressive feedback display with retry and navigation."""
+    """Phase B — one-sentence-at-a-time feedback display with retry and navigation."""
 
     def __init__(
         self,
@@ -63,14 +64,17 @@ class PhaseBView(QWidget):
         super().__init__(parent)
         self._vm = view_model
 
-        # --- Feedback cards area ---
-        self._cards_container = QWidget()
-        self._cards_layout = QVBoxLayout(self._cards_container)
-        self._cards: dict[int, FeedbackCard] = {}
+        # --- Progress indicator ---
+        self._progress_label = QLabel("")
 
-        scroll = QScrollArea()
-        scroll.setWidget(self._cards_container)
-        scroll.setWidgetResizable(True)
+        # --- Single feedback card area ---
+        self._card_container = QWidget()
+        self._card_layout = QVBoxLayout(self._card_container)
+        self._current_card: FeedbackCard | None = None
+
+        # --- Loading indicator ---
+        self._loading_label = QLabel("フィードバックを生成中...")
+        self._loading_label.setVisible(False)
 
         # --- Items and controls ---
         self._stocked_items: list[str] = []
@@ -81,7 +85,9 @@ class PhaseBView(QWidget):
 
         # --- Layout ---
         layout = QVBoxLayout(self)
-        layout.addWidget(scroll, stretch=1)
+        layout.addWidget(self._progress_label)
+        layout.addWidget(self._card_container, stretch=1)
+        layout.addWidget(self._loading_label)
         layout.addWidget(self._items_label)
         layout.addWidget(self._recording)
         layout.addWidget(self._edit_button)
@@ -90,41 +96,76 @@ class PhaseBView(QWidget):
         # --- Connections ---
         self._vm.feedback_added.connect(self._on_feedback_added)
         self._vm.feedback_failed.connect(self._on_feedback_failed)
+        self._vm.current_sentence_loading.connect(self._on_loading)
+        self._vm.current_sentence_changed.connect(self._on_sentence_changed)
         self._vm.item_stocked.connect(self._on_item_stocked)
         self._vm.retry_result.connect(self._on_retry_result)
+        self._recording.recording_finished.connect(self._on_retry_recording)
         self._edit_button.clicked.connect(self._vm.open_item_edit)
-        self._next_button.clicked.connect(self._vm.proceed)
+        self._next_button.clicked.connect(self._vm.advance_sentence)
 
-    def showEvent(self, event) -> None:  # noqa: ANN001
+    def showEvent(self, event: QShowEvent) -> None:
         super().showEvent(event)
         self._vm.activate()
+        self._vm.show_initial()
 
-    def hideEvent(self, event) -> None:  # noqa: ANN001
+    def hideEvent(self, event: QHideEvent) -> None:
         self._vm.deactivate()
         super().hideEvent(event)
 
-    def _get_or_create_card(self, index: int) -> FeedbackCard:
-        if index not in self._cards:
-            card = FeedbackCard(index, parent=self._cards_container)
-            self._cards_layout.addWidget(card)
-            self._cards[index] = card
-        return self._cards[index]
+    def _update_progress(self, current: int, total: int) -> None:
+        self._progress_label.setText(f"センテンス {current + 1} / {total}")
+        if current >= total - 1:
+            self._next_button.setText("完了")
+        else:
+            self._next_button.setText("次へ")
+
+    def _clear_card(self) -> None:
+        if self._current_card is not None:
+            self._card_layout.removeWidget(self._current_card)
+            self._current_card.deleteLater()
+            self._current_card = None
 
     def _on_feedback_added(self, index: int, user_utterance: str, model_answer: str, is_acceptable: bool) -> None:
-        card = self._get_or_create_card(index)
+        self._loading_label.setVisible(False)
+        self._clear_card()
+        self._stocked_items.clear()
+        self._items_label.setText("")
+        card = FeedbackCard(index, parent=self._card_container)
         card.set_feedback(user_utterance, model_answer, is_acceptable)
+        self._card_layout.addWidget(card)
+        self._current_card = card
+        self._next_button.setEnabled(is_acceptable)
 
     def _on_feedback_failed(self, index: int, message: str) -> None:
-        card = self._get_or_create_card(index)
+        self._loading_label.setVisible(False)
+        self._clear_card()
+        card = FeedbackCard(index, parent=self._card_container)
         card.set_error(message)
+        self._card_layout.addWidget(card)
+        self._current_card = card
 
-    def _on_item_stocked(self, pattern: str, is_reappearance: bool) -> None:
+    def _on_loading(self, index: int) -> None:
+        self._clear_card()
+        self._loading_label.setVisible(True)
+        self._next_button.setEnabled(False)
+
+    def _on_sentence_changed(self, current: int, total: int) -> None:
+        self._update_progress(current, total)
+
+    def _on_item_stocked(self, index: int, pattern: str, explanation: str, is_reappearance: bool) -> None:
         marker = " (再出)" if is_reappearance else ""
-        self._stocked_items.append(f"• {pattern}{marker}")
+        self._stocked_items.append(f"• {pattern}{marker} — {explanation}")
         self._items_label.setText("\n".join(self._stocked_items))
 
+    def _on_retry_recording(self, audio_data: object) -> None:
+        from parla.domain.audio import AudioData
+
+        if isinstance(audio_data, AudioData):
+            self._vm.retry_current(audio_data)
+
     def _on_retry_result(self, index: int, attempt: int, correct: bool) -> None:
-        card = self._cards.get(index)
-        if card is None:
-            return
-        card.set_retry_status(attempt, correct)
+        if self._current_card is not None and self._current_card.index == index:
+            self._current_card.set_retry_status(attempt, correct)
+        if correct:
+            self._next_button.setEnabled(True)

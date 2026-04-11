@@ -105,10 +105,16 @@ class FeedbackService:
                 stocked_items=stocked_info,
             )
 
+            user_utterance = raw_feedback.user_utterance
+            model_answer = raw_feedback.model_answer
+
+            if not user_utterance or user_utterance == "<no_speech>":
+                user_utterance = "（発話なし）"
+
             feedback = SentenceFeedback(
                 sentence_id=event.sentence_id,
-                user_utterance=raw_feedback.user_utterance,
-                model_answer=raw_feedback.model_answer,
+                user_utterance=user_utterance,
+                model_answer=model_answer,
                 is_acceptable=raw_feedback.is_acceptable,
             )
             self._feedback_repo.save_feedback(feedback)

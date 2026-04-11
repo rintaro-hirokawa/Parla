@@ -14,7 +14,6 @@ from parla.domain.events import (
     RetryJudged,
 )
 from parla.ui.base_view_model import BaseViewModel
-from parla.ui.screens.session import MAX_RETRY
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -25,16 +24,19 @@ if TYPE_CHECKING:
 
 
 class PhaseBViewModel(BaseViewModel):
-    """Manages Phase B: progressive feedback display, retry, navigation."""
+    """Manages Phase B: one-sentence-at-a-time feedback display, retry, navigation."""
 
     feedback_added = Signal(int, str, str, bool)  # index, user_utterance, model_answer, is_acceptable
     feedback_failed = Signal(int, str)  # index, error_message
-    item_stocked = Signal(str, bool)  # pattern, is_reappearance
+    item_stocked = Signal(int, str, str, bool)  # sentence_index, pattern, explanation, is_reappearance
     retry_result = Signal(int, int, bool)  # sentence_index, attempt, correct
     all_feedback_received = Signal()
     navigate_to_next = Signal(bool)  # skip_phase_c
     navigate_to_edit = Signal()
     error = Signal(str)
+
+    current_sentence_loading = Signal(int)  # index — feedback not yet arrived
+    current_sentence_changed = Signal(int, int)  # (current_index, total)
 
     def __init__(
         self,
@@ -43,12 +45,14 @@ class PhaseBViewModel(BaseViewModel):
         feedback_service: Any,
         practice_service: Any,
         feedback_repo: Any,
+        item_repo: Any,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)
         self._feedback_service = feedback_service
         self._practice_service = practice_service
         self._feedback_repo = feedback_repo
+        self._item_repo = item_repo
         self._ctx = session_context
 
         self._passage_id: UUID | None = None
@@ -58,10 +62,33 @@ class PhaseBViewModel(BaseViewModel):
         self._retry_counts: dict[UUID, int] = {}
         self._new_item_count = 0
 
+        self._current_index: int = 0
+        self._feedback_buffer: dict[int, tuple[str, str, bool]] = {}
+        self._error_buffer: dict[int, str] = {}
+        self._passed: set[int] = set()
+        self._seen_item_ids: set[UUID] = set()
+        self._items_buffer: dict[int, list[tuple[str, str, bool]]] = {}
+
         self._register_sync(FeedbackReady, self._on_feedback_ready)
         self._register_sync(FeedbackFailed, self._on_feedback_failed)
         self._register_sync(LearningItemStocked, self._on_item_stocked)
         self._register_sync(RetryJudged, self._on_retry_judged)
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    @property
+    def sentence_count(self) -> int:
+        return len(self._sentence_ids)
+
+    @property
+    def is_current_passed(self) -> bool:
+        return self._current_index in self._passed
+
+    @property
+    def current_sentence_id(self) -> UUID:
+        return self._sentence_ids[self._current_index]
 
     # ------------------------------------------------------------------
     # Actions
@@ -74,14 +101,59 @@ class PhaseBViewModel(BaseViewModel):
         self._received_count = 0
         self._retry_counts = {}
         self._new_item_count = 0
+        self._current_index = 0
+        self._feedback_buffer = {}
+        self._error_buffer = {}
+        self._passed = set()
+        self._seen_item_ids = set()
+        self._items_buffer = {}
+
+        # Pre-fill buffers with data already generated during Phase A
+        for i, sid in enumerate(sentence_ids):
+            fb = self._feedback_repo.get_feedback_by_sentence(sid)
+            if fb is not None:
+                self._feedback_buffer[i] = (fb.user_utterance, fb.model_answer, fb.is_acceptable)
+                self._received_count += 1
+                if fb.is_acceptable:
+                    self._passed.add(i)
+
+            for item in self._item_repo.get_items_by_sentence(sid):
+                if item.status == "auto_stocked" and item.id not in self._seen_item_ids:
+                    self._seen_item_ids.add(item.id)
+                    self._new_item_count += 1
+                    self._items_buffer.setdefault(i, []).append(
+                        (item.pattern, item.explanation, item.is_reappearance)
+                    )
 
         # Start TTS generation in background for Phase C
         self._practice_service.request_model_audio(passage_id)
 
+    def show_initial(self) -> None:
+        """Emit signals for the first sentence. Called by the View after connection."""
+        self.current_sentence_changed.emit(0, len(self._sentence_ids))
+        self._show_current()
+
+    def advance_sentence(self) -> None:
+        """Move to the next sentence, or proceed to next phase if at end.
+
+        Blocked unless the current sentence has been passed.
+        """
+        if not self.is_current_passed:
+            return
+        if self._current_index >= len(self._sentence_ids) - 1:
+            self.proceed()
+            return
+        self._current_index += 1
+        self.current_sentence_changed.emit(self._current_index, len(self._sentence_ids))
+        self._show_current()
+
+    def retry_current(self, audio: AudioData) -> None:
+        """Retry the currently displayed sentence."""
+        sid = self._sentence_ids[self._current_index]
+        self.retry_sentence(sid, audio)
+
     def retry_sentence(self, sentence_id: UUID, audio: AudioData) -> None:
         count = self._retry_counts.get(sentence_id, 0)
-        if count >= MAX_RETRY:
-            return
         self._retry_counts[sentence_id] = count + 1
         asyncio.ensure_future(
             self._feedback_service.judge_retry(
@@ -98,7 +170,7 @@ class PhaseBViewModel(BaseViewModel):
         skip = self._practice_service.should_skip(
             new_item_count=self._new_item_count,
             wpm=self._ctx.average_wpm,
-            cefr_level="",  # TODO: pass actual CEFR
+            cefr_level=self._ctx.cefr_level,
         )
         self.navigate_to_next.emit(skip)
 
@@ -112,16 +184,26 @@ class PhaseBViewModel(BaseViewModel):
         idx = self._sentence_index.get(event.sentence_id)
         if idx is None:
             return
+        if idx in self._feedback_buffer:
+            return
 
         fb = self._feedback_repo.get_feedback_by_sentence(event.sentence_id)
         if fb is None:
-            self.feedback_failed.emit(idx, "Feedback data not found")
+            self._error_buffer[idx] = "Feedback data not found"
+            if idx == self._current_index:
+                self.feedback_failed.emit(idx, "Feedback data not found")
+            self._mark_received()
             return
 
-        self.feedback_added.emit(idx, fb.user_utterance, fb.model_answer, fb.is_acceptable)
-        self._received_count += 1
-        if self._received_count >= len(self._sentence_ids):
-            self.all_feedback_received.emit()
+        self._feedback_buffer[idx] = (fb.user_utterance, fb.model_answer, fb.is_acceptable)
+        if fb.is_acceptable:
+            self._passed.add(idx)
+        self._mark_received()
+
+        if idx == self._current_index:
+            self.feedback_added.emit(idx, fb.user_utterance, fb.model_answer, fb.is_acceptable)
+            for pattern, explanation, is_reapp in self._items_buffer.get(idx, []):
+                self.item_stocked.emit(idx, pattern, explanation, is_reapp)
 
     def _on_feedback_failed(self, event: FeedbackFailed) -> None:
         if event.passage_id != self._passage_id:
@@ -129,17 +211,56 @@ class PhaseBViewModel(BaseViewModel):
         idx = self._sentence_index.get(event.sentence_id)
         if idx is None:
             return
-        self.feedback_failed.emit(idx, event.error_message)
-        self._received_count += 1
-        if self._received_count >= len(self._sentence_ids):
-            self.all_feedback_received.emit()
+
+        self._error_buffer[idx] = event.error_message
+        self._mark_received()
+
+        if idx == self._current_index:
+            self.feedback_failed.emit(idx, event.error_message)
 
     def _on_item_stocked(self, event: LearningItemStocked) -> None:
+        if event.item_id in self._seen_item_ids:
+            return
+        self._seen_item_ids.add(event.item_id)
         self._new_item_count += 1
-        self.item_stocked.emit(event.pattern, event.is_reappearance)
+
+        item = self._item_repo.get_item(event.item_id)
+        explanation = item.explanation if item else ""
+        idx = self._sentence_index.get(item.source_sentence_id) if item else None
+
+        if idx is not None:
+            self._items_buffer.setdefault(idx, []).append(
+                (event.pattern, explanation, event.is_reappearance)
+            )
+            if idx == self._current_index:
+                self.item_stocked.emit(idx, event.pattern, explanation, event.is_reappearance)
 
     def _on_retry_judged(self, event: RetryJudged) -> None:
         idx = self._sentence_index.get(event.sentence_id)
         if idx is None:
             return
+        if event.correct:
+            self._passed.add(idx)
         self.retry_result.emit(idx, event.attempt, event.correct)
+
+    # ------------------------------------------------------------------
+    # Internal
+    # ------------------------------------------------------------------
+
+    def _show_current(self) -> None:
+        """Emit signal for the current sentence: feedback, error, or loading."""
+        idx = self._current_index
+        if idx in self._feedback_buffer:
+            u, m, a = self._feedback_buffer[idx]
+            self.feedback_added.emit(idx, u, m, a)
+            for pattern, explanation, is_reapp in self._items_buffer.get(idx, []):
+                self.item_stocked.emit(idx, pattern, explanation, is_reapp)
+        elif idx in self._error_buffer:
+            self.feedback_failed.emit(idx, self._error_buffer[idx])
+        else:
+            self.current_sentence_loading.emit(idx)
+
+    def _mark_received(self) -> None:
+        self._received_count += 1
+        if self._received_count >= len(self._sentence_ids):
+            self.all_feedback_received.emit()
