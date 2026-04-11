@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import array
+import io
 import math
+import wave
 from collections.abc import Callable
 from typing import Any
 
@@ -62,6 +64,7 @@ class AudioRecorder(QObject):
         self._io: Any | None = None  # QIODevice or fake
         self._buffer = bytearray()
         self._recording = False
+        self._gain: float = 1.0
 
     # ------------------------------------------------------------------
     # Device management
@@ -72,9 +75,22 @@ class AudioRecorder(QObject):
 
     def select_device(self, device: QAudioDevice) -> None:
         self._device = device
+        if self._recording:
+            self._restart_source()
 
     def selected_device(self) -> QAudioDevice | None:
         return self._device
+
+    # ------------------------------------------------------------------
+    # Gain control
+    # ------------------------------------------------------------------
+
+    @property
+    def gain(self) -> float:
+        return self._gain
+
+    def set_gain(self, factor: float) -> None:
+        self._gain = max(0.5, min(factor, 3.0))
 
     # ------------------------------------------------------------------
     # Recording lifecycle
@@ -131,11 +147,33 @@ class AudioRecorder(QObject):
         if not raw:
             return
 
-        self._buffer.extend(raw)
-
         samples = array.array("h", raw)
+        if self._gain != 1.0:
+            samples = self._apply_gain(samples)
+            raw = samples.tobytes()
+
+        self._buffer.extend(raw)
         self._emit_level(samples)
         self._emit_waveform(samples)
+
+    def _apply_gain(self, samples: array.array[int]) -> array.array[int]:
+        return array.array(
+            "h",
+            [max(-32768, min(32767, int(s * self._gain))) for s in samples],
+        )
+
+    def _restart_source(self) -> None:
+        """Stop the current audio source and recreate with the selected device."""
+        if self._source is not None:
+            self._source.stop()
+            self._source = None
+            self._io = None
+        device = self._device or QMediaDevices.defaultAudioInput()
+        fmt = _build_format()
+        self._source = self._factory(device, fmt)
+        self._source.stateChanged.connect(self._on_state_changed)
+        self._io = self._source.start()
+        self._io.readyRead.connect(self._on_data_ready)
 
     def _emit_level(self, samples: array.array[int]) -> None:
         if not samples:
@@ -164,16 +202,28 @@ class AudioRecorder(QObject):
             self.error_occurred.emit(f"Audio source error: {err.name}")
 
     def _build_audio_data(self) -> AudioData:
-        data = bytes(self._buffer)
-        duration = len(data) / BYTES_PER_SECOND if data else 0.0
+        pcm = bytes(self._buffer)
+        duration = len(pcm) / BYTES_PER_SECOND if pcm else 0.0
+        wav_data = self._pcm_to_wav(pcm)
         return AudioData(
-            data=data,
+            data=wav_data,
             format="wav",
             sample_rate=SAMPLE_RATE,
             channels=CHANNELS,
             sample_width=SAMPLE_WIDTH,
             duration_seconds=duration,
         )
+
+    @staticmethod
+    def _pcm_to_wav(pcm: bytes) -> bytes:
+        """Wrap raw PCM bytes in a WAV container."""
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(SAMPLE_WIDTH)
+            wf.setframerate(SAMPLE_RATE)
+            wf.writeframes(pcm)
+        return buf.getvalue()
 
     def _cleanup(self) -> None:
         self._source = None

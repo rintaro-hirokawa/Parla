@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import io
 import struct
+import wave
 from typing import TYPE_CHECKING
 
 import pytest
@@ -11,6 +13,12 @@ from PySide6.QtMultimedia import QAudio, QAudioDevice, QAudioFormat
 
 from parla.domain.audio import AudioData
 from parla.ui.audio.recorder import AudioRecorder
+
+
+def _extract_pcm(wav_bytes: bytes) -> bytes:
+    """Extract raw PCM data from WAV bytes."""
+    with wave.open(io.BytesIO(wav_bytes), "rb") as wf:
+        return wf.readframes(wf.getnframes())
 
 if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
@@ -195,6 +203,16 @@ class TestAudioDataGeneration:
         assert result.channels == 1
         assert result.sample_width == 2
 
+    def test_audio_data_is_valid_wav(self, qtbot: QtBot) -> None:
+        rec, source = _make_recorder()
+        rec.start()
+        source.io().feed(_make_pcm_chunk([100] * 16))
+        result = rec.stop()
+
+        assert result is not None
+        assert result.data[:4] == b"RIFF"
+        assert result.data[8:12] == b"WAVE"
+
     def test_audio_data_contains_all_buffered_pcm(self, qtbot: QtBot) -> None:
         rec, source = _make_recorder()
         rec.start()
@@ -206,7 +224,8 @@ class TestAudioDataGeneration:
 
         result = rec.stop()
         assert result is not None
-        assert result.data == chunk1 + chunk2
+        pcm = _extract_pcm(result.data)
+        assert pcm == chunk1 + chunk2
 
     def test_duration_computed_correctly(self, qtbot: QtBot) -> None:
         rec, source = _make_recorder()
@@ -226,7 +245,8 @@ class TestAudioDataGeneration:
         result = rec.stop()
         assert result is not None
         assert result.duration_seconds == 0.0
-        assert result.data == b""
+        pcm = _extract_pcm(result.data)
+        assert pcm == b""
 
 
 # ---------------------------------------------------------------------------
@@ -279,6 +299,139 @@ class TestRealtimeSignals:
         assert isinstance(waveforms[0], list)
         assert all(isinstance(v, float) for v in waveforms[0])
         assert all(-1.0 <= v <= 1.0 for v in waveforms[0])
+
+
+# ---------------------------------------------------------------------------
+# TestErrorHandling
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# TestDeviceSwitchWhileRecording
+# ---------------------------------------------------------------------------
+
+
+class TestDeviceSwitchWhileRecording:
+    def test_select_device_restarts_source_while_recording(self, qtbot: QtBot) -> None:
+        sources: list[FakeAudioSource] = []
+
+        def factory(device: QAudioDevice, fmt: QAudioFormat) -> FakeAudioSource:
+            src = FakeAudioSource(device, fmt)
+            sources.append(src)
+            return src
+
+        rec = AudioRecorder(audio_source_factory=factory)
+        rec.start()
+        assert len(sources) == 1
+
+        new_device = QAudioDevice()
+        rec.select_device(new_device)
+
+        # A new source should have been created
+        assert len(sources) == 2
+        assert rec.is_recording is True
+
+        # New source should be active — feed data and verify level emitted
+        with qtbot.waitSignal(rec.level_changed, timeout=1000):
+            sources[1].io().feed(_make_pcm_chunk([10000, -10000]))
+
+    def test_select_device_without_recording_does_not_restart(
+        self, qtbot: QtBot
+    ) -> None:
+        sources: list[FakeAudioSource] = []
+
+        def factory(device: QAudioDevice, fmt: QAudioFormat) -> FakeAudioSource:
+            src = FakeAudioSource(device, fmt)
+            sources.append(src)
+            return src
+
+        rec = AudioRecorder(audio_source_factory=factory)
+        rec.select_device(QAudioDevice())
+
+        assert len(sources) == 0
+
+
+# ---------------------------------------------------------------------------
+# TestGainControl
+# ---------------------------------------------------------------------------
+
+
+class TestGainControl:
+    def test_default_gain_is_one(self, qtbot: QtBot) -> None:
+        rec, _ = _make_recorder()
+        assert rec.gain == 1.0
+
+    def test_set_gain_clamps_range(self, qtbot: QtBot) -> None:
+        rec, _ = _make_recorder()
+        rec.set_gain(0.1)
+        assert rec.gain == 0.5
+        rec.set_gain(5.0)
+        assert rec.gain == 3.0
+        rec.set_gain(2.0)
+        assert rec.gain == 2.0
+
+    def test_gain_amplifies_recorded_data(self, qtbot: QtBot) -> None:
+        rec, source = _make_recorder()
+        rec.set_gain(2.0)
+        rec.start()
+
+        source.io().feed(_make_pcm_chunk([1000, -1000]))
+        result = rec.stop()
+
+        assert result is not None
+        pcm = _extract_pcm(result.data)
+        gained_samples = struct.unpack(f"<{len(pcm) // 2}h", pcm)
+        assert gained_samples == (2000, -2000)
+
+    def test_gain_clamps_to_int16_range(self, qtbot: QtBot) -> None:
+        rec, source = _make_recorder()
+        rec.set_gain(3.0)
+        rec.start()
+
+        source.io().feed(_make_pcm_chunk([20000, -20000]))
+        result = rec.stop()
+
+        assert result is not None
+        pcm = _extract_pcm(result.data)
+        gained_samples = struct.unpack(f"<{len(pcm) // 2}h", pcm)
+        assert gained_samples == (32767, -32768)
+
+    def test_gain_one_passes_through_unchanged(self, qtbot: QtBot) -> None:
+        rec, source = _make_recorder()
+        rec.set_gain(1.0)
+        rec.start()
+
+        original = _make_pcm_chunk([5000, -5000])
+        source.io().feed(original)
+        result = rec.stop()
+
+        assert result is not None
+        pcm = _extract_pcm(result.data)
+        assert pcm == original
+
+    def test_gain_affects_level_signal(self, qtbot: QtBot) -> None:
+        rec_normal, source_normal = _make_recorder()
+        rec_gained, source_gained = _make_recorder()
+        rec_gained.set_gain(2.0)
+
+        levels_normal: list[float] = []
+        levels_gained: list[float] = []
+        rec_normal.level_changed.connect(levels_normal.append)
+        rec_gained.level_changed.connect(levels_gained.append)
+
+        chunk = _make_pcm_chunk([5000, -5000, 3000, -3000])
+
+        rec_normal.start()
+        source_normal.io().feed(chunk)
+        rec_normal.stop()
+
+        rec_gained.start()
+        source_gained.io().feed(chunk)
+        rec_gained.stop()
+
+        assert len(levels_normal) == 1
+        assert len(levels_gained) == 1
+        assert levels_gained[0] > levels_normal[0]
 
 
 # ---------------------------------------------------------------------------

@@ -54,6 +54,12 @@ class MicCheckViewModel(QObject):
         self._ensure_devices()
         if 0 <= index < len(self._devices):  # type: ignore[arg-type]
             self._recorder.select_device(self._devices[index])  # type: ignore[index]
+            self._start_enabled = False
+            self._warning_shown = False
+            self.start_enabled_changed.emit(False)
+
+    def set_gain(self, factor: float) -> None:
+        self._recorder.set_gain(factor)
 
     def _ensure_devices(self) -> None:
         if self._devices is None:
