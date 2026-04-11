@@ -1,4 +1,4 @@
-"""WPM trend line chart widget with CEFR target range band."""
+"""WPM trend line chart widget with CEFR target line."""
 
 from collections.abc import Sequence
 
@@ -13,7 +13,7 @@ from parla.ui import theme
 
 
 class WpmChartWidget(QWidget):
-    """Line chart for WPM trend with CEFR target range band.
+    """Line chart for WPM trend with CEFR target minimum line.
 
     Used in C3 (item detail), C4 (history), F1 (session summary).
     """
@@ -66,8 +66,8 @@ class WpmChartWidget(QWidget):
     def minimumSizeHint(self) -> QSize:
         return QSize(150, 80)
 
-    def _get_cefr_range(self) -> tuple[int, int] | None:
-        """Look up CEFR WPM range, returning None if level is not in targets."""
+    def _get_cefr_target(self) -> int | None:
+        """Look up CEFR minimum WPM target, returning None if level is not in targets."""
         if self._cefr_level is None:
             return None
         return CEFR_WPM_TARGETS.get(self._cefr_level)
@@ -87,11 +87,11 @@ class WpmChartWidget(QWidget):
             return
 
         # Determine Y range
-        cefr_range = self._get_cefr_range()
+        cefr_target = self._get_cefr_target()
         wpm_values = [p.wpm for p in self._data_points]
         all_values = list(wpm_values)
-        if cefr_range:
-            all_values.extend(cefr_range)
+        if cefr_target is not None:
+            all_values.append(cefr_target)
 
         if not all_values:
             painter.setPen(self._NO_DATA_COLOR)
@@ -108,15 +108,11 @@ class WpmChartWidget(QWidget):
         def y_to_px(wpm: float) -> int:
             return int(chart_top + chart_height - (wpm - y_min) / y_range * chart_height)
 
-        # Draw CEFR target band
-        if cefr_range:
-            cefr_lower, cefr_upper = cefr_range
-            band_top = y_to_px(cefr_upper)
-            band_bottom = y_to_px(cefr_lower)
-            painter.fillRect(
-                chart_left, band_top, chart_width, band_bottom - band_top,
-                self._BAND_COLOR,
-            )
+        # Draw CEFR target line
+        if cefr_target is not None:
+            target_y = y_to_px(cefr_target)
+            painter.setPen(self._BAND_COLOR)
+            painter.drawLine(chart_left, target_y, chart_left + chart_width, target_y)
 
         # Draw axes
         painter.setPen(self._AXIS_PEN)

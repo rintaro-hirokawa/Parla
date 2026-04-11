@@ -1,11 +1,35 @@
-"""WPM calculation and Phase C skip logic — pure functions."""
+"""WPM calculation — pure functions."""
 
-CEFR_WPM_TARGETS: dict[str, tuple[int, int]] = {
-    "A2": (90, 100),
-    "B1": (110, 130),
-    "B2": (140, 170),
-    "C1": (180, 200),
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from parla.domain.practice import PronunciationWord
+
+CEFR_WPM_TARGETS: dict[str, int] = {
+    "A2": 90,
+    "B1": 110,
+    "B2": 140,
+    "C1": 180,
 }
+
+
+def calculate_speech_duration(words: Sequence[PronunciationWord]) -> float:
+    """Calculate actual speech duration from Azure word timestamps.
+
+    Uses the first recognized word's offset to the last recognized word's
+    offset + duration. Omissions (offset < 0) are excluded.
+    Returns 0.0 if no recognized words are found.
+    """
+    recognized = [w for w in words if w.offset_seconds >= 0]
+    if not recognized:
+        return 0.0
+    first = min(recognized, key=lambda w: w.offset_seconds)
+    last = max(recognized, key=lambda w: w.offset_seconds + w.duration_seconds)
+    return last.offset_seconds + last.duration_seconds - first.offset_seconds
 
 
 def calculate_wpm(word_count: int, duration_seconds: float) -> float:
@@ -18,20 +42,9 @@ def calculate_wpm(word_count: int, duration_seconds: float) -> float:
 def calculate_time_limit(word_count: int, cefr_level: str, buffer_ratio: float = 1.2) -> float:
     """Calculate time limit in seconds based on CEFR target WPM.
 
-    Uses the lower bound of the CEFR range as the target,
+    Uses the CEFR target as the minimum WPM,
     then applies a buffer ratio for learner tolerance.
     """
-    lower_wpm, _ = CEFR_WPM_TARGETS[cefr_level]
-    base_seconds = word_count / lower_wpm * 60
+    target_wpm = CEFR_WPM_TARGETS[cefr_level]
+    base_seconds = word_count / target_wpm * 60
     return base_seconds * buffer_ratio
-
-
-def is_wpm_in_target(wpm: float, cefr_level: str) -> bool:
-    """Check if WPM falls within the CEFR target range (inclusive)."""
-    lower, upper = CEFR_WPM_TARGETS[cefr_level]
-    return lower <= wpm <= upper
-
-
-def should_skip_phase_c(new_item_count: int, wpm: float, cefr_level: str) -> bool:
-    """Phase C is skippable when there are no new learning items AND WPM is in target range."""
-    return new_item_count == 0 and is_wpm_in_target(wpm, cefr_level)

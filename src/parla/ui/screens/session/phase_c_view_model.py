@@ -13,7 +13,6 @@ from parla.domain.events import (
     ModelAudioFailed,
     ModelAudioReady,
     OverlappingCompleted,
-    OverlappingLagDetected,
 )
 from parla.ui.base_view_model import BaseViewModel
 
@@ -42,7 +41,6 @@ class PhaseCViewModel(BaseViewModel):
     model_audio_ready = Signal()
     model_audio_failed = Signal(str)
     overlapping_result = Signal(float)  # pronunciation_score
-    lag_detected = Signal(int)  # lag_count
     live_delivery_result = Signal(bool, float, float, float)  # passed, error_rate, error_rate_threshold, wpm
     complete_enabled_changed = Signal(bool)
     phase_complete = Signal()
@@ -86,7 +84,6 @@ class PhaseCViewModel(BaseViewModel):
         self._register_sync(ModelAudioReady, self._on_model_audio_ready)
         self._register_sync(ModelAudioFailed, self._on_model_audio_failed)
         self._register_sync(OverlappingCompleted, self._on_overlapping_completed)
-        self._register_sync(OverlappingLagDetected, self._on_lag_detected)
         self._register_sync(LiveDeliveryCompleted, self._on_live_delivery_completed)
 
         # Relay player signals
@@ -205,13 +202,11 @@ class PhaseCViewModel(BaseViewModel):
             self._practice_service.evaluate_overlapping(self._passage_id, audio)
         )
 
-    def submit_live_delivery(self, audio: AudioData, duration_seconds: float) -> None:
+    def submit_live_delivery(self, audio: AudioData) -> None:
         if self._passage_id is None:
             return
         asyncio.ensure_future(
-            self._practice_service.evaluate_live_delivery(
-                self._passage_id, audio, duration_seconds
-            )
+            self._practice_service.evaluate_live_delivery(self._passage_id, audio)
         )
 
     def on_recording_started(self) -> None:
@@ -223,9 +218,9 @@ class PhaseCViewModel(BaseViewModel):
         """Handle recording completion from RecordingControlsWidget."""
         if self._current_mode == "live_delivery":
             if self._streaming_session is not None:
-                self._finalize_live_delivery_stream(audio_data.duration_seconds)
+                self._finalize_live_delivery_stream()
             else:
-                self.submit_live_delivery(audio_data, audio_data.duration_seconds)
+                self.submit_live_delivery(audio_data)
 
     def retry_model_audio(self) -> None:
         """Re-request model audio generation after a failure."""
@@ -258,7 +253,7 @@ class PhaseCViewModel(BaseViewModel):
             self._streaming_session = session
             self._recorder.chunk_ready.connect(self._on_recorder_chunk)
 
-    def _finalize_live_delivery_stream(self, duration_seconds: float) -> None:
+    def _finalize_live_delivery_stream(self) -> None:
         """Disconnect chunk forwarding and finalize the live delivery stream."""
         with contextlib.suppress(RuntimeError):
             self._recorder.chunk_ready.disconnect(self._on_recorder_chunk)
@@ -267,7 +262,7 @@ class PhaseCViewModel(BaseViewModel):
             self._streaming_session = None
             asyncio.ensure_future(
                 self._practice_service.finalize_live_delivery_stream(
-                    self._passage_id, session, duration_seconds
+                    self._passage_id, session
                 )
             )
 
@@ -339,11 +334,6 @@ class PhaseCViewModel(BaseViewModel):
             summary = self._session_query.get_overlapping_summary(event.passage_id)
             if summary is not None:
                 self.overlapping_words_ready.emit(summary)
-
-    def _on_lag_detected(self, event: OverlappingLagDetected) -> None:
-        if event.passage_id != self._passage_id:
-            return
-        self.lag_detected.emit(event.lag_count)
 
     def _on_live_delivery_completed(self, event: LiveDeliveryCompleted) -> None:
         if event.passage_id != self._passage_id:

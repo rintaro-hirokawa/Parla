@@ -1,12 +1,17 @@
 """Phase C practice value objects and evaluation functions."""
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
 from parla.domain.audio import AudioData
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class WordTimestamp(BaseModel, frozen=True):
@@ -65,6 +70,28 @@ class LiveDeliveryResult(BaseModel, frozen=True):
     duration_seconds: float = Field(ge=0.0)
     wpm: float = Field(ge=0.0)
     created_at: datetime = Field(default_factory=datetime.now)
+
+
+#: Maximum ratio of error words (Mispronunciation + Omission) allowed to pass.
+ERROR_RATE_THRESHOLD: float = 0.15
+
+
+def calculate_error_rate(words: Sequence[PronunciationWord]) -> float:
+    """Calculate ratio of error words (Mispronunciation/Omission) excluding Insertions.
+
+    Insertions are excluded from both numerator and denominator because they
+    represent extra words not in the reference text.
+    """
+    ref_aligned = [w for w in words if w.error_type != "Insertion"]
+    if not ref_aligned:
+        return 0.0
+    error_count = sum(1 for w in ref_aligned if w.error_type in ("Mispronunciation", "Omission"))
+    return error_count / len(ref_aligned)
+
+
+def judge_passed(words: Sequence[PronunciationWord]) -> bool:
+    """Judge overall pass/fail based on error rate threshold."""
+    return calculate_error_rate(words) < ERROR_RATE_THRESHOLD
 
 
 def map_words_to_sentence_groups(

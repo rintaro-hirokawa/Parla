@@ -251,16 +251,13 @@ class SessionCoordinator(QObject):
         self._current_vm = vm
         self._nav.push_screen(view)
 
-    def _on_phase_b_done(self, skip_phase_c: bool) -> None:
+    def _on_phase_b_done(self) -> None:
         passage_id = self._current_passage.id if self._current_passage else None
         self._deactivate_current_vm()
         self._pop_current()
         if passage_id is None:
             return
-        if skip_phase_c:
-            self._show_passage_summary(passage_id)
-        else:
-            self._show_phase_c(passage_id)
+        self._show_phase_c(passage_id)
 
     # --- Phase C (E6) ---
 

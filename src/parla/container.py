@@ -14,7 +14,6 @@ import structlog
 from parla.adapters.azure_pronunciation import AzurePronunciationAdapter
 from parla.adapters.elevenlabs_tts import ElevenLabsTTSAdapter
 from parla.adapters.gemini_feedback import GeminiFeedbackAdapter
-from parla.adapters.gemini_overlapping_lag import GeminiOverlappingLagAdapter
 from parla.adapters.gemini_passage_generation import GeminiPassageGenerationAdapter
 from parla.adapters.gemini_retry_judgment import GeminiRetryJudgmentAdapter
 from parla.adapters.gemini_review_judgment import GeminiReviewJudgmentAdapter
@@ -96,7 +95,6 @@ class Container:
         _review_judge = GeminiReviewJudgmentAdapter()
         _tts_generator = ElevenLabsTTSAdapter(cache_dir=tts_cache_dir)
         _pronunciation_assessor = AzurePronunciationAdapter()
-        _lag_detector = GeminiOverlappingLagAdapter()
 
         # --- Config (public) ---
         self.session_config = SessionConfig()
@@ -139,7 +137,6 @@ class Container:
             practice_repo=_practice_repo,
             tts_generator=_tts_generator,
             pronunciation_assessor=_pronunciation_assessor,
-            lag_detector=_lag_detector,
         )
         self.session_service = SessionService(
             event_bus=self.event_bus,

@@ -34,7 +34,7 @@ class PhaseBViewModel(BaseViewModel):
     item_stocked = Signal(int, str, str, bool)  # sentence_index, pattern, explanation, is_reappearance
     retry_result = Signal(int, int, bool)  # sentence_index, attempt, correct
     all_feedback_received = Signal()
-    navigate_to_next = Signal(bool)  # skip_phase_c
+    navigate_to_next = Signal()
     navigate_to_edit = Signal()
     error = Signal(str)
 
@@ -168,12 +168,7 @@ class PhaseBViewModel(BaseViewModel):
         self.navigate_to_edit.emit()
 
     def proceed(self) -> None:
-        skip = self._practice_service.should_skip(
-            new_item_count=self._new_item_count,
-            wpm=self._ctx.average_wpm,
-            cefr_level=self._ctx.cefr_level,
-        )
-        self.navigate_to_next.emit(skip)
+        self.navigate_to_next.emit()
 
     # ------------------------------------------------------------------
     # Event handlers

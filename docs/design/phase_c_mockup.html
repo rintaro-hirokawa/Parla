@@ -258,7 +258,7 @@
     border: 1px solid #eef0f5; background: #fafbfd;
   }
   .result-sentence:last-child { margin-bottom: 0; }
-  .result-sentence.has-issue { border-color: #fde68a; background: #fffdf5; }
+  .result-sentence.has-issue { border-color: #e8eaf0; }
 
   .result-ja {
     font-size: 13px; color: #6b7280; margin-bottom: 6px;
@@ -569,26 +569,24 @@ function showSpeakResults(){
     ],
   ];
 
-  // LLM advice for sentences with errors
-  const advice={
-    1: 'tests が省略されました。三単現の -s を落とさないよう注意しましょう。また company\'s の所有格 /ˈkʌmpəniz/ の発音を練習してください。',
-    3: 'extremely /ɪkˈstriːmli/ の第2音節にストレスを置きましょう。"ik-STREEM-lee" のリズムで練習すると自然になります。',
-    4: 'philosophy /fɪˈlɒsəfi/ は第2音節にストレス。"fi-LOS-uh-fee" と4音節で発音します。',
-  };
 
-  // Count errors
+  // Error rate calculation (simulated VM values)
   let totalWords=0, errorWords=0;
   sentenceWords.forEach(sent=>sent.forEach(w=>{totalWords++;if(w.e!=='None')errorWords++;}));
-  const errorRate=((errorWords/totalWords)*100).toFixed(1);
-  const passed=errorRate<10;
+  const errorRate=errorWords/totalWords;
+  const threshold=0.10;
+  const passed=errorRate<threshold;
+  const wpm=132;
+  const errorPct=Math.round(errorRate*100);
+  const thresholdPct=Math.round(threshold*100);
 
   let html=`<div class="result-card">
     <div class="result-header">
       <span class="result-title">Results</span>
       <div class="result-metrics">
         <span class="result-badge ${passed?'pass':'fail'}">${passed?'合格':'不合格'}</span>
-        <span class="result-badge score">スコア: 76.2</span>
-        <span class="result-badge wpm">132 WPM</span>
+        <span class="result-badge wpm">エラー率: ${errorPct}% / 基準: ${thresholdPct}%未満</span>
+        <span class="result-badge wpm">${wpm} WPM</span>
       </div>
     </div>`;
 
@@ -600,13 +598,9 @@ function showSpeakResults(){
     const wordSpans=sent.map(w=>{
       if(w.e==='Mispronunciation') return `<span class="word-error">${w.w}</span>`;
       if(w.e==='Omission') return `<span class="word-omission">${w.w}</span>`;
-      return `<span class="word-correct">${w.w}</span>`;
+      return w.w;
     }).join(' ');
     html+=`<div class="result-model">${wordSpans}</div>`;
-    // LLM advice if errors exist
-    if(advice[si]){
-      html+=`<div class="result-advice"><div class="result-advice-label">ADVICE</div>${advice[si]}</div>`;
-    }
     html+='</div>';
   });
 

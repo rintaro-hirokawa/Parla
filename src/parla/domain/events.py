@@ -175,13 +175,6 @@ class OverlappingCompleted(Event, frozen=True):
     pronunciation_score: float
 
 
-class OverlappingLagDetected(Event, frozen=True):
-    """Lag detection completed after overlapping practice (LLM call #7)."""
-
-    passage_id: UUID
-    lag_count: int
-
-
 class LiveDeliveryCompleted(Event, frozen=True):
     """Live delivery evaluated."""
 

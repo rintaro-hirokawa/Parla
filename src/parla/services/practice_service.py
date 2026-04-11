@@ -12,23 +12,22 @@ from parla.domain.events import (
     ModelAudioReady,
     ModelAudioRequested,
     OverlappingCompleted,
-    OverlappingLagDetected,
     PassageAchievementRecorded,
 )
-from parla.domain.lag_detection import LagDetectionResult, identify_delayed_phrases
 from parla.domain.practice import (
+    ERROR_RATE_THRESHOLD,
     LiveDeliveryResult,
     ModelAudio,
     OverlappingResult,
     PronunciationWord,
     WordTimestamp,
+    calculate_error_rate,
+    judge_passed,
 )
-from parla.domain.similarity import ERROR_RATE_THRESHOLD, calculate_error_rate, judge_passed
 from parla.domain.timing import calculate_timing_deviations
-from parla.domain.wpm import calculate_wpm, should_skip_phase_c
+from parla.domain.wpm import calculate_speech_duration, calculate_wpm
 from parla.event_bus import EventBus
 from parla.ports.feedback_repository import FeedbackRepository
-from parla.ports.overlapping_lag_detection import OverlappingLagDetectionPort
 from parla.ports.practice_repository import PracticeRepository
 from parla.ports.pronunciation_assessment import (
     PronunciationAssessmentPort,
@@ -53,7 +52,6 @@ class PracticeService:
         practice_repo: PracticeRepository,
         tts_generator: TTSGenerationPort,
         pronunciation_assessor: PronunciationAssessmentPort,
-        lag_detector: OverlappingLagDetectionPort | None = None,
     ) -> None:
         self._bus = event_bus
         self._source_repo = source_repo
@@ -61,7 +59,6 @@ class PracticeService:
         self._practice_repo = practice_repo
         self._tts_generator = tts_generator
         self._pronunciation_assessor = pronunciation_assessor
-        self._lag_detector = lag_detector
 
     def get_model_audio(self, passage_id: UUID) -> ModelAudio | None:
         """Look up cached model audio for a passage."""
@@ -178,13 +175,7 @@ class PracticeService:
             )
         )
 
-        await self.detect_lag(passage_id, result)
-
         return result
-
-    def should_skip(self, new_item_count: int, wpm: float, cefr_level: str) -> bool:
-        """Check if Phase C should be skipped (0 new items AND WPM in target)."""
-        return should_skip_phase_c(new_item_count, wpm, cefr_level)
 
     async def evaluate_overlapping(self, passage_id: UUID, user_audio: AudioData) -> OverlappingResult:
         """Evaluate overlapping practice against model audio."""
@@ -223,46 +214,7 @@ class PracticeService:
             )
         )
 
-        await self.detect_lag(passage_id, result)
-
         return result
-
-    async def detect_lag(self, passage_id: UUID, result: OverlappingResult) -> LagDetectionResult | None:
-        """Detect lag causes from overlapping result via LLM (call #7).
-
-        Returns None if no lag detector is configured or no delayed phrases found.
-        """
-        if self._lag_detector is None:
-            return None
-
-        model_audio = self._practice_repo.get_model_audio(passage_id)
-        if model_audio is None:
-            logger.warning("model_audio_not_found_for_lag", passage_id=str(passage_id))
-            return None
-
-        ref_words = [wt.word for wt in model_audio.word_timestamps]
-        delayed_phrases = identify_delayed_phrases(ref_words, list(result.timing_deviations))
-
-        if not delayed_phrases:
-            return None
-
-        reference_text = " ".join(ref_words)
-
-        try:
-            lag_result = await self._lag_detector.detect(reference_text, delayed_phrases)
-
-            self._bus.emit(
-                OverlappingLagDetected(
-                    passage_id=passage_id,
-                    lag_count=len(lag_result.lag_points),
-                )
-            )
-
-            return lag_result
-
-        except Exception:
-            logger.exception("lag_detection_failed", passage_id=str(passage_id))
-            return None
 
     # --- Live Delivery ---
 
@@ -280,7 +232,6 @@ class PracticeService:
         self,
         passage_id: UUID,
         session: StreamingAssessmentSession,
-        duration_seconds: float,
     ) -> LiveDeliveryResult:
         """Finalize a streaming session and process live delivery results."""
         reference_text = self._build_live_delivery_reference(passage_id)
@@ -289,13 +240,12 @@ class PracticeService:
             raise ValueError(msg)
 
         raw_result = await session.finalize()
-        return self._process_live_delivery_result(passage_id, raw_result, duration_seconds)
+        return self._process_live_delivery_result(passage_id, raw_result)
 
     async def evaluate_live_delivery(
         self,
         passage_id: UUID,
         user_audio: AudioData,
-        duration_seconds: float,
     ) -> LiveDeliveryResult:
         """Evaluate live delivery against model answers (batch mode)."""
         reference_text = self._build_live_delivery_reference(passage_id)
@@ -304,7 +254,7 @@ class PracticeService:
             raise ValueError(msg)
 
         raw_result = await self._pronunciation_assessor.assess(user_audio, reference_text)
-        return self._process_live_delivery_result(passage_id, raw_result, duration_seconds)
+        return self._process_live_delivery_result(passage_id, raw_result)
 
     def _build_live_delivery_reference(self, passage_id: UUID) -> str | None:
         """Build the full reference text for live delivery from model answers."""
@@ -324,7 +274,6 @@ class PracticeService:
         self,
         passage_id: UUID,
         raw_result: RawAssessmentResult,
-        duration_seconds: float,
     ) -> LiveDeliveryResult:
         """Process raw assessment into LiveDeliveryResult, save, and emit events."""
         reference_text = self._build_live_delivery_reference(passage_id)
@@ -333,11 +282,11 @@ class PracticeService:
             raise ValueError(msg)
 
         words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
-        error_types = [w.error_type for w in words]
-        error_rate = calculate_error_rate(error_types)
-        passed = judge_passed(error_types)
+        error_rate = calculate_error_rate(words)
+        passed = judge_passed(words)
 
         total_words = len(reference_text.split())
+        duration_seconds = calculate_speech_duration(words)
         wpm = calculate_wpm(total_words, duration_seconds)
 
         result = LiveDeliveryResult(

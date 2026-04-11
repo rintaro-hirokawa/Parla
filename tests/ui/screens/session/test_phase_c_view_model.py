@@ -10,7 +10,6 @@ from parla.domain.events import (
     ModelAudioFailed,
     ModelAudioReady,
     OverlappingCompleted,
-    OverlappingLagDetected,
 )
 from parla.domain.practice import ModelAudio, OverlappingResult, WordTimestamp
 from parla.event_bus import EventBus
@@ -55,7 +54,6 @@ class FakePracticeService:
     def __init__(self, model_audio: ModelAudio | None = None) -> None:
         self.overlapping_calls: list[dict] = []
         self.live_delivery_calls: list[dict] = []
-        self.lag_calls: list[UUID] = []
         self._streaming_session: FakeStreamingSession | None = None
         self._model_audio = model_audio
 
@@ -77,21 +75,15 @@ class FakePracticeService:
         return self._streaming_session
 
     async def finalize_live_delivery_stream(
-        self, passage_id: UUID, session: FakeStreamingSession, duration_seconds: float
+        self, passage_id: UUID, session: FakeStreamingSession
     ) -> None:
-        self.live_delivery_calls.append({"passage_id": passage_id, "duration": duration_seconds})
+        self.live_delivery_calls.append({"passage_id": passage_id})
 
     async def evaluate_overlapping(self, passage_id: UUID, user_audio: AudioData) -> None:
         self.overlapping_calls.append({"passage_id": passage_id})
 
-    async def detect_lag(self, passage_id: UUID, result) -> None:
-        self.lag_calls.append(passage_id)
-
-    async def evaluate_live_delivery(self, passage_id: UUID, user_audio: AudioData, duration_seconds: float) -> None:
-        self.live_delivery_calls.append({
-            "passage_id": passage_id,
-            "duration": duration_seconds,
-        })
+    async def evaluate_live_delivery(self, passage_id: UUID, user_audio: AudioData) -> None:
+        self.live_delivery_calls.append({"passage_id": passage_id})
 
 
 class FakeSessionQuery:
@@ -292,16 +284,6 @@ class TestOverlapping:
             bus.emit(OverlappingCompleted(passage_id=pid, pronunciation_score=85.0))
 
         assert blocker.args == [85.0]
-
-    def test_lag_detected(self, qtbot) -> None:
-        pid = uuid4()
-        vm, bus, *_ = _make_vm(passage_id=pid)
-
-        with qtbot.waitSignal(vm.lag_detected, timeout=1000) as blocker:
-            bus.emit(OverlappingLagDetected(passage_id=pid, lag_count=3))
-
-        assert blocker.args == [3]
-
 
 class TestLiveDelivery:
     def test_live_delivery_completed(self, qtbot) -> None:

@@ -106,7 +106,6 @@ class PhaseCView(QWidget):
         self._error_banner.retry_clicked.connect(self._vm.retry_model_audio)
         self._vm.overlapping_result.connect(self._on_overlapping)
         self._vm.overlapping_words_ready.connect(self._on_overlapping_words)
-        self._vm.lag_detected.connect(self._on_lag)
         self._vm.live_delivery_result.connect(self._on_delivery)
         self._vm.live_delivery_detail_ready.connect(self._on_delivery_detail)
         self._vm.complete_enabled_changed.connect(self._complete_button.setEnabled)
@@ -221,10 +220,6 @@ class PhaseCView(QWidget):
                 word_spans.append(f'<span style="{style}">{wr.word}</span>')
             parts.append(" ".join(word_spans))
         self._model_text_label.setText("<br>".join(parts))
-
-    def _on_lag(self, count: int) -> None:
-        current = self._status_label.text()
-        self._status_label.setText(f"{current} | 遅延箇所: {count}")
 
     def _on_delivery(self, passed: bool, error_rate: float, threshold: float, wpm: float) -> None:
         result = "合格" if passed else "不合格"

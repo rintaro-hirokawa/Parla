@@ -42,13 +42,9 @@ class FakeFeedbackService:
 class FakePracticeService:
     def __init__(self) -> None:
         self.model_audio_calls: list[UUID] = []
-        self._should_skip = False
 
     def request_model_audio(self, passage_id: UUID) -> None:
         self.model_audio_calls.append(passage_id)
-
-    def should_skip(self, new_item_count: int, wpm: float, cefr_level: str) -> bool:
-        return self._should_skip
 
 
 class FakeFeedbackRepo:
@@ -201,15 +197,12 @@ class TestOneAtATimeDisplay:
         """advance_sentence() on last sentence triggers navigate_to_next when passed."""
         s1 = uuid4()
         vm, bus, _, pr_svc, fb_repo, pid = _make_vm(sentence_ids=[s1])
-        pr_svc._should_skip = False
 
         fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
 
-        with qtbot.waitSignal(vm.navigate_to_next, timeout=1000) as blocker:
+        with qtbot.waitSignal(vm.navigate_to_next, timeout=1000):
             vm.advance_sentence()
-
-        assert blocker.args == [False]
 
     def test_advance_blocked_when_not_passed(self, qtbot) -> None:
         """advance_sentence() does nothing when current sentence is not passed."""
@@ -512,23 +505,11 @@ class TestModelAudioRequest:
 
 
 class TestNavigation:
-    def test_proceed_skip_phase_c(self, qtbot) -> None:
+    def test_proceed_emits_navigate(self, qtbot) -> None:
         vm, bus, _, pr_svc, _, _ = _make_vm()
-        pr_svc._should_skip = True
 
-        with qtbot.waitSignal(vm.navigate_to_next, timeout=1000) as blocker:
+        with qtbot.waitSignal(vm.navigate_to_next, timeout=1000):
             vm.proceed()
-
-        assert blocker.args == [True]
-
-    def test_proceed_to_phase_c(self, qtbot) -> None:
-        vm, bus, _, pr_svc, _, _ = _make_vm()
-        pr_svc._should_skip = False
-
-        with qtbot.waitSignal(vm.navigate_to_next, timeout=1000) as blocker:
-            vm.proceed()
-
-        assert blocker.args == [False]
 
 
 class TestDeactivate:

@@ -262,9 +262,6 @@ class FakePracticeService:
     def get_model_audio(self, passage_id: UUID) -> None:
         return None
 
-    def should_skip(self, **kwargs: Any) -> bool:
-        return False
-
     async def evaluate_overlapping(self, *args: Any) -> None:
         pass
 
@@ -518,7 +515,7 @@ class TestNewMaterialBlock:
         assert len(nav.pushed) == 3
         assert nav.popped_count >= 1
 
-    def test_phase_b_skip_shows_passage_summary(self, qtbot: Any) -> None:
+    def test_phase_b_shows_phase_c(self, qtbot: Any) -> None:
         passage = _make_passage()
         source_repo = FakeSourceRepo()
         source_repo.add_passage(passage)
@@ -535,30 +532,7 @@ class TestNewMaterialBlock:
         coord._on_mic_check_done()
         coord._on_phase_a_done()
 
-        coord._on_phase_b_done(skip_phase_c=True)
-
-        # PhaseB popped + PassageSummaryView pushed (no PhaseC)
-        pushed_count = len(nav.pushed)
-        assert pushed_count == 4  # MicCheck + PhaseA + PhaseB + PassageSummary
-
-    def test_phase_b_no_skip_shows_phase_c(self, qtbot: Any) -> None:
-        passage = _make_passage()
-        source_repo = FakeSourceRepo()
-        source_repo.add_passage(passage)
-
-        menu = _make_menu(
-            pattern="c",
-            blocks=(
-                SessionBlock(block_type="new_material", items=(passage.id,), estimated_minutes=10.0),
-                SessionBlock(block_type="consolidation", items=(), estimated_minutes=0.0),
-            ),
-        )
-        coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
-        coord.start(menu.id)
-        coord._on_mic_check_done()
-        coord._on_phase_a_done()
-
-        coord._on_phase_b_done(skip_phase_c=False)
+        coord._on_phase_b_done()
 
         # PhaseB popped + PhaseCView pushed
         assert len(nav.pushed) == 4  # MicCheck + PhaseA + PhaseB + PhaseC
@@ -579,7 +553,7 @@ class TestNewMaterialBlock:
         coord.start(menu.id)
         coord._on_mic_check_done()
         coord._on_phase_a_done()
-        coord._on_phase_b_done(skip_phase_c=False)
+        coord._on_phase_b_done()
 
         coord._on_phase_c_done(passage.id)
 
@@ -610,9 +584,10 @@ class TestMultiplePassages:
         coord.start(menu.id)
         coord._on_mic_check_done()
 
-        # Passage 1: PhaseA → PhaseB → skip PhaseC → PassageSummary
+        # Passage 1: PhaseA → PhaseB → PhaseC → PassageSummary
         coord._on_phase_a_done()
-        coord._on_phase_b_done(skip_phase_c=True)
+        coord._on_phase_b_done()
+        coord._on_phase_c_done(p1.id)
 
         # Navigate to next passage
         coord._on_next_passage()
@@ -655,9 +630,10 @@ class TestConsolidation:
         )
         assert item_id in coord._stocked_item_ids
 
-        # Complete new_material block: PhaseA → PhaseB → PassageSummary → block_complete
+        # Complete new_material block: PhaseA → PhaseB → PhaseC → PassageSummary → block_complete
         coord._on_phase_a_done()
-        coord._on_phase_b_done(skip_phase_c=True)
+        coord._on_phase_b_done()
+        coord._on_phase_c_done(passage.id)
         coord._on_block_complete()  # advance to consolidation
 
         # Consolidation should have started a review with the stocked item
@@ -683,7 +659,8 @@ class TestConsolidation:
 
         # Complete new_material without stocking any items
         coord._on_phase_a_done()
-        coord._on_phase_b_done(skip_phase_c=True)
+        coord._on_phase_b_done()
+        coord._on_phase_c_done(passage.id)
         coord._on_block_complete()  # advance to consolidation
 
         # Consolidation should auto-skip (advance_block called twice: once for new_material, once for consolidation)
