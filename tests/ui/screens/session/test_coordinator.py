@@ -192,13 +192,20 @@ class FakeSourceRepo:
 
     def __init__(self) -> None:
         self._passages: dict[UUID, Passage] = {}
+        self._sources: dict[UUID, Source] = {}
         self._sources_by_sentence: dict[UUID, Source] = {}
 
     def add_passage(self, p: Passage) -> None:
         self._passages[p.id] = p
 
+    def add_source(self, s: Source) -> None:
+        self._sources[s.id] = s
+
     def add_source_for_sentence(self, sentence_id: UUID, source: Source) -> None:
         self._sources_by_sentence[sentence_id] = source
+
+    def get_source(self, source_id: UUID) -> Source | None:
+        return self._sources.get(source_id)
 
     def get_passage(self, passage_id: UUID) -> Passage | None:
         return self._passages.get(passage_id)
@@ -218,6 +225,9 @@ class FakeItemRepo:
 
     def get_item(self, item_id: UUID) -> LearningItem | None:
         return self._items.get(item_id)
+
+    def get_items_by_sentence(self, sentence_id: UUID) -> list[LearningItem]:
+        return [i for i in self._items.values() if i.source_sentence_id == sentence_id]
 
 
 class FakeReviewService:
