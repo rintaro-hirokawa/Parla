@@ -22,6 +22,7 @@ from parla.domain.session import (
     SessionMenu,
     SessionState,
     compose_blocks,
+    select_next_unlearned_passage,
     select_pattern,
 )
 from parla.domain.source import Source
@@ -174,13 +175,18 @@ class SessionService:
         Returns an empty list when all passages have been learned.
         """
         passages = self._source_repo.get_passages_by_source(source_id)
+        passage_ids = [p.id for p in passages]
+
+        learned_ids: set[UUID] = set()
         for passage in passages:
             has_feedback = any(
                 self._feedback_repo.get_feedback_by_sentence(s.id) is not None for s in passage.sentences
             )
-            if not has_feedback:
-                return [passage.id]
-        return []
+            if has_feedback:
+                learned_ids.add(passage.id)
+
+        next_id = select_next_unlearned_passage(passage_ids, learned_ids)
+        return [next_id] if next_id is not None else []
 
     # --- Menu Confirmation ---
 

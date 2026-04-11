@@ -3,9 +3,9 @@
 from datetime import date
 from uuid import UUID
 
+from parla.domain.base_event import Event
 from parla.domain.session import SessionPattern
 from parla.domain.source import CEFRLevel, EnglishVariant
-from parla.event_bus import Event
 
 # --- Slice 7: User Settings ---
 

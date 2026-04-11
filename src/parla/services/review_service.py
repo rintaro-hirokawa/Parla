@@ -67,6 +67,10 @@ class ReviewService:
         self._review_judge = review_judge
         self._srs_config = srs_config
 
+    def get_variation(self, variation_id: UUID) -> Variation | None:
+        """Look up a variation by ID."""
+        return self._variation_repo.get_variation(variation_id)
+
     def request_variation(self, learning_item_id: UUID, source_id: UUID) -> None:
         """Request variation generation for a learning item."""
         self._bus.emit(

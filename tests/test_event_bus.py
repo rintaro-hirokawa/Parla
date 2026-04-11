@@ -4,7 +4,8 @@ import asyncio
 
 import pytest
 
-from parla.event_bus import Event, EventBus
+from parla.domain.base_event import Event
+from parla.event_bus import EventBus
 
 
 class SampleEvent(Event, frozen=True):

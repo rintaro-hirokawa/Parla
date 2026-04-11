@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from parla.seeders.day1 import seed as seed_day1
 
 if TYPE_CHECKING:
-    from parla.ui.container import Container
+    from parla.container import Container
 
 
 def seed(container: Container) -> None:

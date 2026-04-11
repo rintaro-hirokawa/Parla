@@ -13,6 +13,7 @@ from parla.domain.practice import (
     PronunciationWord,
     SentenceStatus,
     WordTimestamp,
+    evaluate_sentence_statuses,
     map_words_to_sentence_groups,
 )
 
@@ -193,3 +194,54 @@ class TestMapWordsToSentenceGroups:
     def test_empty_sentences(self) -> None:
         groups = map_words_to_sentence_groups((_pw("Hello"),), ())
         assert groups == ()
+
+
+class TestEvaluateSentenceStatuses:
+    """evaluate_sentence_statuses: map words to sentences and judge each."""
+
+    def test_correct_sentence(self) -> None:
+        words = (_pw("Hello"), _pw("world"))
+        result = evaluate_sentence_statuses(["Hello world"], words)
+        assert len(result) == 1
+        assert result[0].status == "correct"
+        assert result[0].recognized_text == "Hello world"
+        assert result[0].model_text == "Hello world"
+        assert result[0].similarity >= 0.9
+
+    def test_multiple_sentences(self) -> None:
+        words = (_pw("Hello"), _pw("world"), _pw("Good"), _pw("morning"))
+        result = evaluate_sentence_statuses(["Hello world", "Good morning"], words)
+        assert len(result) == 2
+        assert result[0].sentence_index == 0
+        assert result[1].sentence_index == 1
+        assert all(s.status == "correct" for s in result)
+
+    def test_omission_heavy_sentence_is_error(self) -> None:
+        words = (
+            _pw("Hello"),
+            _pw("beautiful", "Omission", 0.0),
+            _pw("world", "Omission", 0.0),
+        )
+        result = evaluate_sentence_statuses(["Hello beautiful world"], words)
+        assert result[0].status == "error"
+
+    def test_insertion_excluded(self) -> None:
+        words = (_pw("Hello"), _pw("um", "Insertion"), _pw("world"))
+        result = evaluate_sentence_statuses(["Hello world"], words)
+        assert result[0].status == "correct"
+        assert result[0].recognized_text == "Hello world"
+
+    def test_no_speech_when_all_omitted(self) -> None:
+        words = (_pw("Hello", "Omission", 0.0), _pw("world", "Omission", 0.0))
+        result = evaluate_sentence_statuses(["Hello world"], words)
+        assert result[0].recognized_text == "(no speech)"
+        assert result[0].status == "error"
+
+    def test_empty_words(self) -> None:
+        result = evaluate_sentence_statuses(["Hello world"], ())
+        assert len(result) == 1
+        assert result[0].recognized_text == "(no speech)"
+
+    def test_empty_sentences(self) -> None:
+        result = evaluate_sentence_statuses([], (_pw("Hello"),))
+        assert result == []

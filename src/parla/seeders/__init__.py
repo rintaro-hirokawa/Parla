@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from parla.ui.container import Container
+    from parla.container import Container
 
 _REGISTRY: dict[str, str] = {
     "day1": "parla.seeders.day1",

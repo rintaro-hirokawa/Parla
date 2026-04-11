@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from parla.domain.audio import AudioData
     from parla.domain.practice import WordTimestamp
     from parla.event_bus import EventBus
-    from parla.ports.practice_repository import PracticeRepository
     from parla.ports.pronunciation_assessment import StreamingAssessmentSession
     from parla.services.practice_service import PracticeService
     from parla.services.session_query_service import SessionQueryService
@@ -63,7 +62,6 @@ class PhaseCViewModel(BaseViewModel):
         *,
         event_bus: EventBus,
         practice_service: PracticeService,
-        practice_repo: PracticeRepository,
         audio_player: AudioPlayer,
         recorder: AudioRecorder,
         session_context: SessionContext,
@@ -71,7 +69,6 @@ class PhaseCViewModel(BaseViewModel):
     ) -> None:
         super().__init__(event_bus)
         self._practice_service = practice_service
-        self._practice_repo = practice_repo
         self._player = audio_player
         self._recorder = recorder
         self._ctx = session_context
@@ -148,7 +145,7 @@ class PhaseCViewModel(BaseViewModel):
         self._word_timestamps = ()
 
         # Model audio may already be ready (generated during Phase B)
-        existing = self._practice_repo.get_model_audio(passage_id)
+        existing = self._practice_service.get_model_audio(passage_id)
         if existing is not None:
             self._model_audio_loaded = True
             self._sentence_texts = existing.sentence_texts
@@ -181,7 +178,7 @@ class PhaseCViewModel(BaseViewModel):
             self._player.resume()
             return
         # Stopped — load and play
-        model_audio = self._practice_repo.get_model_audio(self._passage_id)
+        model_audio = self._practice_service.get_model_audio(self._passage_id)
         if model_audio is None:
             self.model_audio_failed.emit("モデル音声が見つかりません")
             return
@@ -322,7 +319,7 @@ class PhaseCViewModel(BaseViewModel):
         if event.passage_id != self._passage_id:
             return
         self._model_audio_loaded = True
-        existing = self._practice_repo.get_model_audio(event.passage_id)
+        existing = self._practice_service.get_model_audio(event.passage_id)
         if existing is not None:
             self._sentence_texts = existing.sentence_texts
             self._word_timestamps = existing.word_timestamps

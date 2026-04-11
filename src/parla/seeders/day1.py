@@ -21,7 +21,7 @@ from parla.domain.source import CEFRLevel, EnglishVariant, Source
 from parla.domain.user_settings import UserSettings
 
 if TYPE_CHECKING:
-    from parla.ui.container import Container
+    from parla.container import Container
 
 logger = structlog.get_logger()
 
@@ -43,7 +43,7 @@ def seed(
 
     # 1. User settings
     settings = UserSettings(cefr_level=CEFRLevel.A2, english_variant=EnglishVariant.AMERICAN)
-    container.settings_repo.save(settings)
+    container._settings_repo.save(settings)
 
     # 2. Source
     source_text = (_FIXTURES / "sample_01.txt").read_text(encoding="utf-8")
@@ -53,7 +53,7 @@ def seed(
         english_variant=EnglishVariant.AMERICAN,
         status="not_started",
     )
-    container.source_repo.save_source(source)
+    container._source_repo.save_source(source)
 
     # 3. Passages
     raw = json.loads((_FIXTURES / "passage_generation_response.json").read_text(encoding="utf-8"))
@@ -84,7 +84,7 @@ def seed(
                 sentences=sentences,
             )
         )
-    container.source_repo.save_passages(passages)
+    container._source_repo.save_passages(passages)
 
     # 3b. Sentence feedback (optional — needed for Phase C seeding)
     if seed_feedback:
@@ -96,7 +96,7 @@ def seed(
                     model_answer=sentence.en,
                     is_acceptable=True,
                 )
-                container.feedback_repo.save_feedback(feedback)
+                container._feedback_repo.save_feedback(feedback)
 
     # 3c. Model audio (optional — pre-seeds TTS output for Phase C)
     if seed_model_audio:
@@ -118,7 +118,7 @@ def seed(
         source_id=source.id,
         confirmed=True,
     )
-    container.session_repo.save_menu(menu)
+    container._session_repo.save_menu(menu)
 
     logger.info(
         "seed_day1_done",
@@ -167,4 +167,4 @@ def _seed_model_audio_for_passage(passage: Passage, container: Container) -> Non
         word_timestamps=tuple(timestamps),
         sentence_texts=sentence_texts,
     )
-    container.practice_repo.save_model_audio(model_audio)
+    container._practice_repo.save_model_audio(model_audio)

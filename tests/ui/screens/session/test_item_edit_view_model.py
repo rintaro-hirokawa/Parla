@@ -60,7 +60,7 @@ def _make_vm(
         for item in items:
             new_item = item.model_copy(update={"source_sentence_id": sid})
             repo.add(new_item)
-    vm = ItemEditViewModel(item_repo=repo)
+    vm = ItemEditViewModel(item_query=repo)
     vm.load_items(sid)
     return vm, repo, sid
 

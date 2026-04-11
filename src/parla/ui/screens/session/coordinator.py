@@ -15,10 +15,10 @@ from parla.ui.screens.session.session_context import SessionContext
 if TYPE_CHECKING:
     from uuid import UUID
 
+    from parla.container import Container
     from parla.domain.passage import Passage
     from parla.domain.session import SessionBlock, SessionMenu, SessionState
     from parla.event_bus import EventBus
-    from parla.ui.container import Container
     from parla.ui.navigation import NavigationController
 
 logger = structlog.get_logger()
@@ -34,12 +34,14 @@ class SessionCoordinator(QObject):
         *,
         nav: NavigationController,
         container: Container,
+        skip_to_phase: str | None = None,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._nav = nav
         self._c = container
         self._bus: EventBus = container.event_bus
+        self._skip_to_phase = skip_to_phase
 
         # Shared objects — created once per session
         self._recorder = AudioRecorder()
@@ -66,14 +68,14 @@ class SessionCoordinator(QObject):
     def start(self, menu_id: UUID) -> None:
         """Start a new session from a confirmed menu."""
         self._session_state = self._c.session_service.start_session(menu_id)
-        self._menu = self._c.session_repo.get_menu(menu_id)
+        self._menu = self._c.session_query.get_menu(menu_id)
         self._nav.enter_session()
         self._show_mic_check()
 
     def start_resumed(self, session_id: UUID) -> None:
         """Resume an interrupted session (skip mic check)."""
         self._session_state = self._c.session_service.resume_session(session_id)
-        self._menu = self._c.session_repo.get_menu(self._session_state.menu_id)
+        self._menu = self._c.session_query.get_menu(self._session_state.menu_id)
         self._nav.enter_session()
         self._session_context.start_timer()
         self._start_current_block()
@@ -148,7 +150,6 @@ class SessionCoordinator(QObject):
         vm = ReviewViewModel(
             event_bus=self._bus,
             review_service=self._c.review_service,
-            variation_repo=self._c.variation_repo,
             session_context=self._session_context,
         )
         view = ReviewView(vm, recorder=self._recorder)
@@ -162,20 +163,7 @@ class SessionCoordinator(QObject):
 
     def _resolve_review_items(self, item_ids: list[UUID]) -> list[tuple[UUID, UUID]]:
         """Resolve learning_item_ids to (item_id, source_id) pairs."""
-        pairs: list[tuple[UUID, UUID]] = []
-        for item_id in item_ids:
-            item = self._c.item_repo.get_item(item_id)
-            if item is None:
-                logger.warning("item_not_found", item_id=str(item_id))
-                continue
-            source = self._c.source_repo.get_source_by_sentence_id(
-                item.source_sentence_id
-            )
-            if source is None:
-                logger.warning("source_not_found", item_id=str(item_id))
-                continue
-            pairs.append((item_id, source.id))
-        return pairs
+        return self._c.item_query.resolve_review_pairs(item_ids)
 
     # ------------------------------------------------------------------
     # New material block (E3 → E4 → E6 → E9 per passage)
@@ -194,7 +182,7 @@ class SessionCoordinator(QObject):
             return
 
         passage_id = self._current_passage_ids[self._current_passage_index]
-        passage = self._c.source_repo.get_passage(passage_id)
+        passage = self._c.source_query.get_passage(passage_id)
         if passage is None:
             logger.error("passage_not_found", passage_id=str(passage_id))
             self._current_passage_index += 1
@@ -203,11 +191,11 @@ class SessionCoordinator(QObject):
 
         self._current_passage = passage
 
-        source = self._c.source_repo.get_source(passage.source_id)
+        source = self._c.source_query.get_source(passage.source_id)
         if source is not None:
             self._session_context.set_cefr_level(source.cefr_level)
 
-        if self._c.skip_to_phase == "c":
+        if self._skip_to_phase == "c":
             self._c.practice_service.request_model_audio(passage.id)
             self._show_phase_c(passage.id)
             return
@@ -252,8 +240,7 @@ class SessionCoordinator(QObject):
             event_bus=self._bus,
             feedback_service=self._c.feedback_service,
             practice_service=self._c.practice_service,
-            feedback_repo=self._c.feedback_repo,
-            item_repo=self._c.item_repo,
+            item_query=self._c.item_query,
             session_context=self._session_context,
         )
         vm.start(passage.id, [s.id for s in passage.sentences])
@@ -285,7 +272,6 @@ class SessionCoordinator(QObject):
         vm = PhaseCViewModel(
             event_bus=self._bus,
             practice_service=self._c.practice_service,
-            practice_repo=self._c.practice_repo,
             audio_player=AudioPlayer(),
             recorder=self._recorder,
             session_context=self._session_context,
@@ -464,7 +450,7 @@ class SessionCoordinator(QObject):
         if not isinstance(self._current_vm, PhaseBViewModel):
             return
 
-        vm = ItemEditViewModel(item_repo=self._c.item_repo)
+        vm = ItemEditViewModel(item_query=self._c.item_query)
         vm.load_items(self._current_vm.current_sentence_id)
         view = ItemEditView(vm)
         view.exec()

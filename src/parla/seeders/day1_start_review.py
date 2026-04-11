@@ -13,7 +13,7 @@ from parla.domain.session import SessionConfig, SessionMenu, compose_blocks
 from parla.seeders.day1 import seed as seed_day1
 
 if TYPE_CHECKING:
-    from parla.ui.container import Container
+    from parla.container import Container
 
 logger = structlog.get_logger()
 
@@ -29,9 +29,9 @@ def seed(container: Container) -> None:
     seed_day1(container, max_passages=2, seed_feedback=False)
 
     # 2. Retrieve seeded source and passages
-    sources = list(container.source_repo.get_active_sources())
+    sources = list(container._source_repo.get_active_sources())
     source = sources[0]
-    passages = list(container.source_repo.get_passages_by_source(source.id))
+    passages = list(container._source_repo.get_passages_by_source(source.id))
     passage_1 = passages[0]
     passage_2 = passages[1]
 
@@ -43,7 +43,7 @@ def seed(container: Container) -> None:
             model_answer=sentence.en,
             is_acceptable=True,
         )
-        container.feedback_repo.save_feedback(feedback)
+        container._feedback_repo.save_feedback(feedback)
 
     # 4. Create 2 learning items (auto_stocked, due today)
     today = date.today()
@@ -67,7 +67,7 @@ def seed(container: Container) -> None:
             next_review_date=today,
         ),
     ]
-    container.item_repo.save_items(items)
+    container._item_repo.save_items(items)
 
     # 5. Compose pattern "a" menu (review → new_material → consolidation)
     blocks = compose_blocks(
@@ -84,7 +84,7 @@ def seed(container: Container) -> None:
         confirmed=True,
         pending_review_count=2,
     )
-    container.session_repo.save_menu(menu)
+    container._session_repo.save_menu(menu)
 
     logger.info(
         "seed_day1_start_review_done",

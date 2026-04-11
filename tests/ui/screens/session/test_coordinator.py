@@ -234,6 +234,9 @@ class FakeReviewService:
     def request_variation(self, item_id: UUID, source_id: UUID) -> None:
         pass
 
+    def get_variation(self, variation_id: UUID) -> None:
+        return None
+
     async def judge_review(self, **kwargs: Any) -> None:
         pass
 
@@ -245,6 +248,9 @@ class FakeFeedbackService:
     def record_sentence(self, passage_id: UUID, sentence_id: UUID, audio: Any) -> None:
         pass
 
+    def get_feedback_by_sentence(self, sentence_id: UUID) -> None:
+        return None
+
     async def judge_retry(self, **kwargs: Any) -> None:
         pass
 
@@ -252,6 +258,9 @@ class FakeFeedbackService:
 class FakePracticeService:
     def request_model_audio(self, passage_id: UUID) -> None:
         pass
+
+    def get_model_audio(self, passage_id: UUID) -> None:
+        return None
 
     def should_skip(self, **kwargs: Any) -> bool:
         return False
@@ -263,22 +272,13 @@ class FakePracticeService:
         pass
 
 
-class FakePracticeRepo:
-    def get_model_audio(self, passage_id: UUID) -> None:
-        return None
-
-
-class FakeFeedbackRepo:
-    def get_feedback_by_sentence(self, sentence_id: UUID) -> None:
-        return None
-
-
-class FakeVariationRepo:
-    def get_variation(self, variation_id: UUID) -> None:
-        return None
-
-
 class FakeSessionQuery:
+    def __init__(self, menu: SessionMenu) -> None:
+        self._menu = menu
+
+    def get_menu(self, menu_id: UUID) -> SessionMenu | None:
+        return self._menu if menu_id == self._menu.id else None
+
     def get_passage_summary(self, passage_id: UUID) -> None:
         return None
 
@@ -289,9 +289,48 @@ class FakeSessionQuery:
         return None
 
 
+class FakeSourceQuery:
+    def __init__(self, source_repo: FakeSourceRepo) -> None:
+        self._repo = source_repo
+
+    def get_passage(self, passage_id: UUID) -> Passage | None:
+        return self._repo.get_passage(passage_id)
+
+    def get_source(self, source_id: UUID) -> Source | None:
+        return self._repo.get_source(source_id)
+
+
 class FakeItemQuery:
+    def __init__(self, item_repo: FakeItemRepo, source_repo: FakeSourceRepo) -> None:
+        self._item_repo = item_repo
+        self._source_repo = source_repo
+
     def get_sentence_items(self, sentence_id: UUID) -> tuple:
         return ()
+
+    def get_item(self, item_id: UUID) -> LearningItem | None:
+        return self._item_repo.get_item(item_id)
+
+    def get_items_by_sentence(self, sentence_id: UUID) -> list[LearningItem]:
+        return self._item_repo.get_items_by_sentence(sentence_id)
+
+    def update_item(self, item_id: UUID, pattern: str, explanation: str) -> None:
+        pass
+
+    def dismiss_item(self, item_id: UUID) -> None:
+        pass
+
+    def resolve_review_pairs(self, item_ids: list[UUID]) -> list[tuple[UUID, UUID]]:
+        pairs: list[tuple[UUID, UUID]] = []
+        for item_id in item_ids:
+            item = self._item_repo.get_item(item_id)
+            if item is None:
+                continue
+            source = self._source_repo.get_source_by_sentence_id(item.source_sentence_id)
+            if source is None:
+                continue
+            pairs.append((item_id, source.id))
+        return pairs
 
 
 class FakeContainer:
@@ -304,20 +343,19 @@ class FakeContainer:
         source_repo: FakeSourceRepo | None = None,
         item_repo: FakeItemRepo | None = None,
     ) -> None:
+        _source_repo = source_repo or FakeSourceRepo()
+        _item_repo = item_repo or FakeItemRepo()
+
         self.event_bus = EventBus()
         self.session_service = FakeSessionService(menu)
-        self.session_repo = FakeSessionRepo(menu)
-        self.source_repo = source_repo or FakeSourceRepo()
-        self.item_repo = item_repo or FakeItemRepo()
         self.review_service = FakeReviewService()
         self.feedback_service = FakeFeedbackService()
         self.practice_service = FakePracticeService()
-        self.practice_repo = FakePracticeRepo()
-        self.feedback_repo = FakeFeedbackRepo()
-        self.variation_repo = FakeVariationRepo()
-        self.session_query = FakeSessionQuery()
-        self.item_query = FakeItemQuery()
-        self.skip_to_phase: str | None = None
+        self.settings_service = None
+        self.source_service = None
+        self.session_query = FakeSessionQuery(menu)
+        self.source_query = FakeSourceQuery(_source_repo)
+        self.item_query = FakeItemQuery(_item_repo, _source_repo)
 
 
 # ======================================================================

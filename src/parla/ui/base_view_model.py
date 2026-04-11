@@ -4,7 +4,8 @@ from collections.abc import Callable
 
 from PySide6.QtCore import QObject
 
-from parla.event_bus import Event, EventBus
+from parla.domain.base_event import Event
+from parla.event_bus import EventBus
 
 
 class BaseViewModel(QObject):

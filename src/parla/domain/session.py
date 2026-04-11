@@ -61,6 +61,17 @@ class SessionState(BaseModel):
 # --- Pure functions ---
 
 
+def select_next_unlearned_passage(
+    passage_ids: Sequence[UUID],
+    learned_passage_ids: set[UUID],
+) -> UUID | None:
+    """Return the first passage ID not in the learned set, or None if all learned."""
+    for pid in passage_ids:
+        if pid not in learned_passage_ids:
+            return pid
+    return None
+
+
 def select_pattern(pending_review_count: int, config: SessionConfig) -> SessionPattern:
     """Deterministic pattern selection based on pending review count.
 

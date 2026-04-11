@@ -20,9 +20,8 @@ if TYPE_CHECKING:
 
     from parla.domain.audio import AudioData
     from parla.event_bus import EventBus
-    from parla.ports.feedback_repository import FeedbackRepository
-    from parla.ports.learning_item_repository import LearningItemRepository
     from parla.services.feedback_service import FeedbackService
+    from parla.services.learning_item_query_service import LearningItemQueryService
     from parla.services.practice_service import PracticeService
     from parla.ui.screens.session.session_context import SessionContext
 
@@ -48,15 +47,13 @@ class PhaseBViewModel(BaseViewModel):
         event_bus: EventBus,
         feedback_service: FeedbackService,
         practice_service: PracticeService,
-        feedback_repo: FeedbackRepository,
-        item_repo: LearningItemRepository,
+        item_query: LearningItemQueryService,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)
         self._feedback_service = feedback_service
         self._practice_service = practice_service
-        self._feedback_repo = feedback_repo
-        self._item_repo = item_repo
+        self._item_query = item_query
         self._ctx = session_context
 
         self._passage_id: UUID | None = None
@@ -114,14 +111,14 @@ class PhaseBViewModel(BaseViewModel):
 
         # Pre-fill buffers with data already generated during Phase A
         for i, sid in enumerate(sentence_ids):
-            fb = self._feedback_repo.get_feedback_by_sentence(sid)
+            fb = self._feedback_service.get_feedback_by_sentence(sid)
             if fb is not None:
                 self._feedback_buffer[i] = (fb.user_utterance, fb.model_answer, fb.is_acceptable)
                 self._received_count += 1
                 if fb.is_acceptable:
                     self._passed.add(i)
 
-            for item in self._item_repo.get_items_by_sentence(sid):
+            for item in self._item_query.get_items_by_sentence(sid):
                 if item.status == "auto_stocked" and item.id not in self._seen_item_ids:
                     self._seen_item_ids.add(item.id)
                     self._new_item_count += 1
@@ -191,7 +188,7 @@ class PhaseBViewModel(BaseViewModel):
         if idx in self._feedback_buffer:
             return
 
-        fb = self._feedback_repo.get_feedback_by_sentence(event.sentence_id)
+        fb = self._feedback_service.get_feedback_by_sentence(event.sentence_id)
         if fb is None:
             self._error_buffer[idx] = "Feedback data not found"
             if idx == self._current_index:
@@ -228,7 +225,7 @@ class PhaseBViewModel(BaseViewModel):
         self._seen_item_ids.add(event.item_id)
         self._new_item_count += 1
 
-        item = self._item_repo.get_item(event.item_id)
+        item = self._item_query.get_item(event.item_id)
         explanation = item.explanation if item else ""
         idx = self._sentence_index.get(item.source_sentence_id) if item else None
 

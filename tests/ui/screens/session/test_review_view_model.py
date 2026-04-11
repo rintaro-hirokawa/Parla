@@ -42,6 +42,13 @@ class FakeReviewService:
         self.request_variation_calls: list[tuple[UUID, UUID]] = []
         self.judge_review_calls: list[dict] = []
         self.judge_review_retry_calls: list[dict] = []
+        self._variations: dict[UUID, Variation] = {}
+
+    def add_variation(self, v: Variation) -> None:
+        self._variations[v.id] = v
+
+    def get_variation(self, variation_id: UUID) -> Variation | None:
+        return self._variations.get(variation_id)
 
     def request_variation(self, learning_item_id: UUID, source_id: UUID) -> None:
         self.request_variation_calls.append((learning_item_id, source_id))
@@ -78,25 +85,22 @@ class FakeVariationRepo:
 def _make_vm(
     event_bus: EventBus | None = None,
     review_service: FakeReviewService | None = None,
-    variation_repo: FakeVariationRepo | None = None,
     session_context: SessionContext | None = None,
-) -> tuple[ReviewViewModel, EventBus, FakeReviewService, FakeVariationRepo, SessionContext]:
+) -> tuple[ReviewViewModel, EventBus, FakeReviewService, SessionContext]:
     bus = event_bus or EventBus()
     svc = review_service or FakeReviewService()
-    repo = variation_repo or FakeVariationRepo()
     ctx = session_context or SessionContext()
     vm = ReviewViewModel(
         event_bus=bus,
         review_service=svc,
-        variation_repo=repo,
         session_context=ctx,
     )
-    return vm, bus, svc, repo, ctx
+    return vm, bus, svc, ctx
 
 
 class TestStartReview:
     def test_request_variation_called(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
 
@@ -110,11 +114,11 @@ class TestStartReview:
 
 class TestVariationReady:
     def test_question_ready_emitted(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -124,11 +128,11 @@ class TestVariationReady:
             bus.emit(VariationReady(variation_id=variation.id, learning_item_id=item_id))
 
     def test_question_data_correct(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -139,7 +143,7 @@ class TestVariationReady:
         assert vm.current_ja == "彼は自分自身でテストした"
 
     def test_variation_failed_emits_error(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
 
@@ -153,11 +157,11 @@ class TestVariationReady:
 
 class TestHints:
     def test_reveal_hint_increments_level(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -169,11 +173,11 @@ class TestHints:
         assert blocker.args == [1, "He ... himself"]
 
     def test_reveal_hint2(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -186,11 +190,11 @@ class TestHints:
         assert blocker.args == [2, "He + 動詞(過去形) + himself"]
 
     def test_no_hint_beyond_level2(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -205,11 +209,11 @@ class TestHints:
 
 class TestReviewResult:
     def test_correct_emits_result(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -228,11 +232,11 @@ class TestReviewResult:
         assert blocker.args[0] is True  # correct
 
     def test_incorrect_emits_result(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -254,11 +258,11 @@ class TestReviewResult:
 
 class TestRetry:
     def test_retry_result_emitted(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -276,11 +280,11 @@ class TestRetry:
 
 class TestAllDone:
     def test_all_done_after_last_item(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
         variation = _make_variation(learning_item_id=item_id, source_id=source_id)
-        repo.add(variation)
+        svc.add_variation(variation)
 
         vm.start_review([(item_id, source_id)])
         vm.activate()
@@ -300,7 +304,7 @@ class TestAllDone:
 
 class TestDeactivate:
     def test_deactivate_unsubscribes(self, qtbot) -> None:
-        vm, bus, svc, repo, ctx = _make_vm()
+        vm, bus, svc, ctx = _make_vm()
         item_id = uuid4()
         source_id = uuid4()
 

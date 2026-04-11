@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from parla.domain.learning_item import LearningItem
-    from parla.ports.learning_item_repository import LearningItemRepository
+    from parla.services.learning_item_query_service import LearningItemQueryService
 
 
 class ItemEditViewModel(QObject):
@@ -24,9 +24,9 @@ class ItemEditViewModel(QObject):
     item_dismissed = Signal(str)  # item_id
     dismissed = Signal()
 
-    def __init__(self, *, item_repo: LearningItemRepository, parent: QObject | None = None) -> None:
+    def __init__(self, *, item_query: LearningItemQueryService, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self._repo = item_repo
+        self._repo = item_query
         self._sentence_id: UUID | None = None
         self._items: Sequence[LearningItem] = []
 

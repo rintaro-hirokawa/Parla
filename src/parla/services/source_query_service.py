@@ -1,5 +1,8 @@
 """Source list and progress query service."""
 
+from uuid import UUID
+
+from parla.domain.passage import Passage
 from parla.domain.source import CEFRLevel, Source, SourceStatus
 from parla.ports.practice_repository import PracticeRepository
 from parla.ports.source_repository import SourceRepository
@@ -17,6 +20,14 @@ class SourceQueryService:
     ) -> None:
         self._source_repo = source_repo
         self._practice_repo = practice_repo
+
+    def get_passage(self, passage_id: UUID) -> Passage | None:
+        """Get a single passage by ID."""
+        return self._source_repo.get_passage(passage_id)
+
+    def get_source(self, source_id: UUID) -> Source | None:
+        """Get a single source by ID."""
+        return self._source_repo.get_source(source_id)
 
     def list_sources(
         self,

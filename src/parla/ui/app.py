@@ -9,9 +9,9 @@ from PySide6 import QtAsyncio
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget
 
+from parla.container import Container
 from parla.ui import theme
 from parla.ui.base_view_model import BaseViewModel
-from parla.ui.container import Container
 from parla.ui.navigation import NavigationController
 from parla.ui.screens.history.view import HistoryView
 from parla.ui.screens.history.view_model import HistoryViewModel
@@ -155,6 +155,7 @@ class MainWindow(QMainWindow):
         self._coordinator = SessionCoordinator(
             nav=self._nav,
             container=self._container,
+            skip_to_phase=getattr(self._container, '_skip_to_phase', None),
         )
         self._coordinator.session_finished.connect(self._on_session_finished)
 

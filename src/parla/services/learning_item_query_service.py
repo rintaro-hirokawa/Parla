@@ -1,6 +1,9 @@
 """Learning item list and detail query service."""
 
+from collections.abc import Sequence
 from uuid import UUID
+
+import structlog
 
 from parla.domain.learning_item import LearningItem
 from parla.ports.feedback_repository import FeedbackRepository
@@ -16,9 +19,11 @@ from parla.services.query_models import (
     SentenceItemRow,
 )
 
+logger = structlog.get_logger()
+
 
 class LearningItemQueryService:
-    """Read-only service for learning item list and detail display."""
+    """Service for learning item queries and basic CRUD."""
 
     def __init__(
         self,
@@ -34,6 +39,45 @@ class LearningItemQueryService:
         self._variation_repo = variation_repo
         self._review_attempt_repo = review_attempt_repo
         self._feedback_repo = feedback_repo
+
+    # --- Direct item access (used by ViewModels) ---
+
+    def get_item(self, item_id: UUID) -> LearningItem | None:
+        """Get a single learning item by ID."""
+        return self._item_repo.get_item(item_id)
+
+    def get_items_by_sentence(self, sentence_id: UUID) -> Sequence[LearningItem]:
+        """Get learning items associated with a sentence."""
+        return self._item_repo.get_items_by_sentence(sentence_id)
+
+    def update_item(self, item_id: UUID, pattern: str, explanation: str) -> None:
+        """Update a learning item's pattern and explanation."""
+        self._item_repo.update_item(item_id, pattern, explanation)
+
+    def dismiss_item(self, item_id: UUID) -> None:
+        """Dismiss a learning item."""
+        self._item_repo.dismiss_item(item_id)
+
+    def resolve_review_pairs(
+        self, item_ids: Sequence[UUID]
+    ) -> list[tuple[UUID, UUID]]:
+        """Resolve learning_item_ids to (item_id, source_id) pairs."""
+        pairs: list[tuple[UUID, UUID]] = []
+        for item_id in item_ids:
+            item = self._item_repo.get_item(item_id)
+            if item is None:
+                logger.warning("item_not_found", item_id=str(item_id))
+                continue
+            source = self._source_repo.get_source_by_sentence_id(
+                item.source_sentence_id
+            )
+            if source is None:
+                logger.warning("source_not_found", item_id=str(item_id))
+                continue
+            pairs.append((item_id, source.id))
+        return pairs
+
+    # --- List & detail queries ---
 
     def list_items(
         self,

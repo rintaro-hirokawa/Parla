@@ -1,7 +1,5 @@
 """Phase A/B feedback orchestration service."""
 
-import contextlib
-from typing import cast
 from uuid import UUID
 
 import structlog
@@ -15,12 +13,11 @@ from parla.domain.events import (
     SentenceRecorded,
 )
 from parla.domain.feedback import PracticeAttempt, RetryResult, SentenceFeedback
-from parla.domain.learning_item import LearningItem, LearningItemCategory, status_from_priority
+from parla.domain.learning_item import RawItemData, create_learning_items_from_raw
 from parla.event_bus import EventBus
 from parla.ports.audio_storage import AudioStorage
 from parla.ports.feedback_generation import (
     FeedbackGenerationPort,
-    RawFeedback,
     StockedItemInfo,
 )
 from parla.ports.feedback_repository import FeedbackRepository
@@ -51,6 +48,10 @@ class FeedbackService:
         self._audio_storage = audio_storage
         self._generator = feedback_generator
         self._retry_judge = retry_judge
+
+    def get_feedback_by_sentence(self, sentence_id: UUID) -> SentenceFeedback | None:
+        """Look up feedback for a sentence."""
+        return self._feedback_repo.get_feedback_by_sentence(sentence_id)
 
     def record_sentence(
         self,
@@ -119,8 +120,20 @@ class FeedbackService:
             )
             self._feedback_repo.save_feedback(feedback)
 
-            learning_items = self._convert_learning_items(
-                raw_feedback,
+            raw_item_data = [
+                RawItemData(
+                    pattern=ri.pattern,
+                    explanation=ri.explanation,
+                    category=ri.category,
+                    sub_tag=ri.sub_tag,
+                    priority=ri.priority,
+                    is_reappearance=ri.is_reappearance,
+                    matched_stock_item_id=ri.matched_stock_item_id,
+                )
+                for ri in raw_feedback.items
+            ]
+            learning_items = create_learning_items_from_raw(
+                raw_item_data,
                 event.sentence_id,
             )
             if learning_items:
@@ -193,29 +206,3 @@ class FeedbackService:
 
         return result
 
-    @staticmethod
-    def _convert_learning_items(
-        raw: RawFeedback,
-        sentence_id: UUID,
-    ) -> list[LearningItem]:
-        items: list[LearningItem] = []
-        for raw_item in raw.items:
-            matched_id = None
-            if raw_item.matched_stock_item_id:
-                with contextlib.suppress(ValueError):
-                    matched_id = UUID(raw_item.matched_stock_item_id)
-
-            items.append(
-                LearningItem(
-                    pattern=raw_item.pattern,
-                    explanation=raw_item.explanation,
-                    category=cast("LearningItemCategory", raw_item.category),
-                    sub_tag=raw_item.sub_tag,
-                    priority=raw_item.priority,
-                    source_sentence_id=sentence_id,
-                    is_reappearance=raw_item.is_reappearance,
-                    matched_item_id=matched_id,
-                    status=status_from_priority(raw_item.priority),
-                )
-            )
-        return items

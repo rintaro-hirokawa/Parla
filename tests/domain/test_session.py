@@ -8,6 +8,7 @@ from uuid import uuid4
 from parla.domain.session import (
     SessionConfig,
     compose_blocks,
+    select_next_unlearned_passage,
     select_pattern,
 )
 
@@ -142,3 +143,31 @@ class TestComposeBlocks:
         assert blocks[0].block_type == "review"
         assert blocks[0].items == ()
         assert blocks[0].estimated_minutes == 0.0
+
+
+class TestSelectNextUnlearnedPassage:
+    """select_next_unlearned_passage: first passage not in learned set."""
+
+    def test_returns_first_unlearned(self) -> None:
+        ids = [uuid4(), uuid4(), uuid4()]
+        result = select_next_unlearned_passage(ids, {ids[0]})
+        assert result == ids[1]
+
+    def test_all_learned_returns_none(self) -> None:
+        ids = [uuid4(), uuid4()]
+        result = select_next_unlearned_passage(ids, set(ids))
+        assert result is None
+
+    def test_none_learned_returns_first(self) -> None:
+        ids = [uuid4(), uuid4()]
+        result = select_next_unlearned_passage(ids, set())
+        assert result == ids[0]
+
+    def test_empty_passages_returns_none(self) -> None:
+        result = select_next_unlearned_passage([], set())
+        assert result is None
+
+    def test_preserves_order(self) -> None:
+        ids = [uuid4(), uuid4(), uuid4()]
+        result = select_next_unlearned_passage(ids, {ids[0], ids[1]})
+        assert result == ids[2]

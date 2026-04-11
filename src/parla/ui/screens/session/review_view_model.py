@@ -23,7 +23,6 @@ if TYPE_CHECKING:
     from parla.domain.audio import AudioData
     from parla.domain.variation import Variation
     from parla.event_bus import EventBus
-    from parla.ports.variation_repository import VariationRepository
     from parla.services.review_service import ReviewService
     from parla.ui.screens.session.session_context import SessionContext
 
@@ -43,12 +42,10 @@ class ReviewViewModel(BaseViewModel):
         *,
         event_bus: EventBus,
         review_service: ReviewService,
-        variation_repo: VariationRepository,
         session_context: SessionContext,
     ) -> None:
         super().__init__(event_bus)
         self._review_service = review_service
-        self._variation_repo = variation_repo
         self._ctx = session_context
 
         self._items: list[tuple[UUID, UUID]] = []  # (item_id, source_id)
@@ -178,7 +175,7 @@ class ReviewViewModel(BaseViewModel):
         if event.learning_item_id != self._waiting_for_item_id:
             _logger.warning("review_vm_id_mismatch")
             return
-        variation = self._variation_repo.get_variation(event.variation_id)
+        variation = self._review_service.get_variation(event.variation_id)
         if variation is None:
             self.error.emit(f"Variation not found: {event.variation_id}")
             return

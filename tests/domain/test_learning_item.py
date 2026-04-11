@@ -5,7 +5,12 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from parla.domain.learning_item import LearningItem, status_from_priority
+from parla.domain.learning_item import (
+    LearningItem,
+    RawItemData,
+    create_learning_items_from_raw,
+    status_from_priority,
+)
 
 
 class TestStatusFromPriority:
@@ -94,3 +99,59 @@ class TestLearningItemCreation:
     def test_empty_sub_tag_allowed(self) -> None:
         item = self._make_item(category="コロケーション", sub_tag="")
         assert item.sub_tag == ""
+
+
+class TestCreateLearningItemsFromRaw:
+    """create_learning_items_from_raw: domain factory for LLM-extracted items."""
+
+    def _make_raw(self, **overrides: object) -> RawItemData:
+        defaults: dict[str, object] = {
+            "pattern": "by ~ing",
+            "explanation": "〜することによって",
+            "category": "文法",
+            "sub_tag": "動名詞",
+            "priority": 5,
+            "is_reappearance": False,
+            "matched_stock_item_id": None,
+        }
+        defaults.update(overrides)
+        return RawItemData(**defaults)
+
+    def test_single_item_high_priority(self) -> None:
+        sid = uuid4()
+        items = create_learning_items_from_raw([self._make_raw(priority=5)], sid)
+        assert len(items) == 1
+        assert items[0].status == "auto_stocked"
+        assert items[0].source_sentence_id == sid
+
+    def test_low_priority_maps_to_review_later(self) -> None:
+        items = create_learning_items_from_raw([self._make_raw(priority=2)], uuid4())
+        assert items[0].status == "review_later"
+
+    def test_valid_matched_id_parsed(self) -> None:
+        matched = uuid4()
+        raw = self._make_raw(matched_stock_item_id=str(matched), is_reappearance=True)
+        items = create_learning_items_from_raw([raw], uuid4())
+        assert items[0].matched_item_id == matched
+        assert items[0].is_reappearance is True
+
+    def test_invalid_matched_id_suppressed(self) -> None:
+        raw = self._make_raw(matched_stock_item_id="not-a-uuid")
+        items = create_learning_items_from_raw([raw], uuid4())
+        assert items[0].matched_item_id is None
+
+    def test_empty_matched_id_is_none(self) -> None:
+        raw = self._make_raw(matched_stock_item_id="")
+        items = create_learning_items_from_raw([raw], uuid4())
+        assert items[0].matched_item_id is None
+
+    def test_empty_input(self) -> None:
+        items = create_learning_items_from_raw([], uuid4())
+        assert items == []
+
+    def test_multiple_items(self) -> None:
+        raws = [self._make_raw(priority=5), self._make_raw(priority=3)]
+        items = create_learning_items_from_raw(raws, uuid4())
+        assert len(items) == 2
+        assert items[0].status == "auto_stocked"
+        assert items[1].status == "review_later"

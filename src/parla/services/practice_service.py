@@ -21,10 +21,10 @@ from parla.domain.practice import (
     ModelAudio,
     OverlappingResult,
     PronunciationWord,
-    SentenceStatus,
     WordTimestamp,
+    evaluate_sentence_statuses,
 )
-from parla.domain.similarity import calculate_similarity, judge_passage, judge_sentence_status
+from parla.domain.similarity import judge_passage
 from parla.domain.timing import calculate_timing_deviations
 from parla.domain.wpm import calculate_wpm, should_skip_phase_c
 from parla.event_bus import EventBus
@@ -63,6 +63,10 @@ class PracticeService:
         self._tts_generator = tts_generator
         self._pronunciation_assessor = pronunciation_assessor
         self._lag_detector = lag_detector
+
+    def get_model_audio(self, passage_id: UUID) -> ModelAudio | None:
+        """Look up cached model audio for a passage."""
+        return self._practice_repo.get_model_audio(passage_id)
 
     def request_model_audio(self, passage_id: UUID) -> None:
         """Request TTS generation for a passage's dynamic model answers.
@@ -338,7 +342,7 @@ class PracticeService:
                 sentence_model_texts.append(feedback.model_answer)
 
         words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
-        sentence_statuses = self._map_words_to_sentences(sentence_model_texts, words)
+        sentence_statuses = evaluate_sentence_statuses(sentence_model_texts, words)
 
         status_strings = [s.status for s in sentence_statuses]
         passed = judge_passage(status_strings)
@@ -380,46 +384,3 @@ class PracticeService:
             duration_seconds=raw.duration_seconds,
         )
 
-    @staticmethod
-    def _map_words_to_sentences(
-        sentence_texts: list[str],
-        assessed_words: tuple[PronunciationWord, ...],
-    ) -> list[SentenceStatus]:
-        """Map assessed words to sentences and calculate per-sentence similarity."""
-        # Build sentence word ranges from reference texts
-        sentence_word_counts = [len(text.split()) for text in sentence_texts]
-
-        # Filter out Insertions for reference-aligned word list
-        ref_aligned = [w for w in assessed_words if w.error_type != "Insertion"]
-
-        results: list[SentenceStatus] = []
-        word_offset = 0
-
-        for i, (text, word_count) in enumerate(zip(sentence_texts, sentence_word_counts, strict=True)):
-            sentence_words = ref_aligned[word_offset : word_offset + word_count]
-            word_offset += word_count
-
-            # User's recognized text (exclude Omissions)
-            user_words = [w.word for w in sentence_words if w.error_type != "Omission"]
-            user_text = " ".join(user_words) if user_words else "(no speech)"
-
-            # Similarity
-            similarity = calculate_similarity(text, user_text)
-
-            # Omission ratio
-            omission_count = sum(1 for w in sentence_words if w.error_type == "Omission")
-            omission_ratio = omission_count / max(len(sentence_words), 1)
-
-            status = judge_sentence_status(similarity, omission_ratio)
-
-            results.append(
-                SentenceStatus(
-                    sentence_index=i,
-                    recognized_text=user_text,
-                    model_text=text,
-                    similarity=similarity,
-                    status=status,
-                )
-            )
-
-        return results

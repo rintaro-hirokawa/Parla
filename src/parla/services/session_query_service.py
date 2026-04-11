@@ -7,7 +7,7 @@ from uuid import UUID
 import structlog
 
 from parla.domain.practice import map_words_to_sentence_groups
-from parla.domain.session import SessionBlock
+from parla.domain.session import SessionBlock, SessionMenu
 from parla.ports.learning_item_repository import LearningItemRepository
 from parla.ports.practice_repository import PracticeRepository
 from parla.ports.review_attempt_repository import ReviewAttemptRepository
@@ -47,6 +47,10 @@ class SessionQueryService:
         self._practice_repo = practice_repo
         self._item_repo = item_repo
         self._review_attempt_repo = review_attempt_repo
+
+    def get_menu(self, menu_id: UUID) -> SessionMenu | None:
+        """Get a session menu by ID."""
+        return self._session_repo.get_menu(menu_id)
 
     def get_today_dashboard(self, *, today: date) -> TodayDashboard:
         """Get today's learning tab data (C1 screen)."""

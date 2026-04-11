@@ -9,14 +9,15 @@ from typing import Any, Literal
 import structlog
 from pydantic import BaseModel
 
+from parla.domain.base_event import Event
+
 logger = structlog.get_logger()
+
+# Re-export Event for backward compatibility
+__all__ = ["Event", "EventBus", "HandlerEntry", "EventRegistration"]
 
 type _SyncHandler = Callable[..., object]
 type _AsyncHandler = Callable[..., Coroutine[Any, Any, None]]
-
-
-class Event(BaseModel, frozen=True):
-    """Base class for all domain events. Immutable value objects."""
 
 
 class HandlerEntry(BaseModel, frozen=True):

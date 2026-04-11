@@ -1,5 +1,6 @@
-"""Phase C practice value objects."""
+"""Phase C practice value objects and evaluation functions."""
 
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Literal
 from uuid import UUID, uuid4
@@ -90,3 +91,48 @@ def map_words_to_sentence_groups(
         groups.append(tuple(ref_aligned[offset : offset + count]))
         offset += count
     return tuple(groups)
+
+
+def evaluate_sentence_statuses(
+    sentence_texts: Sequence[str],
+    assessed_words: tuple[PronunciationWord, ...],
+) -> list[SentenceStatus]:
+    """Map assessed words to sentences and evaluate each sentence.
+
+    For each sentence:
+    1. Groups reference-aligned words (excluding Insertions)
+    2. Reconstructs user text (excluding Omissions)
+    3. Calculates similarity against model text
+    4. Judges status based on similarity and omission ratio
+    """
+    from parla.domain.similarity import calculate_similarity, judge_sentence_status
+
+    groups = map_words_to_sentence_groups(
+        assessed_words, tuple(sentence_texts)
+    )
+
+    results: list[SentenceStatus] = []
+    for i, (text, sentence_words) in enumerate(
+        zip(sentence_texts, groups, strict=False)
+    ):
+        user_words = [w.word for w in sentence_words if w.error_type != "Omission"]
+        user_text = " ".join(user_words) if user_words else "(no speech)"
+
+        similarity = calculate_similarity(text, user_text)
+
+        omission_count = sum(1 for w in sentence_words if w.error_type == "Omission")
+        omission_ratio = omission_count / max(len(sentence_words), 1)
+
+        status = judge_sentence_status(similarity, omission_ratio)
+
+        results.append(
+            SentenceStatus(
+                sentence_index=i,
+                recognized_text=user_text,
+                model_text=text,
+                similarity=similarity,
+                status=status,
+            )
+        )
+
+    return results

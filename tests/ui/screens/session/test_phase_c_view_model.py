@@ -52,11 +52,18 @@ class FakeStreamingSession:
 
 
 class FakePracticeService:
-    def __init__(self) -> None:
+    def __init__(self, model_audio: ModelAudio | None = None) -> None:
         self.overlapping_calls: list[dict] = []
         self.live_delivery_calls: list[dict] = []
         self.lag_calls: list[UUID] = []
         self._streaming_session: FakeStreamingSession | None = None
+        self._model_audio = model_audio
+
+    def get_model_audio(self, passage_id: UUID) -> ModelAudio | None:
+        return self._model_audio
+
+    def request_model_audio(self, passage_id: UUID) -> None:
+        pass
 
     def start_overlapping_stream(self, passage_id: UUID) -> FakeStreamingSession:
         self._streaming_session = FakeStreamingSession()
@@ -211,10 +218,9 @@ def _make_vm(
     PhaseCViewModel, EventBus, FakePracticeService, FakeAudioPlayer, FakeRecorder, SessionContext, FakeSessionQuery
 ]:
     bus = EventBus()
-    svc = FakePracticeService()
     pid = passage_id or uuid4()
     model_audio = _make_model_audio(pid) if with_model_audio else None
-    repo = FakePracticeRepo(model_audio)
+    svc = FakePracticeService(model_audio=model_audio)
     player = FakeAudioPlayer()
     recorder = FakeRecorder()
     ctx = SessionContext()
@@ -222,7 +228,6 @@ def _make_vm(
     vm = PhaseCViewModel(
         event_bus=bus,
         practice_service=svc,
-        practice_repo=repo,
         audio_player=player,
         recorder=recorder,
         session_context=ctx,
