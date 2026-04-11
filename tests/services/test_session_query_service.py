@@ -277,51 +277,6 @@ class TestGetTodayDashboard:
         assert dash.resumable_session_id == state.id
 
 
-class TestGetPassageSummary:
-    def test_passage_summary(self) -> None:
-        source_repo = FakeSourceRepository()
-        practice_repo = FakePracticeRepository()
-        item_repo = FakeLearningItemRepository()
-
-        source = _make_source()
-        source_repo.save_source(source)
-        passage = _make_passage(source.id)
-        source_repo.save_passages([passage])
-        sentence = passage.sentences[0]
-
-        item_repo.save_items([
-            LearningItem(
-                pattern="p", explanation="e", category="文法",
-                priority=4, source_sentence_id=sentence.id, status="auto_stocked",
-            ),
-        ])
-
-        practice_repo.add_achievement(passage.id)
-        practice_repo.add_result(
-            LiveDeliveryResult(
-                passage_id=passage.id, passed=True,
-                words=(), accuracy_score=0.0, fluency_score=0.0, prosody_score=0.0, pronunciation_score=0.0,
-                duration_seconds=30.0, wpm=125.0,
-            )
-        )
-
-        service = SessionQueryService(
-            session_repo=FakeSessionRepository(),
-            source_repo=source_repo,
-            practice_repo=practice_repo,
-            item_repo=item_repo,
-            review_attempt_repo=FakeReviewAttemptRepository(),
-        )
-        summary = service.get_passage_summary(passage.id)
-        assert summary is not None
-        assert summary.topic == "Topic"
-        assert summary.sentence_count == 1
-        assert summary.new_item_count == 1
-        assert summary.has_achievement is True
-        assert summary.live_delivery_wpm == 125.0
-        assert summary.live_delivery_passed is True
-
-
 class TestGetSessionSummary:
     def test_session_summary(self) -> None:
         session_repo = FakeSessionRepository()

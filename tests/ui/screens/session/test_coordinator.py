@@ -276,9 +276,6 @@ class FakeSessionQuery:
     def get_menu(self, menu_id: UUID) -> SessionMenu | None:
         return self._menu if menu_id == self._menu.id else None
 
-    def get_passage_summary(self, passage_id: UUID) -> None:
-        return None
-
     def get_session_summary(self, session_id: UUID) -> None:
         return None
 
@@ -474,7 +471,7 @@ class TestReviewBlock:
 
 
 class TestNewMaterialBlock:
-    def test_new_material_shows_phase_a(self, qtbot: Any) -> None:
+    def test_new_material_shows_recording(self, qtbot: Any) -> None:
         passage = _make_passage()
         source_repo = FakeSourceRepo()
         source_repo.add_passage(passage)
@@ -490,10 +487,10 @@ class TestNewMaterialBlock:
         coord.start(menu.id)
         coord._on_mic_check_done()
 
-        # PhaseAView should be pushed
+        # RecordingView should be pushed
         assert len(nav.pushed) == 2
 
-    def test_phase_a_done_shows_phase_b(self, qtbot: Any) -> None:
+    def test_recording_done_shows_feedback(self, qtbot: Any) -> None:
         passage = _make_passage()
         source_repo = FakeSourceRepo()
         source_repo.add_passage(passage)
@@ -509,13 +506,13 @@ class TestNewMaterialBlock:
         coord.start(menu.id)
         coord._on_mic_check_done()
 
-        coord._on_phase_a_done()
+        coord._on_recording_done()
 
-        # PhaseA popped + PhaseBView pushed
+        # Recording popped + FeedbackView pushed
         assert len(nav.pushed) == 3
         assert nav.popped_count >= 1
 
-    def test_phase_b_shows_phase_c(self, qtbot: Any) -> None:
+    def test_feedback_done_shows_run_through(self, qtbot: Any) -> None:
         passage = _make_passage()
         source_repo = FakeSourceRepo()
         source_repo.add_passage(passage)
@@ -530,14 +527,14 @@ class TestNewMaterialBlock:
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
         coord.start(menu.id)
         coord._on_mic_check_done()
-        coord._on_phase_a_done()
+        coord._on_recording_done()
 
-        coord._on_phase_b_done()
+        coord._on_feedback_done()
 
-        # PhaseB popped + PhaseCView pushed
-        assert len(nav.pushed) == 4  # MicCheck + PhaseA + PhaseB + PhaseC
+        # Feedback popped + RunThroughView pushed
+        assert len(nav.pushed) == 4  # MicCheck + Recording + Feedback + RunThrough
 
-    def test_phase_c_complete_shows_passage_summary(self, qtbot: Any) -> None:
+    def test_run_through_complete_advances_block(self, qtbot: Any) -> None:
         passage = _make_passage()
         source_repo = FakeSourceRepo()
         source_repo.add_passage(passage)
@@ -552,13 +549,13 @@ class TestNewMaterialBlock:
         coord, nav, container = _build_coordinator(menu, source_repo=source_repo)
         coord.start(menu.id)
         coord._on_mic_check_done()
-        coord._on_phase_a_done()
-        coord._on_phase_b_done()
+        coord._on_recording_done()
+        coord._on_feedback_done()
 
-        coord._on_phase_c_done(passage.id)
+        coord._on_run_through_done(passage.id)
 
-        # PhaseC popped + PassageSummaryView pushed
-        assert len(nav.pushed) == 5
+        # Single passage → directly advances block (no passage summary)
+        assert len(container.session_service.advance_block_calls) >= 1
 
 
 class TestMultiplePassages:
@@ -584,15 +581,12 @@ class TestMultiplePassages:
         coord.start(menu.id)
         coord._on_mic_check_done()
 
-        # Passage 1: PhaseA → PhaseB → PhaseC → PassageSummary
-        coord._on_phase_a_done()
-        coord._on_phase_b_done()
-        coord._on_phase_c_done(p1.id)
+        # Passage 1: Recording → Feedback → RunThrough → auto-advance
+        coord._on_recording_done()
+        coord._on_feedback_done()
+        coord._on_run_through_done(p1.id)
 
-        # Navigate to next passage
-        coord._on_next_passage()
-
-        # Passage 2: PhaseA should be pushed
+        # Passage 2: RecordingView should be pushed
         assert coord._current_passage_index == 1
         assert coord._current_passage is not None
         assert coord._current_passage.id == p2.id
@@ -630,11 +624,10 @@ class TestConsolidation:
         )
         assert item_id in coord._stocked_item_ids
 
-        # Complete new_material block: PhaseA → PhaseB → PhaseC → PassageSummary → block_complete
-        coord._on_phase_a_done()
-        coord._on_phase_b_done()
-        coord._on_phase_c_done(passage.id)
-        coord._on_block_complete()  # advance to consolidation
+        # Complete new_material block: Recording → Feedback → RunThrough → auto-advance
+        coord._on_recording_done()
+        coord._on_feedback_done()
+        coord._on_run_through_done(passage.id)
 
         # Consolidation should have started a review with the stocked item
         assert len(container.session_service.advance_block_calls) == 1
@@ -658,10 +651,9 @@ class TestConsolidation:
         coord._on_mic_check_done()
 
         # Complete new_material without stocking any items
-        coord._on_phase_a_done()
-        coord._on_phase_b_done()
-        coord._on_phase_c_done(passage.id)
-        coord._on_block_complete()  # advance to consolidation
+        coord._on_recording_done()
+        coord._on_feedback_done()
+        coord._on_run_through_done(passage.id)
 
         # Consolidation should auto-skip (advance_block called twice: once for new_material, once for consolidation)
         assert len(container.session_service.advance_block_calls) == 2
@@ -818,5 +810,5 @@ class TestResume:
 
         coord.start_resumed(state.id)
 
-        # Should start new_material block directly (PhaseAView)
+        # Should start new_material block directly (RecordingView)
         assert len(nav.pushed) == 1

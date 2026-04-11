@@ -1,10 +1,10 @@
-"""Tests for PhaseAViewModel."""
+"""Tests for RecordingViewModel."""
 
 from uuid import uuid4
 
 from parla.domain.audio import AudioData
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.ui.screens.session.phase_a_view_model import PhaseAViewModel
+from parla.ui.screens.session.recording_view_model import RecordingViewModel
 from tests.conftest import make_wav_audio
 
 
@@ -46,9 +46,9 @@ class FakeFeedbackService:
 def _make_vm(
     passage: Passage | None = None,
     feedback_service: FakeFeedbackService | None = None,
-) -> tuple[PhaseAViewModel, FakeFeedbackService]:
+) -> tuple[RecordingViewModel, FakeFeedbackService]:
     fb_svc = feedback_service or FakeFeedbackService()
-    vm = PhaseAViewModel(
+    vm = RecordingViewModel(
         feedback_service=fb_svc,
     )
     if passage:

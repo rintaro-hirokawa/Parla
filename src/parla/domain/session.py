@@ -11,6 +11,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
+from parla.domain.errors import InvalidStatusTransition
+
 
 class BlockType(StrEnum):
     REVIEW = "review"
@@ -60,9 +62,21 @@ class SessionMenu(BaseModel, frozen=True):
     pending_review_count: int = 0
     created_at: datetime = Field(default_factory=datetime.now)
 
+    def confirm(self) -> "SessionMenu":
+        """Return a confirmed copy. Idempotent."""
+        return self.model_copy(update={"confirmed": True})
 
-class SessionState(BaseModel):
-    """Mutable session execution state — tracks progress through blocks."""
+
+_VALID_SESSION_TRANSITIONS: dict[SessionStatus, set[SessionStatus]] = {
+    SessionStatus.NOT_STARTED: {SessionStatus.IN_PROGRESS},
+    SessionStatus.IN_PROGRESS: {SessionStatus.INTERRUPTED, SessionStatus.COMPLETED},
+    SessionStatus.INTERRUPTED: {SessionStatus.IN_PROGRESS},
+    SessionStatus.COMPLETED: set(),
+}
+
+
+class SessionState(BaseModel, frozen=True):
+    """Immutable session execution state — tracks progress through blocks."""
 
     id: UUID = Field(default_factory=uuid4)
     menu_id: UUID
@@ -71,6 +85,43 @@ class SessionState(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     interrupted_at: datetime | None = None
+
+    @classmethod
+    def start(cls, menu_id: UUID) -> "SessionState":
+        """Factory: create a new session in IN_PROGRESS state."""
+        return cls(
+            menu_id=menu_id,
+            status=SessionStatus.IN_PROGRESS,
+            started_at=datetime.now(),
+        )
+
+    def _transition(self, new_status: SessionStatus, **updates: object) -> "SessionState":
+        if new_status not in _VALID_SESSION_TRANSITIONS[self.status]:
+            msg = f"Cannot transition session from '{self.status}' to '{new_status}'"
+            raise InvalidStatusTransition(msg)
+        return self.model_copy(update={"status": new_status, **updates})
+
+    def interrupt(self) -> "SessionState":
+        """IN_PROGRESS → INTERRUPTED."""
+        return self._transition(SessionStatus.INTERRUPTED, interrupted_at=datetime.now())
+
+    def resume(self) -> "SessionState":
+        """INTERRUPTED → IN_PROGRESS."""
+        return self._transition(SessionStatus.IN_PROGRESS, interrupted_at=None)
+
+    def complete(self) -> "SessionState":
+        """IN_PROGRESS → COMPLETED."""
+        return self._transition(SessionStatus.COMPLETED, completed_at=datetime.now())
+
+    def advance_block(self, total_blocks: int) -> "SessionState":
+        """Advance to next block, or complete if at last block."""
+        if self.status != SessionStatus.IN_PROGRESS:
+            msg = f"Cannot advance block when session status is '{self.status}'"
+            raise InvalidStatusTransition(msg)
+        next_index = self.current_block_index + 1
+        if next_index >= total_blocks:
+            return self.complete()
+        return self.model_copy(update={"current_block_index": next_index})
 
 
 # --- Pure functions ---

@@ -155,3 +155,81 @@ class TestCreateLearningItemsFromRaw:
         assert len(items) == 2
         assert items[0].status == "auto_stocked"
         assert items[1].status == "review_later"
+
+
+class TestApplyReview:
+    """LearningItem.apply_review() — delegates to SRS calculation, returns new instance."""
+
+    def _make_item(self, **overrides: object) -> LearningItem:
+        defaults: dict[str, object] = {
+            "pattern": "by ~ing",
+            "explanation": "explanation",
+            "category": "文法",
+            "priority": 5,
+            "source_sentence_id": uuid4(),
+            "status": "auto_stocked",
+            "srs_stage": 0,
+            "ease_factor": 1.0,
+            "next_review_date": None,
+        }
+        defaults.update(overrides)
+        return LearningItem(**defaults)
+
+    def test_correct_advances_stage(self) -> None:
+        from datetime import date
+
+        from parla.domain.srs import SRSConfig
+
+        item = self._make_item(srs_stage=0)
+        updated = item.apply_review(
+            correct=True, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+        )
+        assert updated.srs_stage == 1
+
+    def test_incorrect_decrements_stage(self) -> None:
+        from datetime import date
+
+        from parla.domain.srs import SRSConfig
+
+        item = self._make_item(srs_stage=2)
+        updated = item.apply_review(
+            correct=False, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+        )
+        assert updated.srs_stage == 1
+
+    def test_returns_new_instance(self) -> None:
+        from datetime import date
+
+        from parla.domain.srs import SRSConfig
+
+        item = self._make_item(srs_stage=0)
+        updated = item.apply_review(
+            correct=True, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+        )
+        assert item is not updated
+        assert item.srs_stage == 0  # original unchanged
+
+    def test_updates_next_review_date(self) -> None:
+        from datetime import date
+
+        from parla.domain.srs import SRSConfig
+
+        item = self._make_item(srs_stage=0)
+        today = date(2026, 4, 11)
+        updated = item.apply_review(
+            correct=True, hint_level=0, timer_ratio=0.0, today=today, config=SRSConfig()
+        )
+        assert updated.next_review_date is not None
+
+    def test_preserves_non_srs_fields(self) -> None:
+        from datetime import date
+
+        from parla.domain.srs import SRSConfig
+
+        item = self._make_item(pattern="unlike ~", category="構文", priority=4)
+        updated = item.apply_review(
+            correct=True, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+        )
+        assert updated.pattern == "unlike ~"
+        assert updated.category == "構文"
+        assert updated.priority == 4

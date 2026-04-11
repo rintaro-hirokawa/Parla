@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QComboBox,
     QLabel,
@@ -16,6 +15,8 @@ from PySide6.QtWidgets import (
 from parla.ui.screens.today.view import BLOCK_TYPE_LABELS
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QHideEvent, QShowEvent
+
     from parla.ui.screens.session.tomorrow_menu_view_model import TomorrowMenuViewModel
 
 

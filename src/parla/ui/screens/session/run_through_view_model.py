@@ -1,4 +1,4 @@
-"""ViewModel for Phase C practice workspace (SCREEN-E6)."""
+"""ViewModel for run-through practice workspace (SCREEN-E6)."""
 
 from __future__ import annotations
 
@@ -34,8 +34,8 @@ type PracticeMode = Literal["listening", "overlapping", "live_delivery"]
 _ALL_MODES: tuple[PracticeMode, ...] = ("listening", "overlapping", "live_delivery")
 
 
-class PhaseCViewModel(BaseViewModel):
-    """Manages Phase C: listening, overlapping, and live delivery modes."""
+class RunThroughViewModel(BaseViewModel):
+    """Manages run-through practice: listening, overlapping, and live delivery modes."""
 
     mode_changed = Signal(str)
     model_audio_ready = Signal()
@@ -43,7 +43,7 @@ class PhaseCViewModel(BaseViewModel):
     overlapping_result = Signal(float)  # pronunciation_score
     live_delivery_result = Signal(bool, float, float, float)  # passed, error_rate, error_rate_threshold, wpm
     complete_enabled_changed = Signal(bool)
-    phase_complete = Signal()
+    run_through_complete = Signal()
     error = Signal(str)
 
     # Playback transport signals
@@ -141,7 +141,7 @@ class PhaseCViewModel(BaseViewModel):
         self._sentence_ja_texts = sentence_ja_texts
         self._word_timestamps = ()
 
-        # Model audio may already be ready (generated during Phase B)
+        # Model audio may already be ready (generated during feedback)
         existing = self._practice_service.get_model_audio(passage_id)
         if existing is not None:
             self._model_audio_loaded = True
@@ -229,7 +229,7 @@ class PhaseCViewModel(BaseViewModel):
 
     def complete(self) -> None:
         self._player.stop()
-        self.phase_complete.emit()
+        self.run_through_complete.emit()
 
     # ------------------------------------------------------------------
     # Streaming assessment

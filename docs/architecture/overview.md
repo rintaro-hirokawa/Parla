@@ -234,11 +234,11 @@ BC境界は設けないが、以下の境界は厳守する:
 
 このアプリはバックグラウンドでの先読み生成（[11-latency-strategy.md](../requirements/11-latency-strategy.md)）が生命線である。「何をトリガーに何を事前生成するか」はプロトタイプ中に頻繁に変わるため、トリガーと後続処理を疎結合にする必要がある。
 
-イベント駆動にしない場合、Phase B 完了処理はこうなる:
+イベント駆動にしない場合、フィードバック完了処理はこうなる:
 
 ```python
-# 悪い例: Phase Bが後続処理を全て知っている
-def complete_phase_b(self, passage_id):
+# 悪い例: フィードバックが後続処理を全て知っている
+def complete_feedback(self, passage_id):
     feedback = self.generate_feedback(passage_id)
     self.tts_service.generate(feedback.dynamic_answer)
     self.coherence_service.regenerate(feedback)
@@ -249,13 +249,13 @@ def complete_phase_b(self, passage_id):
 イベント駆動にすると:
 
 ```python
-# Phase Bは「終わった」と言うだけ
-def complete_phase_b(self, passage_id):
+# フィードバックは「終わった」と言うだけ
+def complete_feedback(self, passage_id):
     feedback = self.generate_feedback(passage_id)
-    self.emit(PhaseBCompleted(passage_id, feedback))
+    self.emit(FeedbackCompleted(passage_id, feedback))
 ```
 
-後続処理はハンドラとして独立に登録・削除できる。Phase B のコードに触れずにバックグラウンド生成戦略を変更できる。
+後続処理はハンドラとして独立に登録・削除できる。フィードバックのコードに触れずにバックグラウンド生成戦略を変更できる。
 
 ### 5.2 イベントバスの設計要件
 

@@ -18,7 +18,7 @@ from parla.domain.events import (
 from parla.domain.learning_item import LearningItem
 from parla.domain.review import ReviewAttempt, ReviewResult
 from parla.domain.source import Source
-from parla.domain.srs import SRSConfig, calculate_next_review
+from parla.domain.srs import SRSConfig
 from parla.domain.variation import Variation
 from parla.event_bus import EventBus
 from parla.ports.audio_storage import AudioStorage
@@ -178,24 +178,24 @@ class ReviewService:
         )
         self._attempt_repo.save_attempt(attempt)
 
-        # Update SRS
+        # Update SRS via domain entity
         old_stage = ctx.item.srs_stage
-        srs_update = calculate_next_review(
-            current_stage=ctx.item.srs_stage,
+        updated_item = ctx.item.apply_review(
             correct=result.correct,
             hint_level=hint_level,
             timer_ratio=timer_ratio,
-            ease_factor=ctx.item.ease_factor,
             today=today,
             config=self._srs_config,
         )
 
+        assert updated_item.next_review_date is not None  # always set after apply_review
+
         self._item_repo.update_srs_state(
             item_id=ctx.item.id,
-            srs_stage=srs_update.new_stage,
-            ease_factor=srs_update.new_ease_factor,
-            next_review_date=srs_update.next_review_date,
-            correct_context_count=ctx.item.correct_context_count,
+            srs_stage=updated_item.srs_stage,
+            ease_factor=updated_item.ease_factor,
+            next_review_date=updated_item.next_review_date,
+            correct_context_count=updated_item.correct_context_count,
         )
 
         # Emit events
@@ -213,8 +213,8 @@ class ReviewService:
             SRSUpdated(
                 learning_item_id=ctx.item.id,
                 old_stage=old_stage,
-                new_stage=srs_update.new_stage,
-                next_review_date=srs_update.next_review_date,
+                new_stage=updated_item.srs_stage,
+                next_review_date=updated_item.next_review_date,
             )
         )
 

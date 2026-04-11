@@ -160,10 +160,14 @@ class TestStatePersistence:
         )
         repo.save_state(state)
 
-        state.status = "interrupted"
-        state.current_block_index = 1
-        state.interrupted_at = datetime(2026, 4, 11, 9, 15)
-        repo.update_state(state)
+        updated = state.model_copy(
+            update={
+                "status": "interrupted",
+                "current_block_index": 1,
+                "interrupted_at": datetime(2026, 4, 11, 9, 15),
+            }
+        )
+        repo.update_state(updated)
 
         loaded = repo.get_state(state.id)
         assert loaded is not None

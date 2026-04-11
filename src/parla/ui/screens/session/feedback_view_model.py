@@ -1,4 +1,4 @@
-"""ViewModel for Phase B feedback screen (SCREEN-E4)."""
+"""ViewModel for feedback screen (SCREEN-E4)."""
 
 from __future__ import annotations
 
@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     from parla.ui.screens.session.session_context import SessionContext
 
 
-class PhaseBViewModel(BaseViewModel):
-    """Manages Phase B: one-sentence-at-a-time feedback display, retry, navigation."""
+class FeedbackViewModel(BaseViewModel):
+    """Manages one-sentence-at-a-time feedback display, retry, navigation."""
 
     feedback_added = Signal(int, str, str, bool)  # index, user_utterance, model_answer, is_acceptable
     feedback_failed = Signal(int, str)  # index, error_message
@@ -109,7 +109,7 @@ class PhaseBViewModel(BaseViewModel):
         self._seen_item_ids = set()
         self._items_buffer = {}
 
-        # Pre-fill buffers with data already generated during Phase A
+        # Pre-fill buffers with data already generated during recording
         for i, sid in enumerate(sentence_ids):
             fb = self._feedback_service.get_feedback_by_sentence(sid)
             if fb is not None:
@@ -126,7 +126,7 @@ class PhaseBViewModel(BaseViewModel):
                         (item.pattern, item.explanation, item.is_reappearance)
                     )
 
-        # Start TTS generation in background for Phase C
+        # Start TTS generation in background for run-through
         self._practice_service.request_model_audio(passage_id)
 
     def show_initial(self) -> None:

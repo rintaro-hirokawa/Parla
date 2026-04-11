@@ -1,4 +1,4 @@
-"""Phase C state seeder — skip Phase A/B and start directly at Phase C."""
+"""Run-through state seeder — skip recording/feedback and start directly at run-through."""
 
 from __future__ import annotations
 
@@ -13,4 +13,4 @@ if TYPE_CHECKING:
 def seed(container: Container) -> None:
     """Seed day-1 data with feedback, then set skip_to_phase flag."""
     seed_day1(container, max_passages=1, max_sentences=2, seed_feedback=True)
-    container._skip_to_phase = "c"  # noqa: SLF001 — dev-only seeder
+    container._skip_to_phase = "run_through"  # noqa: SLF001 — dev-only seeder

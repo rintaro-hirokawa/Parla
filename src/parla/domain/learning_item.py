@@ -8,6 +8,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
+from parla.domain.srs import SRSConfig, calculate_next_review
+
 type LearningItemCategory = Literal["文法", "語彙", "コロケーション", "構文", "表現"]
 type LearningItemStatus = Literal["auto_stocked", "review_later", "dismissed"]
 
@@ -44,6 +46,33 @@ class LearningItem(BaseModel):
     ease_factor: float = Field(default=1.0, gt=0.0)
     next_review_date: date | None = None
     correct_context_count: int = Field(default=0, ge=0)
+
+    def apply_review(
+        self,
+        *,
+        correct: bool,
+        hint_level: int,
+        timer_ratio: float,
+        today: date,
+        config: SRSConfig,
+    ) -> "LearningItem":
+        """Apply a review result, returning a new instance with updated SRS fields."""
+        srs_update = calculate_next_review(
+            current_stage=self.srs_stage,
+            correct=correct,
+            hint_level=hint_level,
+            timer_ratio=timer_ratio,
+            ease_factor=self.ease_factor,
+            today=today,
+            config=config,
+        )
+        return self.model_copy(
+            update={
+                "srs_stage": srs_update.new_stage,
+                "ease_factor": srs_update.new_ease_factor,
+                "next_review_date": srs_update.next_review_date,
+            }
+        )
 
 
 class RawItemData(BaseModel, frozen=True):

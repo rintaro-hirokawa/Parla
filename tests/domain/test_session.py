@@ -5,10 +5,16 @@ TDD — these tests define the specification for deterministic session compositi
 
 from uuid import uuid4
 
+import pytest
+
+from parla.domain.errors import InvalidStatusTransition
 from parla.domain.session import (
     BlockType,
     SessionConfig,
+    SessionMenu,
     SessionPattern,
+    SessionState,
+    SessionStatus,
     compose_blocks,
     select_next_unlearned_passage,
     select_pattern,
@@ -173,3 +179,105 @@ class TestSelectNextUnlearnedPassage:
         ids = [uuid4(), uuid4(), uuid4()]
         result = select_next_unlearned_passage(ids, {ids[0], ids[1]})
         assert result == ids[2]
+
+
+class TestSessionStateTransitions:
+    """SessionState rich entity: state machine transitions following Source pattern."""
+
+    def test_start_creates_in_progress(self) -> None:
+        menu_id = uuid4()
+        state = SessionState.start(menu_id)
+        assert state.menu_id == menu_id
+        assert state.status == SessionStatus.IN_PROGRESS
+        assert state.started_at is not None
+
+    def test_interrupt_from_in_progress(self) -> None:
+        state = SessionState.start(uuid4())
+        interrupted = state.interrupt()
+        assert interrupted.status == SessionStatus.INTERRUPTED
+        assert interrupted.interrupted_at is not None
+
+    def test_interrupt_from_completed_raises(self) -> None:
+        state = SessionState.start(uuid4()).complete()
+        with pytest.raises(InvalidStatusTransition):
+            state.interrupt()
+
+    def test_interrupt_from_interrupted_raises(self) -> None:
+        state = SessionState.start(uuid4()).interrupt()
+        with pytest.raises(InvalidStatusTransition):
+            state.interrupt()
+
+    def test_resume_from_interrupted(self) -> None:
+        state = SessionState.start(uuid4()).interrupt()
+        resumed = state.resume()
+        assert resumed.status == SessionStatus.IN_PROGRESS
+        assert resumed.interrupted_at is None
+
+    def test_resume_from_in_progress_raises(self) -> None:
+        state = SessionState.start(uuid4())
+        with pytest.raises(InvalidStatusTransition):
+            state.resume()
+
+    def test_complete_from_in_progress(self) -> None:
+        state = SessionState.start(uuid4())
+        completed = state.complete()
+        assert completed.status == SessionStatus.COMPLETED
+        assert completed.completed_at is not None
+
+    def test_complete_from_interrupted_raises(self) -> None:
+        state = SessionState.start(uuid4()).interrupt()
+        with pytest.raises(InvalidStatusTransition):
+            state.complete()
+
+    def test_advance_block_increments(self) -> None:
+        state = SessionState.start(uuid4())
+        advanced = state.advance_block(total_blocks=3)
+        assert advanced.current_block_index == 1
+        assert advanced.status == SessionStatus.IN_PROGRESS
+
+    def test_advance_block_completes_at_last(self) -> None:
+        state = SessionState.start(uuid4())
+        # 1ブロックのセッション → advance で完了
+        completed = state.advance_block(total_blocks=1)
+        assert completed.status == SessionStatus.COMPLETED
+        assert completed.completed_at is not None
+
+    def test_advance_block_from_interrupted_raises(self) -> None:
+        state = SessionState.start(uuid4()).interrupt()
+        with pytest.raises(InvalidStatusTransition):
+            state.advance_block(total_blocks=3)
+
+    def test_transition_returns_new_instance(self) -> None:
+        original = SessionState.start(uuid4())
+        interrupted = original.interrupt()
+        assert original is not interrupted
+        assert original.status == SessionStatus.IN_PROGRESS
+
+    def test_frozen_model(self) -> None:
+        state = SessionState.start(uuid4())
+        with pytest.raises(Exception):  # noqa: B017
+            state.status = SessionStatus.COMPLETED  # type: ignore[misc]
+
+
+class TestSessionMenuConfirm:
+    """SessionMenu.confirm() — returns confirmed copy, idempotent."""
+
+    def _make_menu(self) -> SessionMenu:
+        from datetime import date
+
+        return SessionMenu(
+            target_date=date(2026, 4, 11),
+            pattern=SessionPattern.NEW_ONLY,
+            blocks=(),
+        )
+
+    def test_confirm_returns_confirmed(self) -> None:
+        menu = self._make_menu()
+        assert menu.confirmed is False
+        confirmed = menu.confirm()
+        assert confirmed.confirmed is True
+
+    def test_confirm_is_idempotent(self) -> None:
+        menu = self._make_menu().confirm()
+        again = menu.confirm()
+        assert again.confirmed is True

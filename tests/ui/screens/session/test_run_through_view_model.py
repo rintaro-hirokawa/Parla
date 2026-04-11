@@ -1,4 +1,4 @@
-"""Tests for PhaseCViewModel."""
+"""Tests for RunThroughViewModel."""
 
 from uuid import UUID, uuid4
 
@@ -14,7 +14,7 @@ from parla.domain.events import (
 from parla.domain.practice import ModelAudio, OverlappingResult, WordTimestamp
 from parla.event_bus import EventBus
 from parla.services.query_models import OverlappingSummary, PronunciationWordResult
-from parla.ui.screens.session.phase_c_view_model import PhaseCViewModel
+from parla.ui.screens.session.run_through_view_model import RunThroughViewModel
 from parla.ui.screens.session.session_context import SessionContext
 from tests.conftest import make_wav_audio
 
@@ -207,7 +207,7 @@ def _make_vm(
     with_model_audio: bool = False,
     sentence_ja_texts: tuple[str, ...] = (),
 ) -> tuple[
-    PhaseCViewModel, EventBus, FakePracticeService, FakeAudioPlayer, FakeRecorder, SessionContext, FakeSessionQuery
+    RunThroughViewModel, EventBus, FakePracticeService, FakeAudioPlayer, FakeRecorder, SessionContext, FakeSessionQuery
 ]:
     bus = EventBus()
     pid = passage_id or uuid4()
@@ -217,7 +217,7 @@ def _make_vm(
     recorder = FakeRecorder()
     ctx = SessionContext()
     query = FakeSessionQuery()
-    vm = PhaseCViewModel(
+    vm = RunThroughViewModel(
         event_bus=bus,
         practice_service=svc,
         audio_player=player,

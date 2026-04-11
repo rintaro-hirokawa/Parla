@@ -1,11 +1,10 @@
-"""View for Phase C practice workspace (SCREEN-E6)."""
+"""View for run-through practice workspace (SCREEN-E6)."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -21,17 +20,19 @@ from parla.ui.widgets.playback_controls import PlaybackControlsWidget
 from parla.ui.widgets.recording_controls import RecordingControlsWidget
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QHideEvent, QShowEvent
+
     from parla.services.query_models import LiveDeliverySummary, OverlappingSummary
     from parla.ui.audio.recorder import AudioRecorder
-    from parla.ui.screens.session.phase_c_view_model import PhaseCViewModel
+    from parla.ui.screens.session.run_through_view_model import RunThroughViewModel
 
 
-class PhaseCView(QWidget):
-    """Phase C — listening, overlapping, and live delivery modes."""
+class RunThroughView(QWidget):
+    """Run-through practice — listening, overlapping, and live delivery modes."""
 
     def __init__(
         self,
-        view_model: PhaseCViewModel,
+        view_model: RunThroughViewModel,
         recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:
@@ -117,7 +118,7 @@ class PhaseCView(QWidget):
             lambda state: self._playback_controls.set_playing(state == "playing")
         )
 
-        # Model audio may already be ready (generated during Phase B)
+        # Model audio may already be ready (generated during feedback)
         if self._vm.is_model_audio_loaded:
             self._on_audio_ready()
 

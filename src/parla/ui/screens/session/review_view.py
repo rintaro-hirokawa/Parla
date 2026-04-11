@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QHideEvent, QShowEvent
 from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
@@ -18,6 +17,8 @@ from parla.ui.widgets.recording_controls import RecordingControlsWidget
 from parla.ui.widgets.timer_widget import TimerWidget
 
 if TYPE_CHECKING:
+    from PySide6.QtGui import QHideEvent, QShowEvent
+
     from parla.ui.audio.recorder import AudioRecorder
     from parla.ui.screens.session.review_view_model import ReviewViewModel
 

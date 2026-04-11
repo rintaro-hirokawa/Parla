@@ -191,18 +191,6 @@ class TodayDashboard(BaseModel, frozen=True):
     resumable_session_id: UUID | None = None
 
 
-class PassageSummary(BaseModel, frozen=True):
-    """Passage completion summary for E9."""
-
-    passage_id: UUID
-    topic: str
-    sentence_count: int = 0
-    new_item_count: int = 0
-    has_achievement: bool = False
-    live_delivery_wpm: float | None = None
-    live_delivery_passed: bool | None = None
-
-
 class SessionSummaryBlock(BaseModel, frozen=True):
     """Block result in session summary."""
 

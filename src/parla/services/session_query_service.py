@@ -1,4 +1,4 @@
-"""Session, menu, and passage summary query service."""
+"""Session and menu query service."""
 
 from collections.abc import Sequence
 from datetime import date
@@ -19,7 +19,6 @@ from parla.services.query_models import (
     MenuBlockSummary,
     MenuPreview,
     OverlappingSummary,
-    PassageSummary,
     PronunciationWordResult,
     SessionSummary,
     SessionSummaryBlock,
@@ -78,39 +77,6 @@ class SessionQueryService:
             source_title=source_title,
             has_resumable_session=active_state is not None,
             resumable_session_id=active_state.id if active_state else None,
-        )
-
-    def get_passage_summary(self, passage_id: UUID) -> PassageSummary | None:
-        """Get passage completion summary (E9 screen)."""
-        passage = self._source_repo.get_passage(passage_id)
-        if passage is None:
-            logger.warning("get_passage_summary_passage_not_found", passage_id=str(passage_id))
-            return None
-        logger.info(
-            "get_passage_summary_passage_found",
-            passage_id=str(passage_id),
-            topic=passage.topic,
-            sentence_count=len(passage.sentences),
-        )
-
-        new_item_count = sum(
-            len(self._item_repo.get_items_by_sentence(s.id))
-            for s in passage.sentences
-        )
-
-        has_achievement = self._practice_repo.has_achievement(passage_id)
-
-        results = self._practice_repo.get_live_delivery_results(passage_id)
-        last_result = results[-1] if results else None
-
-        return PassageSummary(
-            passage_id=passage.id,
-            topic=passage.topic,
-            sentence_count=len(passage.sentences),
-            new_item_count=new_item_count,
-            has_achievement=has_achievement,
-            live_delivery_wpm=last_result.wpm if last_result else None,
-            live_delivery_passed=last_result.passed if last_result else None,
         )
 
     def get_session_summary(self, session_id: UUID) -> SessionSummary | None:

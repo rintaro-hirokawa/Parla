@@ -1,4 +1,4 @@
-"""View for Phase A speaking screen (SCREEN-E3)."""
+"""View for recording screen (SCREEN-E3)."""
 
 from __future__ import annotations
 
@@ -20,15 +20,15 @@ from parla.ui.widgets.timer_widget import TimerWidget
 
 if TYPE_CHECKING:
     from parla.ui.audio.recorder import AudioRecorder
-    from parla.ui.screens.session.phase_a_view_model import PhaseAViewModel
+    from parla.ui.screens.session.recording_view_model import RecordingViewModel
 
 
-class PhaseAView(QWidget):
-    """Phase A — sequential sentence recording with hints."""
+class RecordingView(QWidget):
+    """Sequential sentence recording with hints."""
 
     def __init__(
         self,
-        view_model: PhaseAViewModel,
+        view_model: RecordingViewModel,
         recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:

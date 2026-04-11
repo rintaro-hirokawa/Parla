@@ -1,4 +1,4 @@
-"""Tests for PhaseBViewModel."""
+"""Tests for FeedbackViewModel."""
 
 import asyncio
 from uuid import UUID, uuid4
@@ -12,13 +12,28 @@ from parla.domain.events import (
 )
 from parla.domain.feedback import SentenceFeedback
 from parla.event_bus import EventBus
-from parla.ui.screens.session.phase_b_view_model import PhaseBViewModel
+from parla.ui.screens.session.feedback_view_model import FeedbackViewModel
 from parla.ui.screens.session.session_context import SessionContext
 from tests.conftest import make_wav_audio
 
 
 def _make_audio() -> AudioData:
     return make_wav_audio()
+
+
+def _make_fb(
+    sentence_id: UUID,
+    *,
+    utterance: str = "u",
+    answer: str = "m",
+    acceptable: bool = True,
+) -> SentenceFeedback:
+    return SentenceFeedback(
+        sentence_id=sentence_id,
+        user_utterance=utterance,
+        model_answer=answer,
+        is_acceptable=acceptable,
+    )
 
 
 class FakeFeedbackService:
@@ -78,14 +93,14 @@ def _make_vm(
     passage_id: UUID | None = None,
     sentence_ids: list[UUID] | None = None,
     item_repo: FakeItemRepo | None = None,
-) -> tuple[PhaseBViewModel, EventBus, FakeFeedbackService, FakePracticeService, FakeFeedbackService, UUID]:
+) -> tuple[FeedbackViewModel, EventBus, FakeFeedbackService, FakePracticeService, FakeFeedbackService, UUID]:
     bus = EventBus()
     fb_svc = FakeFeedbackService()
     pr_svc = FakePracticeService()
     i_repo = item_repo or FakeItemRepo()
     ctx = SessionContext()
 
-    vm = PhaseBViewModel(
+    vm = FeedbackViewModel(
         event_bus=bus,
         feedback_service=fb_svc,
         practice_service=pr_svc,
@@ -148,8 +163,8 @@ class TestOneAtATimeDisplay:
         vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
 
         # Buffer feedback for both sentences (s1 acceptable → can advance)
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s2, user_utterance="u2", model_answer="m2", is_acceptable=False))
+        fb_repo.add_feedback(_make_fb(s1, utterance="u1", acceptable=True))
+        fb_repo.add_feedback(_make_fb(s2, utterance="u2", acceptable=False))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s2))
 
@@ -166,7 +181,7 @@ class TestOneAtATimeDisplay:
         vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
 
         # Only buffer index 0 (acceptable → can advance)
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
 
         with qtbot.waitSignal(vm.current_sentence_loading, timeout=1000) as blocker:
@@ -180,12 +195,12 @@ class TestOneAtATimeDisplay:
         vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
 
         # Show and advance past sentence 0
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
         vm.advance_sentence()  # now current=1, loading
 
         # Late arrival for sentence 1
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s2, user_utterance="u2", model_answer="m2", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s2, utterance="u2", acceptable=True))
 
         with qtbot.waitSignal(vm.feedback_added, timeout=1000) as blocker:
             bus.emit(FeedbackReady(passage_id=pid, sentence_id=s2))
@@ -198,7 +213,7 @@ class TestOneAtATimeDisplay:
         s1 = uuid4()
         vm, bus, _, pr_svc, fb_repo, pid = _make_vm(sentence_ids=[s1])
 
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
 
         with qtbot.waitSignal(vm.navigate_to_next, timeout=1000):
@@ -210,7 +225,7 @@ class TestOneAtATimeDisplay:
         vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
 
         # is_acceptable=False → cannot advance
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=False))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=False))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
 
         with qtbot.assertNotEmitted(vm.current_sentence_changed):
@@ -223,8 +238,8 @@ class TestOneAtATimeDisplay:
         s1, s2 = uuid4(), uuid4()
         vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
 
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=False))
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s2, user_utterance="u2", model_answer="m2", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=False))
+        fb_repo.add_feedback(_make_fb(s2, acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s2))
 
@@ -246,7 +261,7 @@ class TestOneAtATimeDisplay:
         s1, s2, s3 = uuid4(), uuid4(), uuid4()
         vm, bus, _, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2, s3])
 
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
 
         with qtbot.waitSignal(vm.current_sentence_changed, timeout=1000) as blocker:
@@ -303,7 +318,7 @@ class TestFeedbackFailed:
 
 class TestLearningItems:
     def test_pre_existing_items_emitted_on_start(self, qtbot) -> None:
-        """Items generated during Phase A are emitted on start()."""
+        """Items generated during recording are emitted on start()."""
         from parla.domain.learning_item import LearningItem
 
         s1 = uuid4()
@@ -326,7 +341,7 @@ class TestLearningItems:
         fb_svc = FakeFeedbackService()
         pr_svc = FakePracticeService()
         ctx = SessionContext()
-        vm = PhaseBViewModel(
+        vm = FeedbackViewModel(
             event_bus=bus,
             feedback_service=fb_svc,
             practice_service=pr_svc,
@@ -416,7 +431,7 @@ class TestLearningItems:
         assert len(item_signals) == 0
 
     def test_item_stocked_forwarded_on_event(self, qtbot) -> None:
-        """LearningItemStocked event arriving during Phase B is forwarded."""
+        """LearningItemStocked event arriving during feedback is forwarded."""
         from parla.domain.learning_item import LearningItem
 
         s1, s2 = uuid4(), uuid4()
@@ -486,7 +501,7 @@ class TestRetry:
         vm, bus, fb_svc, _, fb_repo, pid = _make_vm(sentence_ids=[s1, s2])
 
         # Advance to sentence 1
-        fb_repo.add_feedback(SentenceFeedback(sentence_id=s1, user_utterance="u1", model_answer="m1", is_acceptable=True))
+        fb_repo.add_feedback(_make_fb(s1, acceptable=True))
         bus.emit(FeedbackReady(passage_id=pid, sentence_id=s1))
         vm.advance_sentence()
 

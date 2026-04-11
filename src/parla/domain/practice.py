@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
-from parla.domain.audio import AudioData
+from parla.domain.audio import AudioData  # noqa: TC001  # Pydantic field needs runtime
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

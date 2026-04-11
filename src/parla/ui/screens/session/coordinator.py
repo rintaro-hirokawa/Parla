@@ -168,7 +168,7 @@ class SessionCoordinator(QObject):
         return self._c.item_query.resolve_review_pairs(item_ids)
 
     # ------------------------------------------------------------------
-    # New material block (E3 → E4 → E6 → E9 per passage)
+    # New material block (Recording → Feedback → RunThrough per passage)
     # ------------------------------------------------------------------
 
     def _start_new_material_block(self, block: SessionBlock) -> None:
@@ -197,25 +197,25 @@ class SessionCoordinator(QObject):
         if source is not None:
             self._session_context.set_cefr_level(source.cefr_level)
 
-        if self._skip_to_phase == "c":
+        if self._skip_to_phase == "run_through":
             self._c.practice_service.request_model_audio(passage.id)
-            self._show_phase_c(passage.id)
+            self._show_run_through(passage.id)
             return
 
-        self._show_phase_a(passage)
+        self._show_recording(passage)
 
-    # --- Phase A (E3) ---
+    # --- Recording (E3) ---
 
-    def _show_phase_a(self, passage: Passage) -> None:
-        from parla.ui.screens.session.phase_a_view import PhaseAView
-        from parla.ui.screens.session.phase_a_view_model import PhaseAViewModel
+    def _show_recording(self, passage: Passage) -> None:
+        from parla.ui.screens.session.recording_view import RecordingView
+        from parla.ui.screens.session.recording_view_model import RecordingViewModel
 
-        vm = PhaseAViewModel(
+        vm = RecordingViewModel(
             feedback_service=self._c.feedback_service,
         )
         vm.load_passage(passage)
-        view = PhaseAView(vm, recorder=self._recorder)
-        vm.all_sentences_done.connect(self._on_phase_a_done)
+        view = RecordingView(vm, recorder=self._recorder)
+        vm.all_sentences_done.connect(self._on_recording_done)
         self._current_vm = vm
         self._session_context.update_progress(
             "新素材",
@@ -224,21 +224,21 @@ class SessionCoordinator(QObject):
         )
         self._nav.push_screen(view)
 
-    def _on_phase_a_done(self) -> None:
+    def _on_recording_done(self) -> None:
         self._pop_current()
-        self._show_phase_b()
+        self._show_feedback()
 
-    # --- Phase B (E4) ---
+    # --- Feedback (E4) ---
 
-    def _show_phase_b(self) -> None:
-        from parla.ui.screens.session.phase_b_view import PhaseBView
-        from parla.ui.screens.session.phase_b_view_model import PhaseBViewModel
+    def _show_feedback(self) -> None:
+        from parla.ui.screens.session.feedback_view import FeedbackView
+        from parla.ui.screens.session.feedback_view_model import FeedbackViewModel
 
         passage = self._current_passage
         if passage is None:
             return
 
-        vm = PhaseBViewModel(
+        vm = FeedbackViewModel(
             event_bus=self._bus,
             feedback_service=self._c.feedback_service,
             practice_service=self._c.practice_service,
@@ -246,29 +246,29 @@ class SessionCoordinator(QObject):
             session_context=self._session_context,
         )
         vm.start(passage.id, [s.id for s in passage.sentences])
-        view = PhaseBView(vm, recorder=self._recorder)
-        vm.navigate_to_next.connect(self._on_phase_b_done)
+        view = FeedbackView(vm, recorder=self._recorder)
+        vm.navigate_to_next.connect(self._on_feedback_done)
         vm.navigate_to_edit.connect(self._show_item_edit)
         vm.activate()
         self._current_vm = vm
         self._nav.push_screen(view)
 
-    def _on_phase_b_done(self) -> None:
+    def _on_feedback_done(self) -> None:
         passage_id = self._current_passage.id if self._current_passage else None
         self._deactivate_current_vm()
         self._pop_current()
         if passage_id is None:
             return
-        self._show_phase_c(passage_id)
+        self._show_run_through(passage_id)
 
-    # --- Phase C (E6) ---
+    # --- Run-through (E6) ---
 
-    def _show_phase_c(self, passage_id: UUID) -> None:
+    def _show_run_through(self, passage_id: UUID) -> None:
         from parla.ui.audio.player import AudioPlayer
-        from parla.ui.screens.session.phase_c_view import PhaseCView
-        from parla.ui.screens.session.phase_c_view_model import PhaseCViewModel
+        from parla.ui.screens.session.run_through_view import RunThroughView
+        from parla.ui.screens.session.run_through_view_model import RunThroughViewModel
 
-        vm = PhaseCViewModel(
+        vm = RunThroughViewModel(
             event_bus=self._bus,
             practice_service=self._c.practice_service,
             audio_player=AudioPlayer(),
@@ -278,40 +278,20 @@ class SessionCoordinator(QObject):
         )
         ja_texts = tuple(s.ja for s in self._current_passage.sentences) if self._current_passage else ()
         vm.start(passage_id, sentence_ja_texts=ja_texts)
-        view = PhaseCView(vm, recorder=self._recorder)
-        vm.phase_complete.connect(lambda: self._on_phase_c_done(passage_id))
+        view = RunThroughView(vm, recorder=self._recorder)
+        vm.run_through_complete.connect(lambda: self._on_run_through_done(passage_id))
         vm.activate()
         self._current_vm = vm
         self._nav.push_screen(view)
 
-    def _on_phase_c_done(self, passage_id: UUID) -> None:
+    def _on_run_through_done(self, passage_id: UUID) -> None:
         self._deactivate_current_vm()
         self._pop_current()
-        self._show_passage_summary(passage_id)
-
-    # --- Passage summary (E9) ---
-
-    def _show_passage_summary(self, passage_id: UUID) -> None:
-        from parla.ui.screens.session.passage_summary_view import PassageSummaryView
-        from parla.ui.screens.session.passage_summary_view_model import (
-            PassageSummaryViewModel,
-        )
-
-        logger.info("show_passage_summary", passage_id=str(passage_id))
-        vm = PassageSummaryViewModel(session_query_service=self._c.session_query)
-        has_more = self._current_passage_index < len(self._current_passage_ids) - 1
-        vm.set_has_more_passages(has_more)
-        view = PassageSummaryView(vm)
-        vm.load(passage_id)
-        vm.navigate_next_passage.connect(self._on_next_passage)
-        vm.navigate_block_complete.connect(self._on_block_complete)
-        self._current_vm = vm
-        self._nav.push_screen(view)
-
-    def _on_next_passage(self) -> None:
-        self._pop_current()
-        self._current_passage_index += 1
-        self._start_next_passage()
+        if self._current_passage_index < len(self._current_passage_ids) - 1:
+            self._current_passage_index += 1
+            self._start_next_passage()
+        else:
+            self._advance_block()
 
     # ------------------------------------------------------------------
     # Consolidation block
@@ -335,7 +315,10 @@ class SessionCoordinator(QObject):
     def _on_block_complete(self) -> None:
         self._deactivate_current_vm()
         self._pop_current()
+        self._advance_block()
 
+    def _advance_block(self) -> None:
+        """Advance to the next block (or session summary)."""
         if self._session_state is None:
             return
         state = self._c.session_service.advance_block(self._session_state.id)
@@ -442,11 +425,11 @@ class SessionCoordinator(QObject):
     # ------------------------------------------------------------------
 
     def _show_item_edit(self) -> None:
+        from parla.ui.screens.session.feedback_view_model import FeedbackViewModel
         from parla.ui.screens.session.item_edit_view import ItemEditView
         from parla.ui.screens.session.item_edit_view_model import ItemEditViewModel
-        from parla.ui.screens.session.phase_b_view_model import PhaseBViewModel
 
-        if not isinstance(self._current_vm, PhaseBViewModel):
+        if not isinstance(self._current_vm, FeedbackViewModel):
             return
 
         vm = ItemEditViewModel(item_query=self._c.item_query)

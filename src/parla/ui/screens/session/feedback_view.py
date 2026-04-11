@@ -1,4 +1,4 @@
-"""View for Phase B feedback screen (SCREEN-E4)."""
+"""View for feedback screen (SCREEN-E4)."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from PySide6.QtGui import QHideEvent, QShowEvent
 
     from parla.ui.audio.recorder import AudioRecorder
-    from parla.ui.screens.session.phase_b_view_model import PhaseBViewModel
+    from parla.ui.screens.session.feedback_view_model import FeedbackViewModel
 
 
 class FeedbackCard(QWidget):
@@ -53,12 +53,12 @@ class FeedbackCard(QWidget):
         self._status_label.setText(f"リトライ{attempt}: {status}")
 
 
-class PhaseBView(QWidget):
-    """Phase B — one-sentence-at-a-time feedback display with retry and navigation."""
+class FeedbackView(QWidget):
+    """One-sentence-at-a-time feedback display with retry and navigation."""
 
     def __init__(
         self,
-        view_model: PhaseBViewModel,
+        view_model: FeedbackViewModel,
         recorder: AudioRecorder,
         parent: QWidget | None = None,
     ) -> None:

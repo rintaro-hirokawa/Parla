@@ -1,6 +1,6 @@
 """Session composition and lifecycle orchestration service."""
 
-from datetime import date, datetime
+from datetime import date
 from uuid import UUID
 
 import structlog
@@ -200,7 +200,7 @@ class SessionService:
             msg = f"Menu not found: {menu_id}"
             raise ValueError(msg)
 
-        confirmed = menu.model_copy(update={"confirmed": True})
+        confirmed = menu.confirm()
         self._session_repo.save_menu(confirmed)
 
         self._bus.emit(
@@ -286,11 +286,7 @@ class SessionService:
             msg = f"Menu is not confirmed: {menu_id}"
             raise ValueError(msg)
 
-        state = SessionState(
-            menu_id=menu_id,
-            status=SessionStatus.IN_PROGRESS,
-            started_at=datetime.now(),
-        )
+        state = SessionState.start(menu_id)
         self._session_repo.save_state(state)
 
         self._bus.emit(
@@ -305,7 +301,7 @@ class SessionService:
     def interrupt_session(self, session_id: UUID) -> None:
         """Record interruption at current block."""
         state = self._get_state(session_id)
-        updated = state.model_copy(update={"status": SessionStatus.INTERRUPTED, "interrupted_at": datetime.now()})
+        updated = state.interrupt()
         self._session_repo.update_state(updated)
 
         self._bus.emit(
@@ -318,11 +314,7 @@ class SessionService:
     def resume_session(self, session_id: UUID) -> SessionState:
         """Resume an interrupted session at the same block."""
         state = self._get_state(session_id)
-        if state.status != SessionStatus.INTERRUPTED:
-            msg = f"Session is not interrupted: {session_id}"
-            raise ValueError(msg)
-
-        updated = state.model_copy(update={"status": SessionStatus.IN_PROGRESS, "interrupted_at": None})
+        updated = state.resume()
         self._session_repo.update_state(updated)
 
         self._bus.emit(
@@ -343,15 +335,11 @@ class SessionService:
             msg = f"Menu not found: {state.menu_id}"
             raise ValueError(msg)
 
-        next_index = state.current_block_index + 1
+        updated = state.advance_block(total_blocks=len(menu.blocks))
+        self._session_repo.update_state(updated)
 
-        if next_index >= len(menu.blocks):
-            updated = state.model_copy(update={"status": SessionStatus.COMPLETED, "completed_at": datetime.now()})
-            self._session_repo.update_state(updated)
+        if updated.status == SessionStatus.COMPLETED:
             self._bus.emit(SessionCompleted(session_id=session_id))
-        else:
-            updated = state.model_copy(update={"current_block_index": next_index})
-            self._session_repo.update_state(updated)
 
         return updated
 

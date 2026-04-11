@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtMultimedia import QAudioDevice
 
 if TYPE_CHECKING:
+    from PySide6.QtMultimedia import QAudioDevice
+
     from parla.ui.audio.recorder import AudioRecorder
 
 LEVEL_THRESHOLD = 0.05

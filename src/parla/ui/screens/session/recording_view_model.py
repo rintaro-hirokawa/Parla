@@ -1,4 +1,4 @@
-"""ViewModel for Phase A speaking screen (SCREEN-E3)."""
+"""ViewModel for recording screen (SCREEN-E3)."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ if TYPE_CHECKING:
     from parla.services.feedback_service import FeedbackService
 
 
-class PhaseAViewModel(QObject):
-    """Manages Phase A: sequential sentence recording for a passage.
+class RecordingViewModel(QObject):
+    """Manages sequential sentence recording for a passage.
 
     Does not inherit BaseViewModel — no EventBus event handlers needed.
     """
