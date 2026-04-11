@@ -93,15 +93,6 @@ class RunThroughView(QWidget):
         )
         text_header.addWidget(self._text_title)
         text_header.addStretch()
-        self._ipa_toggle = QPushButton("IPA")
-        self._ipa_toggle.setCheckable(True)
-        self._ipa_toggle.setStyleSheet(
-            f"padding: 4px 10px; border: 1px solid {theme.rgb(theme.BORDER)}; "
-            f"border-radius: 6px; background: {theme.rgb(theme.BG_CARD)}; "
-            f"font-size: 11px; font-weight: 600; color: {theme.rgb(theme.TEXT_TERTIARY)};"
-        )
-        self._ipa_toggle.clicked.connect(self._vm.toggle_ipa)
-        text_header.addWidget(self._ipa_toggle)
         text_card_layout.addLayout(text_header)
 
         self._model_text_label = QLabel("")
@@ -243,7 +234,6 @@ class RunThroughView(QWidget):
         self._vm.mode_changed.connect(self._on_mode_changed)
         self._vm.model_audio_ready.connect(self._on_audio_ready)
         self._vm.model_audio_failed.connect(self._on_audio_failed)
-        self._vm.ipa_toggled.connect(self._on_ipa_toggled)
         self._error_banner.retry_clicked.connect(self._vm.retry_model_audio)
         self._vm.overlapping_result.connect(self._on_overlapping)
         self._vm.overlapping_words_ready.connect(self._on_overlapping_words)
@@ -292,7 +282,6 @@ class RunThroughView(QWidget):
         self._model_text_label.setVisible(is_listening or is_overlapping)
         self._ja_text_label.setVisible(is_live)
         self._text_title.setText("Model Text" if not is_live else "")
-        self._ipa_toggle.setVisible(is_listening or is_overlapping)
         self._playback_card.setVisible(is_listening)
         self._overlap_btn.setVisible(is_overlapping)
         self._recording_card.setVisible(is_overlapping or is_live)
@@ -314,17 +303,6 @@ class RunThroughView(QWidget):
 
     def _on_audio_failed(self, message: str) -> None:
         self._error_banner.show_error(f"TTS エラー: {message}")
-
-    def _on_ipa_toggled(self, visible: bool) -> None:
-        self._ipa_toggle.setChecked(visible)
-        self._ipa_toggle.setStyleSheet(
-            f"padding: 4px 10px; border: 1px solid "
-            f"{theme.rgb(theme.ACCENT_BORDER) if visible else theme.rgb(theme.BORDER)}; "
-            f"border-radius: 6px; "
-            f"background: {theme.rgb(theme.ACCENT_SUBTLE) if visible else theme.rgb(theme.BG_CARD)}; "
-            f"font-size: 11px; font-weight: 600; "
-            f"color: {theme.rgb(theme.ACCENT) if visible else theme.rgb(theme.TEXT_TERTIARY)};"
-        )
 
     def _init_model_text(self) -> None:
         texts = self._vm.sentence_texts
@@ -366,12 +344,12 @@ class RunThroughView(QWidget):
     def _on_overlapping_words(self, summary: OverlappingSummary) -> None:
         self._render_word_results(summary.sentence_words)
 
-    def _on_delivery(self, passed: bool, error_rate: float, threshold: float, wpm: float) -> None:
+    def _on_delivery(self, passed: bool, error_rate: float, threshold: float) -> None:
         result = "合格" if passed else "不合格"
         pct = error_rate * 100
         threshold_pct = threshold * 100
         self._status_label.setText(
-            f"{result} — エラー率: {pct:.0f}% (基準: {threshold_pct:.0f}%未満) — {wpm:.1f} WPM"
+            f"{result} — エラー率: {pct:.0f}% (基準: {threshold_pct:.0f}%未満)"
         )
 
     def _on_delivery_detail(self, summary: LiveDeliverySummary) -> None:

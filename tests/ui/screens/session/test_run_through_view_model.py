@@ -292,10 +292,10 @@ class TestLiveDelivery:
 
         with qtbot.waitSignal(vm.live_delivery_result, timeout=1000) as blocker:
             bus.emit(LiveDeliveryCompleted(
-                passage_id=pid, passed=True, error_rate=0.05, error_rate_threshold=0.15, wpm=120.0,
+                passage_id=pid, passed=True, error_rate=0.05, error_rate_threshold=0.15,
             ))
 
-        assert blocker.args == [True, 0.05, 0.15, 120.0]
+        assert blocker.args == [True, 0.05, 0.15]
 
 
 class TestSpeedControl:

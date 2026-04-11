@@ -7,19 +7,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QScrollArea,
-    QTableWidget,
-    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
 from parla.services.query_models import LearningItemDetail
 from parla.ui.screens.items.detail_view_model import DetailViewModel
-from parla.ui.widgets.wpm_chart import WpmChartWidget
 
 
 class DetailView(QWidget):
-    """Learning item detail view with growth story and WPM chart."""
+    """Learning item detail view."""
 
     def __init__(self, view_model: DetailViewModel, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -75,30 +72,6 @@ class DetailView(QWidget):
         source_layout.addWidget(self._source_en_label)
         scroll_layout.addWidget(source_group)
 
-        # Growth story
-        story_group = QGroupBox("成長ストーリー")
-        story_layout = QVBoxLayout(story_group)
-        utterance_layout = QHBoxLayout()
-        utterance_layout.addWidget(QLabel("初出時発話:"))
-        self._first_utterance_label = QLabel()
-        self._first_utterance_label.setWordWrap(True)
-        utterance_layout.addWidget(self._first_utterance_label, 1)
-        story_layout.addLayout(utterance_layout)
-
-        self._review_table = QTableWidget()
-        self._review_table.setColumnCount(4)
-        self._review_table.setHorizontalHeaderLabels(["日時", "バリエーション(日)", "正誤", "ヒントレベル"])
-        self._review_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        story_layout.addWidget(self._review_table)
-        scroll_layout.addWidget(story_group)
-
-        # WPM chart
-        wpm_group = QGroupBox("WPM推移")
-        wpm_layout = QVBoxLayout(wpm_group)
-        self._wpm_chart = WpmChartWidget()
-        wpm_layout.addWidget(self._wpm_chart)
-        scroll_layout.addWidget(wpm_group)
-
         scroll.setWidget(scroll_content)
         layout.addWidget(scroll)
 
@@ -121,17 +94,6 @@ class DetailView(QWidget):
         self._source_title_label.setText(detail.source_title)
         self._source_ja_label.setText(detail.source_sentence_ja)
         self._source_en_label.setText(detail.source_sentence_en)
-
-        self._first_utterance_label.setText(detail.first_utterance or "---")
-
-        self._review_table.setRowCount(len(detail.review_history))
-        for i, entry in enumerate(detail.review_history):
-            self._review_table.setItem(i, 0, QTableWidgetItem(str(entry.attempt_date)))
-            self._review_table.setItem(i, 1, QTableWidgetItem(entry.variation_ja))
-            self._review_table.setItem(i, 2, QTableWidgetItem("○" if entry.correct else "×"))
-            self._review_table.setItem(i, 3, QTableWidgetItem(str(entry.hint_level)))
-
-        self._wpm_chart.set_data(detail.wpm_trend)
 
     def _on_not_found(self) -> None:
         self._title_label.setText("項目が見つかりません")

@@ -764,32 +764,6 @@ class TestSessionSummaryAndMenu:
 
         assert not coord._session_context.is_running
 
-    def test_tomorrow_menu_confirmed_exits(self, qtbot: Any) -> None:
-        menu = _make_menu(pattern=SessionPattern.REVIEW_ONLY, blocks=(
-            SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
-        ))
-        item_id = menu.blocks[0].items[0]
-        source = _make_source()
-        item = _make_item(item_id=item_id)
-        source_repo = FakeSourceRepo()
-        source_repo.add_source_for_sentence(item.source_sentence_id, source)
-        item_repo = FakeItemRepo()
-        item_repo.add_item(item)
-
-        coord, nav, container = _build_coordinator(
-            menu, source_repo=source_repo, item_repo=item_repo
-        )
-        finished = []
-        coord.session_finished.connect(lambda: finished.append(True))
-
-        coord.start(menu.id)
-        coord._on_mic_check_done()
-        coord._on_block_complete()  # → F1
-        coord._show_tomorrow_menu()  # → F2
-        coord._on_session_end()
-
-        assert nav.exited_session
-        assert len(finished) == 1
 
 
 # ======================================================================

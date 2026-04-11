@@ -20,7 +20,6 @@ class SettingsChanged(Event, frozen=True):
 
     cefr_level: CEFRLevel
     english_variant: EnglishVariant
-    phonetic_display: bool
 
 
 # --- Slice 1: Source registration & passage generation ---
@@ -182,7 +181,6 @@ class LiveDeliveryCompleted(Event, frozen=True):
     passed: bool
     error_rate: float
     error_rate_threshold: float
-    wpm: float
 
 
 class PassageAchievementRecorded(Event, frozen=True):

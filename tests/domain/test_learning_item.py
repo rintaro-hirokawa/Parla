@@ -182,7 +182,7 @@ class TestApplyReview:
 
         item = self._make_item(srs_stage=0)
         updated = item.apply_review(
-            correct=True, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+            correct=True, today=date(2026, 4, 11), config=SRSConfig()
         )
         assert updated.srs_stage == 1
 
@@ -193,7 +193,7 @@ class TestApplyReview:
 
         item = self._make_item(srs_stage=2)
         updated = item.apply_review(
-            correct=False, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+            correct=False, today=date(2026, 4, 11), config=SRSConfig()
         )
         assert updated.srs_stage == 1
 
@@ -204,7 +204,7 @@ class TestApplyReview:
 
         item = self._make_item(srs_stage=0)
         updated = item.apply_review(
-            correct=True, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+            correct=True, today=date(2026, 4, 11), config=SRSConfig()
         )
         assert item is not updated
         assert item.srs_stage == 0  # original unchanged
@@ -217,7 +217,7 @@ class TestApplyReview:
         item = self._make_item(srs_stage=0)
         today = date(2026, 4, 11)
         updated = item.apply_review(
-            correct=True, hint_level=0, timer_ratio=0.0, today=today, config=SRSConfig()
+            correct=True, today=today, config=SRSConfig()
         )
         assert updated.next_review_date is not None
 
@@ -228,7 +228,7 @@ class TestApplyReview:
 
         item = self._make_item(pattern="unlike ~", category="構文", priority=4)
         updated = item.apply_review(
-            correct=True, hint_level=0, timer_ratio=0.0, today=date(2026, 4, 11), config=SRSConfig()
+            correct=True, today=date(2026, 4, 11), config=SRSConfig()
         )
         assert updated.pattern == "unlike ~"
         assert updated.category == "構文"

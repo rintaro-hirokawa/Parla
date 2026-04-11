@@ -84,25 +84,6 @@ class LearningItemFilter(BaseModel, frozen=True):
     source_id: UUID | None = None
 
 
-class ReviewHistoryEntry(BaseModel, frozen=True):
-    """Single review attempt in item detail history."""
-
-    attempt_date: datetime
-    variation_ja: str
-    variation_en: str
-    correct: bool
-    item_used: bool
-    hint_level: int
-    attempt_number: int
-
-
-class WpmDataPoint(BaseModel, frozen=True):
-    """A single point in WPM trend chart."""
-
-    recorded_at: datetime
-    wpm: float
-
-
 class LearningItemDetail(BaseModel, frozen=True):
     """Learning item detail for C3."""
 
@@ -120,8 +101,6 @@ class LearningItemDetail(BaseModel, frozen=True):
     source_sentence_ja: str = ""
     source_sentence_en: str = ""
     first_utterance: str = ""
-    review_history: tuple[ReviewHistoryEntry, ...] = ()
-    wpm_trend: tuple[WpmDataPoint, ...] = ()
     created_at: datetime
 
 
@@ -134,35 +113,6 @@ class SentenceItemRow(BaseModel, frozen=True):
     category: LearningItemCategory
     status: LearningItemStatus
     is_reappearance: bool = False
-
-
-# --- HistoryQueryService DTOs ---
-
-
-class CalendarMarker(BaseModel, frozen=True):
-    """Date with learning activity for calendar display."""
-
-    date: date
-    session_count: int = 0
-
-
-class DailySummary(BaseModel, frozen=True):
-    """Daily learning summary for C4."""
-
-    date: date
-    session_count: int = 0
-    passage_count: int = 0
-    new_item_count: int = 0
-    review_count: int = 0
-    review_correct_count: int = 0
-    average_wpm: float = 0.0
-
-
-class HistoryOverview(BaseModel, frozen=True):
-    """History tab data for C4."""
-
-    calendar_markers: tuple[CalendarMarker, ...] = ()
-    wpm_trend: tuple[WpmDataPoint, ...] = ()
 
 
 # --- SessionQueryService DTOs ---
@@ -205,35 +155,6 @@ class SessionSummary(BaseModel, frozen=True):
     session_id: UUID
     pattern: SessionPattern
     blocks: tuple[SessionSummaryBlock, ...] = ()
-    passage_count: int = 0
-    new_item_count: int = 0
-    review_count: int = 0
-    review_correct_count: int = 0
-    average_wpm: float = 0.0
-    duration_minutes: float = 0.0
-
-
-class MenuPreview(BaseModel, frozen=True):
-    """Menu preview for F2 (tomorrow's menu confirmation)."""
-
-    menu_id: UUID
-    target_date: date
-    pattern: SessionPattern
-    blocks: tuple[MenuBlockSummary, ...] = ()
-    total_estimated_minutes: float = 0.0
-    source_id: UUID | None = None
-    source_title: str = ""
-    pending_review_count: int = 0
-    active_sources: tuple["ActiveSourceOption", ...] = ()
-
-
-class ActiveSourceOption(BaseModel, frozen=True):
-    """Source option for menu source selection in F2."""
-
-    id: UUID
-    title: str
-    cefr_level: CEFRLevel
-    remaining_passages: int = 0
 
 
 # --- Pronunciation assessment summary DTOs (shared by overlapping & live delivery) ---
@@ -259,5 +180,4 @@ class LiveDeliverySummary(BaseModel, frozen=True):
 
     passed: bool
     pronunciation_score: float
-    wpm: float
     sentence_words: tuple[tuple[PronunciationWordResult, ...], ...]

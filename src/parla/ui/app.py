@@ -13,8 +13,6 @@ from parla.container import Container
 from parla.ui import theme
 from parla.ui.base_view_model import BaseViewModel
 from parla.ui.navigation import NavigationController
-from parla.ui.screens.history.view import HistoryView
-from parla.ui.screens.history.view_model import HistoryViewModel
 from parla.ui.screens.items.detail_view import DetailView
 from parla.ui.screens.items.detail_view_model import DetailViewModel
 from parla.ui.screens.items.list_view import ListView
@@ -33,7 +31,7 @@ from parla.ui.screens.today.view_model import TodayViewModel
 
 logger = structlog.get_logger()
 
-TAB_TITLES = ("Today's Learning", "Learning Items", "History", "Settings")
+TAB_TITLES = ("Today's Learning", "Learning Items", "Settings")
 
 
 class MainWindow(QMainWindow):
@@ -54,17 +52,14 @@ class MainWindow(QMainWindow):
 
         self._today_vm = TodayViewModel(container.event_bus, container.session_query)
         self._items_vm = ListViewModel(container.event_bus, container.item_query)
-        self._history_vm = HistoryViewModel(container.event_bus, container.history_query)
         self._settings_vm = SettingsViewModel(container.event_bus, container.settings_service)
 
         today_view = TodayView(self._today_vm)
         items_view = ListView(self._items_vm)
-        history_view = HistoryView(self._history_vm)
         settings_view = SettingsView(self._settings_vm)
 
         self._nav.set_tab_widget(NavigationController.TAB_TODAY, today_view)
         self._nav.set_tab_widget(NavigationController.TAB_ITEMS, items_view)
-        self._nav.set_tab_widget(NavigationController.TAB_HISTORY, history_view)
         self._nav.set_tab_widget(NavigationController.TAB_SETTINGS, settings_view)
 
         self._settings_vm.navigate_to_sources.connect(self._push_source_list)
@@ -78,8 +73,6 @@ class MainWindow(QMainWindow):
         self._today_vm.load_dashboard()
         self._items_vm.activate()
         self._items_vm.load_items()
-        self._history_vm.activate()
-        self._history_vm.load_overview()
 
     @property
     def navigation(self) -> NavigationController:
@@ -177,7 +170,6 @@ class MainWindow(QMainWindow):
             self._coordinator = None
         self._today_vm.deactivate()
         self._items_vm.deactivate()
-        self._history_vm.deactivate()
         self._settings_vm.deactivate()
         for vm in self._pushed_vms:
             vm.deactivate()

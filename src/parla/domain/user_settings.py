@@ -10,4 +10,3 @@ class UserSettings(BaseModel):
 
     cefr_level: CEFRLevel = CEFRLevel.B1
     english_variant: EnglishVariant = EnglishVariant.AMERICAN
-    phonetic_display: bool = False

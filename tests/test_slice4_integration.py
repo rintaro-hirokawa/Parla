@@ -265,17 +265,7 @@ class TestOverlapping:
 
         assert result.passage_id == setup["passage_id"]
         assert len(result.words) > 0
-        assert len(result.timing_deviations) > 0
         assert len(collector.of_type(OverlappingCompleted)) == 1
-
-    @pytest.mark.asyncio
-    async def test_timing_deviations_calculated(self, setup, service_and_collector) -> None:
-        service, _ = service_and_collector
-        await service.handle_model_audio_requested(ModelAudioRequested(passage_id=setup["passage_id"]))
-
-        result = await service.evaluate_overlapping(setup["passage_id"], _make_audio())
-        for dev in result.timing_deviations:
-            assert abs(dev) < 1.0
 
     @pytest.mark.asyncio
     async def test_no_model_audio_raises(self, setup, service_and_collector) -> None:
@@ -350,14 +340,6 @@ class TestLiveDelivery:
         assert omission_count > 0
         assert not setup["practice_repo"].has_achievement(setup["passage_id"])
         assert len(collector.of_type(PassageAchievementRecorded)) == 0
-
-    @pytest.mark.asyncio
-    async def test_wpm_calculated(self, setup, service_and_collector) -> None:
-        service, _ = service_and_collector
-        result = await service.evaluate_live_delivery(setup["passage_id"], _make_audio())
-
-        assert result.wpm > 0
-        assert result.duration_seconds > 0
 
     @pytest.mark.asyncio
     async def test_result_persisted(self, setup, service_and_collector) -> None:

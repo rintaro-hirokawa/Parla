@@ -19,12 +19,6 @@ def _make_summary() -> SessionSummary:
     return SessionSummary(
         session_id=uuid4(),
         pattern=SessionPattern.REVIEW_AND_NEW,
-        passage_count=2,
-        new_item_count=5,
-        review_count=10,
-        review_correct_count=8,
-        average_wpm=125.0,
-        duration_minutes=30.0,
     )
 
 
@@ -38,8 +32,6 @@ class TestLoad:
             vm.load(summary.session_id)
 
         assert vm.pattern == SessionPattern.REVIEW_AND_NEW
-        assert vm.duration_minutes == 30.0
-        assert vm.average_wpm == 125.0
 
     def test_load_not_found(self, qtbot) -> None:
         svc = FakeSessionQueryService(None)

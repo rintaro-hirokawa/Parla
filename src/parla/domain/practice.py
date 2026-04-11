@@ -48,7 +48,6 @@ class OverlappingResult(BaseModel, frozen=True):
     id: UUID = Field(default_factory=uuid4)
     passage_id: UUID
     words: tuple[PronunciationWord, ...]
-    timing_deviations: tuple[float, ...]
     accuracy_score: float
     fluency_score: float
     prosody_score: float
@@ -67,8 +66,6 @@ class LiveDeliveryResult(BaseModel, frozen=True):
     fluency_score: float
     prosody_score: float
     pronunciation_score: float
-    duration_seconds: float = Field(ge=0.0)
-    wpm: float = Field(ge=0.0)
     created_at: datetime = Field(default_factory=datetime.now)
 
 

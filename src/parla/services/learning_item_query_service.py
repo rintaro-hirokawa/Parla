@@ -8,14 +8,11 @@ import structlog
 from parla.domain.learning_item import LearningItem
 from parla.ports.feedback_repository import FeedbackRepository
 from parla.ports.learning_item_repository import LearningItemRepository
-from parla.ports.review_attempt_repository import ReviewAttemptRepository
 from parla.ports.source_repository import SourceRepository
-from parla.ports.variation_repository import VariationRepository
 from parla.services.query_models import (
     LearningItemDetail,
     LearningItemFilter,
     LearningItemRow,
-    ReviewHistoryEntry,
     SentenceItemRow,
 )
 
@@ -30,14 +27,10 @@ class LearningItemQueryService:
         *,
         item_repo: LearningItemRepository,
         source_repo: SourceRepository,
-        variation_repo: VariationRepository,
-        review_attempt_repo: ReviewAttemptRepository,
         feedback_repo: FeedbackRepository,
     ) -> None:
         self._item_repo = item_repo
         self._source_repo = source_repo
-        self._variation_repo = variation_repo
-        self._review_attempt_repo = review_attempt_repo
         self._feedback_repo = feedback_repo
 
     # --- Direct item access (used by ViewModels) ---
@@ -115,7 +108,6 @@ class LearningItemQueryService:
 
         source_title, sentence_ja, sentence_en = self._resolve_source_info(item)
         first_utterance = self._get_first_utterance(item)
-        review_history = self._build_review_history(item)
 
         return LearningItemDetail(
             id=item.id,
@@ -132,7 +124,6 @@ class LearningItemQueryService:
             source_sentence_ja=sentence_ja,
             source_sentence_en=sentence_en,
             first_utterance=first_utterance,
-            review_history=tuple(review_history),
             created_at=item.created_at,
         )
 
@@ -157,28 +148,6 @@ class LearningItemQueryService:
         if feedback is None:
             return ""
         return feedback.user_utterance
-
-    def _build_review_history(self, item: LearningItem) -> list[ReviewHistoryEntry]:
-        variations = self._variation_repo.get_variations_by_item(item.id)
-
-        entries: list[ReviewHistoryEntry] = []
-        for variation in variations:
-            attempts = self._review_attempt_repo.get_attempts_by_variation(variation.id)
-            for attempt in attempts:
-                entries.append(
-                    ReviewHistoryEntry(
-                        attempt_date=attempt.created_at,
-                        variation_ja=variation.ja,
-                        variation_en=variation.en,
-                        correct=attempt.correct,
-                        item_used=attempt.item_used,
-                        hint_level=attempt.hint_level,
-                        attempt_number=attempt.attempt_number,
-                    )
-                )
-
-        entries.sort(key=lambda e: e.attempt_date)
-        return entries
 
     def _apply_filter(
         self, items: list[LearningItem], f: LearningItemFilter

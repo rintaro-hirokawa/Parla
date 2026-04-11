@@ -14,10 +14,8 @@ from parla.ports.review_attempt_repository import ReviewAttemptRepository
 from parla.ports.session_repository import SessionRepository
 from parla.ports.source_repository import SourceRepository
 from parla.services.query_models import (
-    ActiveSourceOption,
     LiveDeliverySummary,
     MenuBlockSummary,
-    MenuPreview,
     OverlappingSummary,
     PronunciationWordResult,
     SessionSummary,
@@ -97,48 +95,10 @@ class SessionQueryService:
             for b in menu.blocks
         )
 
-        duration_minutes = 0.0
-        if state.started_at and state.completed_at:
-            delta = state.completed_at - state.started_at
-            duration_minutes = delta.total_seconds() / 60
-
         return SessionSummary(
             session_id=state.id,
             pattern=menu.pattern,
             blocks=blocks,
-            duration_minutes=duration_minutes,
-        )
-
-    def get_menu_preview(self, menu_id: UUID) -> MenuPreview | None:
-        """Get menu preview for confirmation (F2 screen)."""
-        menu = self._session_repo.get_menu(menu_id)
-        if menu is None:
-            return None
-
-        blocks, total = self._summarize_blocks(menu.blocks)
-        source_title = self._resolve_source_title(menu.source_id)
-
-        active_sources = self._source_repo.get_active_sources()
-        active_options = tuple(
-            ActiveSourceOption(
-                id=s.id,
-                title=s.title,
-                cefr_level=s.cefr_level,
-                remaining_passages=self._count_remaining_passages(s.id),
-            )
-            for s in active_sources
-        )
-
-        return MenuPreview(
-            menu_id=menu.id,
-            target_date=menu.target_date,
-            pattern=menu.pattern,
-            blocks=blocks,
-            total_estimated_minutes=total,
-            source_id=menu.source_id,
-            source_title=source_title,
-            pending_review_count=menu.pending_review_count,
-            active_sources=active_options,
         )
 
     def _summarize_blocks(
@@ -216,10 +176,5 @@ class SessionQueryService:
         return LiveDeliverySummary(
             passed=last.passed,
             pronunciation_score=last.pronunciation_score,
-            wpm=last.wpm,
             sentence_words=sentence_words,
         )
-
-    def _count_remaining_passages(self, source_id: UUID) -> int:
-        passages = self._source_repo.get_passages_by_source(source_id)
-        return sum(1 for p in passages if not self._practice_repo.has_achievement(p.id))

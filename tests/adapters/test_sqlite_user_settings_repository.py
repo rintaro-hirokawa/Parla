@@ -19,14 +19,12 @@ class TestSQLiteUserSettingsRepository:
         settings = repo.get()
         assert settings.cefr_level == "B1"
         assert settings.english_variant == "American"
-        assert settings.phonetic_display is False
 
     def test_save_and_get(self, repo: SQLiteUserSettingsRepository) -> None:
-        repo.save(UserSettings(cefr_level="C1", english_variant="British", phonetic_display=True))
+        repo.save(UserSettings(cefr_level="C1", english_variant="British"))
         settings = repo.get()
         assert settings.cefr_level == "C1"
         assert settings.english_variant == "British"
-        assert settings.phonetic_display is True
 
     def test_save_overwrites(self, repo: SQLiteUserSettingsRepository) -> None:
         repo.save(UserSettings(cefr_level="A1"))
@@ -37,11 +35,11 @@ class TestSQLiteUserSettingsRepository:
 
     def test_partial_update_via_model_copy(self, repo: SQLiteUserSettingsRepository) -> None:
         original = repo.get()
-        updated = original.model_copy(update={"phonetic_display": True})
+        updated = original.model_copy(update={"cefr_level": "C1"})
         repo.save(updated)
         result = repo.get()
-        assert result.phonetic_display is True
-        assert result.cefr_level == "B1"  # unchanged
+        assert result.cefr_level == "C1"
+        assert result.english_variant == "American"  # unchanged
 
     def test_exists_false_before_save(self, repo: SQLiteUserSettingsRepository) -> None:
         assert repo.exists() is False

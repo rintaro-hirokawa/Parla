@@ -27,17 +27,14 @@ class SettingsService:
         *,
         cefr_level: CEFRLevel | None = None,
         english_variant: EnglishVariant | None = None,
-        phonetic_display: bool | None = None,
     ) -> UserSettings:
         """Update user settings. Only provided fields are changed."""
         current = self._repo.get()
-        updates: dict[str, CEFRLevel | EnglishVariant | bool] = {}
+        updates: dict[str, CEFRLevel | EnglishVariant] = {}
         if cefr_level is not None:
             updates["cefr_level"] = cefr_level
         if english_variant is not None:
             updates["english_variant"] = english_variant
-        if phonetic_display is not None:
-            updates["phonetic_display"] = phonetic_display
 
         if not updates:
             return current
@@ -49,7 +46,6 @@ class SettingsService:
             SettingsChanged(
                 cefr_level=updated.cefr_level,
                 english_variant=updated.english_variant,
-                phonetic_display=updated.phonetic_display,
             )
         )
 

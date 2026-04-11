@@ -11,17 +11,14 @@ class TestUserSettings:
         settings = UserSettings()
         assert settings.cefr_level == "B1"
         assert settings.english_variant == "American"
-        assert settings.phonetic_display is False
 
     def test_custom_values(self) -> None:
         settings = UserSettings(
             cefr_level="C1",
             english_variant="British",
-            phonetic_display=True,
         )
         assert settings.cefr_level == "C1"
         assert settings.english_variant == "British"
-        assert settings.phonetic_display is True
 
     def test_all_cefr_levels(self) -> None:
         for level in ("A1", "A2", "B1", "B2", "C1", "C2"):

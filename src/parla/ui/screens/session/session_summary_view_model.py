@@ -33,30 +33,6 @@ class SessionSummaryViewModel(QObject):
     def pattern(self) -> str:
         return self._summary.pattern if self._summary else ""
 
-    @property
-    def duration_minutes(self) -> float:
-        return self._summary.duration_minutes if self._summary else 0.0
-
-    @property
-    def passage_count(self) -> int:
-        return self._summary.passage_count if self._summary else 0
-
-    @property
-    def new_item_count(self) -> int:
-        return self._summary.new_item_count if self._summary else 0
-
-    @property
-    def review_count(self) -> int:
-        return self._summary.review_count if self._summary else 0
-
-    @property
-    def review_correct_count(self) -> int:
-        return self._summary.review_correct_count if self._summary else 0
-
-    @property
-    def average_wpm(self) -> float:
-        return self._summary.average_wpm if self._summary else 0.0
-
     # ------------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------------

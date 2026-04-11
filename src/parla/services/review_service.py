@@ -182,8 +182,6 @@ class ReviewService:
         old_stage = ctx.item.srs_stage
         updated_item = ctx.item.apply_review(
             correct=result.correct,
-            hint_level=hint_level,
-            timer_ratio=timer_ratio,
             today=today,
             config=self._srs_config,
         )

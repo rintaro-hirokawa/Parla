@@ -38,7 +38,6 @@ class TestGetSettings:
         settings = service.get_settings()
         assert settings.cefr_level == "B1"
         assert settings.english_variant == "American"
-        assert settings.phonetic_display is False
 
 
 class TestUpdateSettings:
@@ -54,12 +53,6 @@ class TestUpdateSettings:
         service = SettingsService(bus, InMemorySettingsRepository())
         updated = service.update_settings(english_variant="British")
         assert updated.english_variant == "British"
-
-    def test_update_phonetic_display(self) -> None:
-        bus = EventBus()
-        service = SettingsService(bus, InMemorySettingsRepository())
-        updated = service.update_settings(phonetic_display=True)
-        assert updated.phonetic_display is True
 
     def test_update_multiple_fields(self) -> None:
         bus = EventBus()
@@ -94,7 +87,6 @@ class TestUpdateSettings:
         assert isinstance(event, SettingsChanged)
         assert event.cefr_level == "B2"
         assert event.english_variant == "American"
-        assert event.phonetic_display is False
 
     def test_sequential_updates(self) -> None:
         bus = EventBus()

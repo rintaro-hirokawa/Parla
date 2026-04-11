@@ -314,37 +314,3 @@ class TestGetSessionSummary:
         assert summary is not None
         assert summary.session_id == state.id
         assert summary.pattern == SessionPattern.REVIEW_AND_NEW
-        assert summary.duration_minutes == 90.0
-
-
-class TestGetMenuPreview:
-    def test_menu_preview(self) -> None:
-        session_repo = FakeSessionRepository()
-        source_repo = FakeSourceRepository()
-        source = _make_source(title="Preview Source")
-        source_repo.save_source(source)
-
-        menu = SessionMenu(
-            target_date=date(2026, 4, 11), pattern=SessionPattern.REVIEW_AND_NEW,
-            blocks=(
-                SessionBlock(block_type=BlockType.REVIEW, items=(uuid4(),), estimated_minutes=2.0),
-            ),
-            source_id=source.id, confirmed=False, pending_review_count=5,
-        )
-        session_repo._menus[menu.id] = menu
-
-        service = SessionQueryService(
-            session_repo=session_repo,
-            source_repo=source_repo,
-            practice_repo=FakePracticeRepository(),
-            item_repo=FakeLearningItemRepository(),
-            review_attempt_repo=FakeReviewAttemptRepository(),
-        )
-        preview = service.get_menu_preview(menu.id)
-        assert preview is not None
-        assert preview.target_date == date(2026, 4, 11)
-        assert preview.pattern == SessionPattern.REVIEW_AND_NEW
-        assert preview.source_title == "Preview Source"
-        assert preview.pending_review_count == 5
-        assert len(preview.blocks) == 1
-        assert preview.total_estimated_minutes == 2.0

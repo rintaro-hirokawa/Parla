@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 import structlog
@@ -470,81 +469,14 @@ class SessionCoordinator(QObject):
         view = SessionSummaryView(vm)
         if self._session_state is not None:
             vm.load(self._session_state.id)
-        vm.navigate_to_menu.connect(self._show_tomorrow_menu)
+        vm.navigate_to_menu.connect(self._on_session_end)
         self._current_vm = vm
         self._nav.push_screen(view)
-
-    # ------------------------------------------------------------------
-    # Tomorrow menu (F2)
-    # ------------------------------------------------------------------
-
-    def _show_tomorrow_menu(self) -> None:
-        from parla.ui.screens.session.tomorrow_menu_view import TomorrowMenuView
-        from parla.ui.screens.session.tomorrow_menu_view_model import (
-            TomorrowMenuViewModel,
-        )
-
-        self._pop_current()
-
-        source_id = self._menu.source_id if self._menu else None
-        if source_id is None:
-            sources = self._c.session_service.get_active_sources()
-            source_id = sources[0].id if sources else None
-
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
-        menu_id: UUID | None = None
-        if source_id is not None:
-            new_menu = self._c.session_service.compose_menu(tomorrow, source_id, today)
-            if new_menu is not None:
-                menu_id = new_menu.id
-
-        vm = TomorrowMenuViewModel(
-            event_bus=self._bus,
-            session_service=self._c.session_service,
-            session_query_service=self._c.session_query,
-            session_context=self._session_context,
-        )
-        view = TomorrowMenuView(vm)
-        vm.confirmed.connect(self._on_session_end)
-        vm.navigate_to_source_registration.connect(
-            self._push_source_registration_in_session
-        )
-        vm.activate()
-        self._current_vm = vm
-        self._nav.push_screen(view)
-        if menu_id is not None:
-            vm.load(menu_id)
-        else:
-            vm.show_no_material()
 
     def _on_session_end(self) -> None:
         self._deactivate_current_vm()
         self._nav.exit_session()
         self.session_finished.emit()
-
-    # ------------------------------------------------------------------
-    # Source registration (from F2)
-    # ------------------------------------------------------------------
-
-    def _push_source_registration_in_session(self) -> None:
-        from parla.ui.screens.sources.registration_view import (
-            SourceRegistrationView,
-        )
-        from parla.ui.screens.sources.registration_view_model import (
-            SourceRegistrationViewModel,
-        )
-
-        vm = SourceRegistrationViewModel(
-            self._bus,
-            self._c.source_service,
-            self._c.settings_service,
-        )
-        view = SourceRegistrationView(vm)
-        vm.navigate_back.connect(lambda: self._nav.pop_screen())
-        vm.load_settings()
-        vm.activate()
-        self._nav.push_screen(view)
 
     # ------------------------------------------------------------------
     # Item edit modal (E5)

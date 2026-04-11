@@ -24,8 +24,6 @@ from parla.domain.practice import (
     calculate_error_rate,
     judge_passed,
 )
-from parla.domain.timing import calculate_timing_deviations
-from parla.domain.wpm import calculate_speech_duration, calculate_wpm
 from parla.event_bus import EventBus
 from parla.ports.feedback_repository import FeedbackRepository
 from parla.ports.practice_repository import PracticeRepository
@@ -152,15 +150,9 @@ class PracticeService:
 
         words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
 
-        user_offsets = [w.offset_seconds for w in words if w.error_type != "Omission" and w.offset_seconds >= 0]
-        ref_offsets = [wt.start_seconds for wt in model_audio.word_timestamps]
-        n = min(len(user_offsets), len(ref_offsets))
-        deviations = calculate_timing_deviations(user_offsets[:n], ref_offsets[:n], baseline_correction=False)
-
         result = OverlappingResult(
             passage_id=passage_id,
             words=words,
-            timing_deviations=tuple(deviations),
             accuracy_score=raw_result.accuracy_score,
             fluency_score=raw_result.fluency_score,
             prosody_score=raw_result.prosody_score,
@@ -190,16 +182,9 @@ class PracticeService:
 
         words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
 
-        # Calculate timing deviations against reference timestamps
-        user_offsets = [w.offset_seconds for w in words if w.error_type != "Omission" and w.offset_seconds >= 0]
-        ref_offsets = [wt.start_seconds for wt in model_audio.word_timestamps]
-        n = min(len(user_offsets), len(ref_offsets))
-        deviations = calculate_timing_deviations(user_offsets[:n], ref_offsets[:n], baseline_correction=False)
-
         result = OverlappingResult(
             passage_id=passage_id,
             words=words,
-            timing_deviations=tuple(deviations),
             accuracy_score=raw_result.accuracy_score,
             fluency_score=raw_result.fluency_score,
             prosody_score=raw_result.prosody_score,
@@ -285,10 +270,6 @@ class PracticeService:
         error_rate = calculate_error_rate(words)
         passed = judge_passed(words)
 
-        total_words = len(reference_text.split())
-        duration_seconds = calculate_speech_duration(words)
-        wpm = calculate_wpm(total_words, duration_seconds)
-
         result = LiveDeliveryResult(
             passage_id=passage_id,
             passed=passed,
@@ -297,8 +278,6 @@ class PracticeService:
             fluency_score=raw_result.fluency_score,
             prosody_score=raw_result.prosody_score,
             pronunciation_score=raw_result.pronunciation_score,
-            duration_seconds=duration_seconds,
-            wpm=wpm,
         )
         self._practice_repo.save_live_delivery_result(result)
 
@@ -313,7 +292,6 @@ class PracticeService:
                 passed=passed,
                 error_rate=error_rate,
                 error_rate_threshold=ERROR_RATE_THRESHOLD,
-                wpm=wpm,
             )
         )
 

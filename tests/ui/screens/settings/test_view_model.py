@@ -19,15 +19,12 @@ class FakeSettingsService:
         *,
         cefr_level: str | None = None,
         english_variant: str | None = None,
-        phonetic_display: bool | None = None,
     ) -> UserSettings:
         call: dict = {}
         if cefr_level is not None:
             call["cefr_level"] = cefr_level
         if english_variant is not None:
             call["english_variant"] = english_variant
-        if phonetic_display is not None:
-            call["phonetic_display"] = phonetic_display
         self.update_calls.append(call)
 
         updates = {k: v for k, v in call.items()}
@@ -38,14 +35,14 @@ class FakeSettingsService:
 class TestLoadSettings:
     def test_emits_settings_loaded(self, qtbot) -> None:
         bus = EventBus()
-        service = FakeSettingsService(UserSettings(cefr_level="B2", english_variant="British", phonetic_display=True))
+        service = FakeSettingsService(UserSettings(cefr_level="B2", english_variant="British"))
         vm = SettingsViewModel(bus, service)
         vm.activate()
 
         with qtbot.waitSignal(vm.settings_changed, timeout=1000) as blocker:
             vm.load_settings()
 
-        assert blocker.args == ["B2", "British", True]
+        assert blocker.args == ["B2", "British"]
 
     def test_state_properties_after_load(self, qtbot) -> None:
         bus = EventBus()
@@ -56,7 +53,6 @@ class TestLoadSettings:
 
         assert vm.cefr_level == "A1"
         assert vm.english_variant == "Australian"
-        assert vm.phonetic_display is False
 
 
 class TestUpdateSettings:
@@ -83,16 +79,6 @@ class TestUpdateSettings:
 
         assert service.update_calls[0] == {"english_variant": "Indian"}
 
-    def test_update_phonetic_display(self, qtbot) -> None:
-        bus = EventBus()
-        service = FakeSettingsService()
-        vm = SettingsViewModel(bus, service)
-        vm.activate()
-        vm.load_settings()
-
-        vm.update_phonetic_display(True)
-
-        assert service.update_calls[0] == {"phonetic_display": True}
 
 
 class TestSettingsChangedEvent:
@@ -104,12 +90,11 @@ class TestSettingsChangedEvent:
         vm.load_settings()
 
         with qtbot.waitSignal(vm.settings_changed, timeout=1000) as blocker:
-            bus.emit(SettingsChanged(cefr_level="C2", english_variant="Canadian", phonetic_display=True))
+            bus.emit(SettingsChanged(cefr_level="C2", english_variant="Canadian"))
 
-        assert blocker.args == ["C2", "Canadian", True]
+        assert blocker.args == ["C2", "Canadian"]
         assert vm.cefr_level == "C2"
         assert vm.english_variant == "Canadian"
-        assert vm.phonetic_display is True
 
     def test_no_signal_when_inactive(self, qtbot) -> None:
         bus = EventBus()
@@ -118,7 +103,7 @@ class TestSettingsChangedEvent:
         # not activated
 
         with qtbot.assertNotEmitted(vm.settings_changed):
-            bus.emit(SettingsChanged(cefr_level="C2", english_variant="Canadian", phonetic_display=True))
+            bus.emit(SettingsChanged(cefr_level="C2", english_variant="Canadian"))
 
 
 class TestNavigateToSources:

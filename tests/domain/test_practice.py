@@ -93,7 +93,6 @@ class TestOverlappingResult:
                     word="hello", accuracy_score=90.0, error_type="None", offset_seconds=0.1, duration_seconds=0.3
                 ),
             ),
-            timing_deviations=(0.1,),
             accuracy_score=90.0,
             fluency_score=85.0,
             prosody_score=80.0,
@@ -117,26 +116,9 @@ class TestLiveDeliveryResult:
             fluency_score=85.0,
             prosody_score=80.0,
             pronunciation_score=88.0,
-            duration_seconds=30.0,
-            wpm=120.0,
         )
         assert result.passed is True
-        assert result.wpm == 120.0
         assert result.pronunciation_score == 88.0
-
-    def test_negative_duration_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            LiveDeliveryResult(
-                passage_id=uuid4(),
-                passed=False,
-                words=(),
-                accuracy_score=0.0,
-                fluency_score=0.0,
-                prosody_score=0.0,
-                pronunciation_score=0.0,
-                duration_seconds=-1.0,
-                wpm=0.0,
-            )
 
 
 def _pw(word: str, error_type: str = "None", accuracy: float = 90.0) -> PronunciationWord:

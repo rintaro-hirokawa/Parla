@@ -19,8 +19,7 @@ class NavigationController(QWidget):
 
     TAB_TODAY = 0
     TAB_ITEMS = 1
-    TAB_HISTORY = 2
-    TAB_SETTINGS = 3
+    TAB_SETTINGS = 2
 
     def __init__(self, tab_titles: Sequence[str], parent: QWidget | None = None) -> None:
         super().__init__(parent)

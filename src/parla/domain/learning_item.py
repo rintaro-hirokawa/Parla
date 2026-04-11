@@ -51,8 +51,6 @@ class LearningItem(BaseModel):
         self,
         *,
         correct: bool,
-        hint_level: int,
-        timer_ratio: float,
         today: date,
         config: SRSConfig,
     ) -> "LearningItem":
@@ -60,8 +58,6 @@ class LearningItem(BaseModel):
         srs_update = calculate_next_review(
             current_stage=self.srs_stage,
             correct=correct,
-            hint_level=hint_level,
-            timer_ratio=timer_ratio,
             ease_factor=self.ease_factor,
             today=today,
             config=config,

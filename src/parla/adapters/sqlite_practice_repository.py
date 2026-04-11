@@ -98,7 +98,6 @@ class SQLitePracticeRepository:
 
     def save_overlapping_result(self, result: OverlappingResult) -> None:
         words_json = json.dumps([w.model_dump() for w in result.words])
-        deviations_json = json.dumps(list(result.timing_deviations))
 
         self._conn.execute(
             """INSERT INTO overlapping_results
@@ -109,7 +108,7 @@ class SQLitePracticeRepository:
                 str(result.id),
                 str(result.passage_id),
                 words_json,
-                deviations_json,
+                "[]",
                 result.accuracy_score,
                 result.fluency_score,
                 result.prosody_score,
@@ -148,8 +147,8 @@ class SQLitePracticeRepository:
                 result.fluency_score,
                 result.prosody_score,
                 result.pronunciation_score,
-                result.duration_seconds,
-                result.wpm,
+                0.0,
+                0.0,
                 result.created_at.isoformat(),
             ),
         )
@@ -159,12 +158,6 @@ class SQLitePracticeRepository:
         rows = self._conn.execute(
             "SELECT * FROM live_delivery_results WHERE passage_id = ? ORDER BY created_at",
             (str(passage_id),),
-        ).fetchall()
-        return [self._row_to_live_delivery(r) for r in rows]
-
-    def get_all_live_delivery_results(self) -> list[LiveDeliveryResult]:
-        rows = self._conn.execute(
-            "SELECT * FROM live_delivery_results ORDER BY created_at",
         ).fetchall()
         return [self._row_to_live_delivery(r) for r in rows]
 
@@ -190,12 +183,10 @@ class SQLitePracticeRepository:
     @staticmethod
     def _row_to_overlapping_result(row: sqlite3.Row) -> OverlappingResult:
         words = tuple(PronunciationWord(**w) for w in json.loads(row["words"]))
-        deviations = tuple(json.loads(row["timing_deviations"]))
         return OverlappingResult(
             id=UUID(row["id"]),
             passage_id=UUID(row["passage_id"]),
             words=words,
-            timing_deviations=deviations,
             accuracy_score=row["accuracy_score"],
             fluency_score=row["fluency_score"],
             prosody_score=row["prosody_score"],
@@ -215,7 +206,5 @@ class SQLitePracticeRepository:
             fluency_score=row["fluency_score"],
             prosody_score=row["prosody_score"],
             pronunciation_score=row["pronunciation_score"],
-            duration_seconds=row["duration_seconds"],
-            wpm=row["wpm"],
             created_at=datetime.fromisoformat(row["created_at"]),
         )

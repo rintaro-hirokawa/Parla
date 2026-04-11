@@ -1,15 +1,13 @@
 """Tests for LearningItemQueryService."""
 
 from collections.abc import Sequence
-from datetime import date, datetime
+from datetime import date
 from uuid import UUID, uuid4
 
 from parla.domain.feedback import SentenceFeedback
 from parla.domain.learning_item import LearningItem
 from parla.domain.passage import Hint, Passage, Sentence
-from parla.domain.review import ReviewAttempt
 from parla.domain.source import Source
-from parla.domain.variation import Variation
 from parla.services.learning_item_query_service import LearningItemQueryService
 from parla.services.query_models import LearningItemFilter
 
@@ -145,34 +143,6 @@ class FakeLearningItemRepository:
         return list(self._items)
 
 
-class FakeVariationRepository:
-    def __init__(self) -> None:
-        self._variations: list[Variation] = []
-
-    def save_variation(self, variation: Variation) -> None:
-        self._variations.append(variation)
-
-    def get_variation(self, variation_id: UUID) -> Variation | None:
-        for v in self._variations:
-            if v.id == variation_id:
-                return v
-        return None
-
-    def get_variations_by_item(self, item_id: UUID) -> Sequence[Variation]:
-        return [v for v in self._variations if v.learning_item_id == item_id]
-
-
-class FakeReviewAttemptRepository:
-    def __init__(self) -> None:
-        self._attempts: list[ReviewAttempt] = []
-
-    def save_attempt(self, attempt: ReviewAttempt) -> None:
-        self._attempts.append(attempt)
-
-    def get_attempts_by_variation(self, variation_id: UUID) -> Sequence[ReviewAttempt]:
-        return [a for a in self._attempts if a.variation_id == variation_id]
-
-
 class FakeFeedbackRepository:
     def __init__(self) -> None:
         self._feedbacks: dict[UUID, SentenceFeedback] = {}
@@ -194,15 +164,11 @@ def _make_service(
     *,
     item_repo: FakeLearningItemRepository | None = None,
     source_repo: FakeSourceRepository | None = None,
-    variation_repo: FakeVariationRepository | None = None,
-    review_attempt_repo: FakeReviewAttemptRepository | None = None,
     feedback_repo: FakeFeedbackRepository | None = None,
 ) -> LearningItemQueryService:
     return LearningItemQueryService(
         item_repo=item_repo or FakeLearningItemRepository(),
         source_repo=source_repo or FakeSourceRepository(),
-        variation_repo=variation_repo or FakeVariationRepository(),
-        review_attempt_repo=review_attempt_repo or FakeReviewAttemptRepository(),
         feedback_repo=feedback_repo or FakeFeedbackRepository(),
     )
 
@@ -328,23 +294,17 @@ class TestGetItemDetail:
         LearningItemQueryService,
         FakeSourceRepository,
         FakeLearningItemRepository,
-        FakeVariationRepository,
-        FakeReviewAttemptRepository,
         FakeFeedbackRepository,
     ]:
         source_repo = FakeSourceRepository()
         item_repo = FakeLearningItemRepository()
-        variation_repo = FakeVariationRepository()
-        attempt_repo = FakeReviewAttemptRepository()
         feedback_repo = FakeFeedbackRepository()
         service = LearningItemQueryService(
             item_repo=item_repo,
             source_repo=source_repo,
-            variation_repo=variation_repo,
-            review_attempt_repo=attempt_repo,
             feedback_repo=feedback_repo,
         )
-        return service, source_repo, item_repo, variation_repo, attempt_repo, feedback_repo
+        return service, source_repo, item_repo, feedback_repo
 
     def test_returns_none_for_unknown_item(self) -> None:
         service, *_ = self._make_service()
@@ -370,7 +330,7 @@ class TestGetItemDetail:
         assert detail.source_sentence_en == "Hello"
 
     def test_includes_first_utterance(self) -> None:
-        service, source_repo, item_repo, _, _, feedback_repo = self._make_service()
+        service, source_repo, item_repo, feedback_repo = self._make_service()
         source = _make_source()
         source_repo.save_source(source)
         passage = _make_passage(source.id)
@@ -392,85 +352,3 @@ class TestGetItemDetail:
         assert detail is not None
         assert detail.first_utterance == "I go to school yesterday"
 
-    def test_includes_review_history(self) -> None:
-        service, source_repo, item_repo, variation_repo, attempt_repo, _ = self._make_service()
-        source = _make_source()
-        source_repo.save_source(source)
-        passage = _make_passage(source.id)
-        source_repo.save_passages([passage])
-        sentence = passage.sentences[0]
-
-        item = _make_item(sentence.id)
-        item_repo.save_items([item])
-
-        variation = Variation(
-            learning_item_id=item.id,
-            source_id=source.id,
-            ja="昨日学校に行った",
-            en="I went to school yesterday",
-            hint1="hint1",
-            hint2="hint2",
-        )
-        variation_repo.save_variation(variation)
-
-        attempt = ReviewAttempt(
-            variation_id=variation.id,
-            learning_item_id=item.id,
-            attempt_number=1,
-            correct=True,
-            item_used=True,
-            hint_level=0,
-            timer_ratio=0.5,
-        )
-        attempt_repo.save_attempt(attempt)
-
-        detail = service.get_item_detail(item.id)
-        assert detail is not None
-        assert len(detail.review_history) == 1
-        entry = detail.review_history[0]
-        assert entry.correct is True
-        assert entry.variation_ja == "昨日学校に行った"
-        assert entry.variation_en == "I went to school yesterday"
-        assert entry.hint_level == 0
-
-    def test_review_history_ordered_by_date(self) -> None:
-        service, source_repo, item_repo, variation_repo, attempt_repo, _ = self._make_service()
-        source = _make_source()
-        source_repo.save_source(source)
-        passage = _make_passage(source.id)
-        source_repo.save_passages([passage])
-        sentence = passage.sentences[0]
-
-        item = _make_item(sentence.id)
-        item_repo.save_items([item])
-
-        v1 = Variation(
-            learning_item_id=item.id, source_id=source.id,
-            ja="v1", en="v1", hint1="h1", hint2="h2",
-        )
-        v2 = Variation(
-            learning_item_id=item.id, source_id=source.id,
-            ja="v2", en="v2", hint1="h1", hint2="h2",
-        )
-        variation_repo.save_variation(v1)
-        variation_repo.save_variation(v2)
-
-        a1 = ReviewAttempt(
-            variation_id=v1.id, learning_item_id=item.id,
-            attempt_number=1, correct=False, item_used=False,
-            hint_level=0, timer_ratio=0.5,
-            created_at=datetime(2026, 4, 1, 10, 0),
-        )
-        a2 = ReviewAttempt(
-            variation_id=v2.id, learning_item_id=item.id,
-            attempt_number=1, correct=True, item_used=True,
-            hint_level=0, timer_ratio=0.5,
-            created_at=datetime(2026, 4, 5, 10, 0),
-        )
-        attempt_repo.save_attempt(a1)
-        attempt_repo.save_attempt(a2)
-
-        detail = service.get_item_detail(item.id)
-        assert detail is not None
-        assert len(detail.review_history) == 2
-        assert detail.review_history[0].attempt_date < detail.review_history[1].attempt_date

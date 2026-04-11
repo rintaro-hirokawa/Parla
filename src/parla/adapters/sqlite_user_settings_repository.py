@@ -20,7 +20,6 @@ class SQLiteUserSettingsRepository:
         return UserSettings(
             cefr_level=row["cefr_level"],
             english_variant=row["english_variant"],
-            phonetic_display=bool(row["phonetic_display"]),
         )
 
     def exists(self) -> bool:
@@ -37,6 +36,6 @@ class SQLiteUserSettingsRepository:
                 english_variant = excluded.english_variant,
                 phonetic_display = excluded.phonetic_display
             """,
-            (settings.cefr_level, settings.english_variant, int(settings.phonetic_display)),
+            (settings.cefr_level, settings.english_variant, 0),
         )
         self._conn.commit()

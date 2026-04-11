@@ -115,7 +115,6 @@ class TestOverlappingResult:
                     duration_seconds=0.3,
                 ),
             ),
-            timing_deviations=(0.05, 0.12),
             accuracy_score=87.5,
             fluency_score=90.0,
             prosody_score=80.0,
@@ -150,8 +149,6 @@ class TestLiveDeliveryResult:
             fluency_score=88.0,
             prosody_score=82.0,
             pronunciation_score=90.0,
-            duration_seconds=30.0,
-            wpm=120.0,
         )
         practice_repo.save_live_delivery_result(result)
 
@@ -159,7 +156,6 @@ class TestLiveDeliveryResult:
         assert len(results) == 1
         loaded = results[0]
         assert loaded.passed is True
-        assert loaded.wpm == pytest.approx(120.0)
         assert loaded.pronunciation_score == pytest.approx(90.0)
         assert len(loaded.words) == 2
         assert loaded.words[0].word == "hello"
@@ -178,8 +174,6 @@ class TestLiveDeliveryResult:
                 fluency_score=0.0,
                 prosody_score=0.0,
                 pronunciation_score=0.0,
-                duration_seconds=30.0 + i,
-                wpm=100.0 + i * 10,
                 created_at=datetime(2026, 4, 10, 10, i),
             )
             practice_repo.save_live_delivery_result(result)

@@ -1,11 +1,8 @@
 """Tests for DetailView (SCREEN-C3)."""
 
-from datetime import datetime
-
 from PySide6.QtCore import Qt
 
 from parla.event_bus import EventBus
-from parla.services.query_models import ReviewHistoryEntry, WpmDataPoint
 from parla.ui.screens.items.detail_view import DetailView
 from parla.ui.screens.items.detail_view_model import DetailViewModel
 from tests.ui.screens.items.conftest import FakeItemQueryService, make_detail
@@ -31,45 +28,6 @@ class TestDetailDisplay:
         assert "present perfect" in view._title_label.text()
         assert "文法" in view._category_label.text()
         assert "2" in view._srs_label.text()
-        assert "I have been there" in view._first_utterance_label.text()
-
-    def test_review_table_rows(self, qtbot) -> None:
-        detail = make_detail(
-            review_history=(
-                ReviewHistoryEntry(
-                    attempt_date=datetime(2026, 3, 1),
-                    variation_ja="問題1",
-                    variation_en="var 1",
-                    correct=True,
-                    item_used=True,
-                    hint_level=0,
-                    attempt_number=1,
-                ),
-                ReviewHistoryEntry(
-                    attempt_date=datetime(2026, 3, 5),
-                    variation_ja="問題2",
-                    variation_en="var 2",
-                    correct=False,
-                    item_used=False,
-                    hint_level=1,
-                    attempt_number=1,
-                ),
-            ),
-        )
-        view, _vm, _bus = _make_view(qtbot, detail=detail)
-
-        assert view._review_table.rowCount() == 2
-
-    def test_wpm_chart_receives_data(self, qtbot) -> None:
-        detail = make_detail(
-            wpm_trend=(
-                WpmDataPoint(recorded_at=datetime(2026, 3, 1), wpm=120.0),
-                WpmDataPoint(recorded_at=datetime(2026, 3, 5), wpm=135.0),
-            ),
-        )
-        view, _vm, _bus = _make_view(qtbot, detail=detail)
-
-        assert len(view._wpm_chart.data_points) == 2
 
     def test_source_info_displayed(self, qtbot) -> None:
         detail = make_detail()

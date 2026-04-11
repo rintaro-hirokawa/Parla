@@ -41,7 +41,6 @@ from parla.domain.srs import SRSConfig
 from parla.event_bus import EventBus
 from parla.services.app_state_query_service import AppStateQueryService
 from parla.services.feedback_service import FeedbackService
-from parla.services.history_query_service import HistoryQueryService
 from parla.services.learning_item_query_service import LearningItemQueryService
 from parla.services.practice_service import PracticeService
 from parla.services.review_service import ReviewService
@@ -170,15 +169,7 @@ class Container:
         self.item_query = LearningItemQueryService(
             item_repo=_item_repo,
             source_repo=_source_repo,
-            variation_repo=_variation_repo,
-            review_attempt_repo=_attempt_repo,
             feedback_repo=_feedback_repo,
-        )
-        self.history_query = HistoryQueryService(
-            session_repo=_session_repo,
-            practice_repo=_practice_repo,
-            item_repo=_item_repo,
-            review_attempt_repo=_attempt_repo,
         )
         self.session_query = SessionQueryService(
             session_repo=_session_repo,

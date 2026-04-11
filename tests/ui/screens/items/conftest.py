@@ -7,8 +7,6 @@ from parla.services.query_models import (
     LearningItemDetail,
     LearningItemFilter,
     LearningItemRow,
-    ReviewHistoryEntry,
-    WpmDataPoint,
 )
 
 
@@ -43,20 +41,6 @@ def make_detail(**overrides) -> LearningItemDetail:
         "source_sentence_ja": "テスト文",
         "source_sentence_en": "Test sentence",
         "first_utterance": "I have been there",
-        "review_history": (
-            ReviewHistoryEntry(
-                attempt_date=datetime(2026, 3, 1),
-                variation_ja="テスト問題",
-                variation_en="test variation",
-                correct=True,
-                item_used=True,
-                hint_level=0,
-                attempt_number=1,
-            ),
-        ),
-        "wpm_trend": (
-            WpmDataPoint(recorded_at=datetime(2026, 3, 1), wpm=120.0),
-        ),
         "created_at": datetime(2026, 1, 1),
     }
     defaults.update(overrides)
