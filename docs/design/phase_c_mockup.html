@@ -532,50 +532,84 @@ function toggleLiveRec(){
 function showSpeakResults(){
   completeBtn.disabled=false;
   const ca=document.getElementById('contentArea');
-  const results=[
-    {ja:JA[0],model:EN[0],user:EN[0],status:'ok',diff:null,advice:null},
-    {ja:JA[1],model:EN[1],
-     user:'Although he is 69 years old now, he still test his company cars by himself.',
-     status:'ng',
-     diff:[{idx:9,model:'tests',user:'test'},{idx:11,model:"company's",user:'company'}],
-     advice:'三単現の -s が抜けています（"test" → "tests"）。また所有格の \'s も忘れずに。主語が三人称単数のとき、現在形の動詞には -s を付けましょう。'},
-    {ja:JA[2],model:EN[2],user:EN[2],status:'ok',diff:null,advice:null},
-    {ja:JA[3],model:EN[3],
-     user:'The course is very tough because it has steep hills and sharp turns.',
-     status:'ok',
-     diff:[{idx:3,model:'extremely',user:'very'},{idx:11,model:'curves',user:'turns'}],
-     advice:'意味は通じますが、模範では "extremely"（より強い強調）と "curves"（カーブ）を使っています。語彙の幅を広げるために模範表現も覚えましょう。'},
-    {ja:JA[4],model:EN[4],user:EN[4],status:'ok',diff:null,advice:null},
+
+  // Per-word results (same structure as overlap: PronunciationWordResult)
+  const sentenceWords=[
+    [
+      {w:'Akio',e:'None'},{w:'Toyoda',e:'None'},{w:'is',e:'None'},{w:'the',e:'None'},
+      {w:'chairman',e:'None'},{w:'of',e:'None'},{w:'Toyota',e:'None'},{w:'Motor',e:'None'},
+      {w:'Corporation,',e:'None'},{w:'a',e:'None'},{w:'famous',e:'None'},
+      {w:'Japanese',e:'None'},{w:'company.',e:'None'},
+    ],
+    [
+      {w:'Although',e:'None'},{w:'he',e:'None'},{w:'is',e:'None'},{w:'69',e:'None'},
+      {w:'years',e:'None'},{w:'old',e:'None'},{w:'now,',e:'None'},{w:'he',e:'None'},
+      {w:'still',e:'None'},{w:'tests',e:'Omission'},{w:'his',e:'None'},
+      {w:"company's",e:'Mispronunciation'},{w:'cars',e:'None'},
+      {w:'by',e:'None'},{w:'himself.',e:'None'},
+    ],
+    [
+      {w:'He',e:'None'},{w:'often',e:'None'},{w:'wears',e:'None'},{w:'a',e:'None'},
+      {w:'racing',e:'None'},{w:'suit',e:'None'},{w:'and',e:'None'},{w:'a',e:'None'},
+      {w:'helmet',e:'None'},{w:'to',e:'None'},{w:'drive',e:'None'},{w:'cars',e:'None'},
+      {w:'on',e:'None'},{w:'a',e:'None'},{w:'special',e:'None'},{w:'test',e:'None'},
+      {w:'course.',e:'None'},
+    ],
+    [
+      {w:'The',e:'None'},{w:'course',e:'None'},{w:'is',e:'None'},
+      {w:'extremely',e:'Mispronunciation'},{w:'tough',e:'None'},{w:'because',e:'None'},
+      {w:'it',e:'None'},{w:'has',e:'None'},{w:'steep',e:'None'},{w:'hills',e:'None'},
+      {w:'and',e:'None'},{w:'sharp',e:'None'},{w:'curves.',e:'None'},
+    ],
+    [
+      {w:'His',e:'None'},{w:'basic',e:'None'},{w:'philosophy',e:'Mispronunciation'},
+      {w:'is',e:'None'},{w:'to',e:'None'},{w:'test',e:'None'},{w:'cars',e:'None'},
+      {w:'until',e:'None'},{w:'they',e:'None'},{w:'completely',e:'None'},
+      {w:'break.',e:'None'},
+    ],
   ];
 
-  let html='<div class="result-card"><div class="result-header"><span class="result-title">Results</span><div class="result-metrics"><span class="result-badge pass">合格</span><span class="result-badge wpm">132 WPM</span></div></div>';
-  results.forEach(r=>{
-    const hasIssue=r.diff&&r.diff.length>0;
-    html+=`<div class="result-sentence${hasIssue?' has-issue':''}">`;
-    html+=`<div class="result-sentence-status ${r.status}">${r.status==='ok'?'✓ OK':'✗ 要確認'}</div>`;
-    html+=`<div class="result-ja">${r.ja}</div>`;
-    // Model with diff highlights
-    if(hasIssue){
-      const modelWords=r.model.split(' ');
-      const highlighted=modelWords.map((w,i)=>{
-        const d=r.diff.find(x=>x.idx===i);
-        return d?`<span class="diff-word">${w}</span>`:w;
-      }).join(' ');
-      html+=`<div class="result-model">${highlighted}</div>`;
-      // User utterance
-      const userWords=r.user.split(' ');
-      const userHL=userWords.map((w,i)=>{
-        const d=r.diff.find(x=>x.idx===i);
-        return d?`<span class="user-diff">${w}</span>`:w;
-      }).join(' ');
-      html+=`<div class="result-user">${userHL}</div>`;
-      // LLM advice
-      html+=`<div class="result-advice"><div class="result-advice-label">ADVICE</div>${r.advice}</div>`;
-    } else {
-      html+=`<div class="result-model">${r.model}</div>`;
+  // LLM advice for sentences with errors
+  const advice={
+    1: 'tests が省略されました。三単現の -s を落とさないよう注意しましょう。また company\'s の所有格 /ˈkʌmpəniz/ の発音を練習してください。',
+    3: 'extremely /ɪkˈstriːmli/ の第2音節にストレスを置きましょう。"ik-STREEM-lee" のリズムで練習すると自然になります。',
+    4: 'philosophy /fɪˈlɒsəfi/ は第2音節にストレス。"fi-LOS-uh-fee" と4音節で発音します。',
+  };
+
+  // Count errors
+  let totalWords=0, errorWords=0;
+  sentenceWords.forEach(sent=>sent.forEach(w=>{totalWords++;if(w.e!=='None')errorWords++;}));
+  const errorRate=((errorWords/totalWords)*100).toFixed(1);
+  const passed=errorRate<10;
+
+  let html=`<div class="result-card">
+    <div class="result-header">
+      <span class="result-title">Results</span>
+      <div class="result-metrics">
+        <span class="result-badge ${passed?'pass':'fail'}">${passed?'合格':'不合格'}</span>
+        <span class="result-badge score">スコア: 76.2</span>
+        <span class="result-badge wpm">132 WPM</span>
+      </div>
+    </div>`;
+
+  sentenceWords.forEach((sent,si)=>{
+    const hasError=sent.some(w=>w.e!=='None');
+    html+=`<div class="result-sentence${hasError?' has-issue':''}">`;
+    html+=`<div class="result-ja">${JA[si]}</div>`;
+    // Per-word coloring (same as overlap)
+    const wordSpans=sent.map(w=>{
+      if(w.e==='Mispronunciation') return `<span class="word-error">${w.w}</span>`;
+      if(w.e==='Omission') return `<span class="word-omission">${w.w}</span>`;
+      return `<span class="word-correct">${w.w}</span>`;
+    }).join(' ');
+    html+=`<div class="result-model">${wordSpans}</div>`;
+    // LLM advice if errors exist
+    if(advice[si]){
+      html+=`<div class="result-advice"><div class="result-advice-label">ADVICE</div>${advice[si]}</div>`;
     }
     html+='</div>';
   });
+
   html+='</div>';
   ca.innerHTML=html;
 }

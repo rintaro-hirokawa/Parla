@@ -14,7 +14,7 @@ from parla.domain.events import (
 )
 from parla.domain.practice import ModelAudio, OverlappingResult, WordTimestamp
 from parla.event_bus import EventBus
-from parla.services.query_models import OverlappingSummary, OverlappingWordResult
+from parla.services.query_models import OverlappingSummary, PronunciationWordResult
 from parla.ui.screens.session.phase_c_view_model import PhaseCViewModel
 from parla.ui.screens.session.session_context import SessionContext
 from tests.conftest import make_wav_audio
@@ -309,9 +309,11 @@ class TestLiveDelivery:
         vm, bus, *_ = _make_vm(passage_id=pid)
 
         with qtbot.waitSignal(vm.live_delivery_result, timeout=1000) as blocker:
-            bus.emit(LiveDeliveryCompleted(passage_id=pid, passed=True, wpm=120.0))
+            bus.emit(LiveDeliveryCompleted(
+                passage_id=pid, passed=True, error_rate=0.05, error_rate_threshold=0.15, wpm=120.0,
+            ))
 
-        assert blocker.args == [True, 120.0]
+        assert blocker.args == [True, 0.05, 0.15, 120.0]
 
 
 class TestSpeedControl:
@@ -485,12 +487,12 @@ class TestOverlappingWordsReady:
             pronunciation_score=85.0,
             sentence_words=(
                 (
-                    OverlappingWordResult(word="Hello", error_type="None", accuracy_score=95.0),
-                    OverlappingWordResult(word="world", error_type="Mispronunciation", accuracy_score=40.0),
+                    PronunciationWordResult(word="Hello", error_type="None", accuracy_score=95.0),
+                    PronunciationWordResult(word="world", error_type="Mispronunciation", accuracy_score=40.0),
                 ),
                 (
-                    OverlappingWordResult(word="Good", error_type="None", accuracy_score=90.0),
-                    OverlappingWordResult(word="morning", error_type="Omission", accuracy_score=0.0),
+                    PronunciationWordResult(word="Good", error_type="None", accuracy_score=90.0),
+                    PronunciationWordResult(word="morning", error_type="Omission", accuracy_score=0.0),
                 ),
             ),
         )

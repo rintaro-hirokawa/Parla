@@ -11,9 +11,7 @@ from parla.domain.practice import (
     ModelAudio,
     OverlappingResult,
     PronunciationWord,
-    SentenceStatus,
     WordTimestamp,
-    evaluate_sentence_statuses,
     map_words_to_sentence_groups,
 )
 
@@ -86,28 +84,6 @@ class TestPronunciationWord:
             PronunciationWord(word="x", accuracy_score=50.0, error_type="Unknown")
 
 
-class TestSentenceStatus:
-    def test_construction(self) -> None:
-        ss = SentenceStatus(
-            sentence_index=0,
-            recognized_text="hello world",
-            model_text="hello world",
-            similarity=1.0,
-            status="correct",
-        )
-        assert ss.status == "correct"
-
-    def test_invalid_status_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            SentenceStatus(
-                sentence_index=0,
-                recognized_text="",
-                model_text="",
-                similarity=0.5,
-                status="unknown",
-            )
-
-
 class TestOverlappingResult:
     def test_construction(self) -> None:
         result = OverlappingResult(
@@ -132,23 +108,32 @@ class TestLiveDeliveryResult:
         result = LiveDeliveryResult(
             passage_id=uuid4(),
             passed=True,
-            sentence_statuses=(
-                SentenceStatus(
-                    sentence_index=0, recognized_text="hello", model_text="hello", similarity=1.0, status="correct"
+            words=(
+                PronunciationWord(
+                    word="hello", accuracy_score=95.0, error_type="None", offset_seconds=0.1, duration_seconds=0.3
                 ),
             ),
+            accuracy_score=90.0,
+            fluency_score=85.0,
+            prosody_score=80.0,
+            pronunciation_score=88.0,
             duration_seconds=30.0,
             wpm=120.0,
         )
         assert result.passed is True
         assert result.wpm == 120.0
+        assert result.pronunciation_score == 88.0
 
     def test_negative_duration_rejected(self) -> None:
         with pytest.raises(ValidationError):
             LiveDeliveryResult(
                 passage_id=uuid4(),
                 passed=False,
-                sentence_statuses=(),
+                words=(),
+                accuracy_score=0.0,
+                fluency_score=0.0,
+                prosody_score=0.0,
+                pronunciation_score=0.0,
                 duration_seconds=-1.0,
                 wpm=0.0,
             )
@@ -194,54 +179,3 @@ class TestMapWordsToSentenceGroups:
     def test_empty_sentences(self) -> None:
         groups = map_words_to_sentence_groups((_pw("Hello"),), ())
         assert groups == ()
-
-
-class TestEvaluateSentenceStatuses:
-    """evaluate_sentence_statuses: map words to sentences and judge each."""
-
-    def test_correct_sentence(self) -> None:
-        words = (_pw("Hello"), _pw("world"))
-        result = evaluate_sentence_statuses(["Hello world"], words)
-        assert len(result) == 1
-        assert result[0].status == "correct"
-        assert result[0].recognized_text == "Hello world"
-        assert result[0].model_text == "Hello world"
-        assert result[0].similarity >= 0.9
-
-    def test_multiple_sentences(self) -> None:
-        words = (_pw("Hello"), _pw("world"), _pw("Good"), _pw("morning"))
-        result = evaluate_sentence_statuses(["Hello world", "Good morning"], words)
-        assert len(result) == 2
-        assert result[0].sentence_index == 0
-        assert result[1].sentence_index == 1
-        assert all(s.status == "correct" for s in result)
-
-    def test_omission_heavy_sentence_is_error(self) -> None:
-        words = (
-            _pw("Hello"),
-            _pw("beautiful", "Omission", 0.0),
-            _pw("world", "Omission", 0.0),
-        )
-        result = evaluate_sentence_statuses(["Hello beautiful world"], words)
-        assert result[0].status == "error"
-
-    def test_insertion_excluded(self) -> None:
-        words = (_pw("Hello"), _pw("um", "Insertion"), _pw("world"))
-        result = evaluate_sentence_statuses(["Hello world"], words)
-        assert result[0].status == "correct"
-        assert result[0].recognized_text == "Hello world"
-
-    def test_no_speech_when_all_omitted(self) -> None:
-        words = (_pw("Hello", "Omission", 0.0), _pw("world", "Omission", 0.0))
-        result = evaluate_sentence_statuses(["Hello world"], words)
-        assert result[0].recognized_text == "(no speech)"
-        assert result[0].status == "error"
-
-    def test_empty_words(self) -> None:
-        result = evaluate_sentence_statuses(["Hello world"], ())
-        assert len(result) == 1
-        assert result[0].recognized_text == "(no speech)"
-
-    def test_empty_sentences(self) -> None:
-        result = evaluate_sentence_statuses([], (_pw("Hello"),))
-        assert result == []

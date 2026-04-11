@@ -317,7 +317,7 @@ class TestLiveDelivery:
         result = await service.evaluate_live_delivery(setup["passage_id"], _make_audio(), 30.0)
 
         assert result.passed is True
-        assert all(s.status == "correct" for s in result.sentence_statuses)
+        assert result.pronunciation_score > 0
         assert setup["practice_repo"].has_achievement(setup["passage_id"])
         assert len(collector.of_type(PassageAchievementRecorded)) == 1
         assert collector.of_type(LiveDeliveryCompleted)[0].passed is True
@@ -371,9 +371,9 @@ class TestLiveDelivery:
         result = await service.evaluate_live_delivery(setup["passage_id"], _make_audio(), 30.0)
 
         assert result.passed is False
-        assert result.sentence_statuses[1].status == "error"
-        assert result.sentence_statuses[0].status == "correct"
-        assert result.sentence_statuses[2].status == "correct"
+        # Words from omitted sentence should have error_type="Omission"
+        omission_count = sum(1 for w in result.words if w.error_type == "Omission")
+        assert omission_count > 0
         assert not setup["practice_repo"].has_achievement(setup["passage_id"])
         assert len(collector.of_type(PassageAchievementRecorded)) == 0
 

@@ -15,7 +15,7 @@
 | 場面 | 何を見るか | 許容 | 不合格 |
 |------|-----------|------|--------|
 | フェーズB即時リトライ | 模範解答の内容がおおむね再現されているか | 語彙の言い換え、語順の軽微な違い、冠詞の間違い | 学習項目の表現の欠落、意味が通じない |
-| フェーズC本番発話 | ターゲットWPM内で全センテンスが動的模範解答とおおむね一致しているか（Azure Pronunciation Assessment で判定） | 冠詞・三単現等の軽微な差異（similarity >= 0.90 は correct 扱い） | センテンスのスキップ（Omission）、意味の大幅な逸脱（similarity < 0.50） |
+| フェーズC本番発話 | Azure Pronunciation Assessment のword-level ErrorType でエラー率を判定 | 軽微な発音ミス（エラー率 < 15%） | エラー率 >= 15%（Mispronunciation + Omission の割合） |
 | ブロック1復習 | 対象の学習項目が使われているか | 学習項目以外の部分の言い換え | 対象学習項目の不使用、意味が大きく異なる |
 | ブロック3定着 | ブロック1と同じ | 同上 | 同上 |
 
@@ -56,20 +56,23 @@
 - item_used: bool
 ```
 
-### フェーズC本番発話（Azure + difflib 判定）
+### フェーズC本番発話（Azure ErrorType ベース判定）
 
-LLMコールは使用しない。Azure Pronunciation Assessment の認識結果と difflib の similarity で判定する。
+LLMコールは使用しない。Azure Pronunciation Assessment のword-level ErrorType でエラー率を判定する。
+Overlapping・Live Delivery とも同じアルゴリズムを使用。
 
 ```
 判定ロジック:
 1. Azure reference_text = 動的模範解答全文
-2. difflib.SequenceMatcher で Omission/Insertion を検出
-3. 文ごとの similarity を算出:
-   - >= 0.90 → correct
-   - 0.50〜0.90 → paraphrase（合格扱い）
-   - < 0.50 または Omission > 50% → error（不合格）
-4. 全文が correct または paraphrase なら合格
+2. 全単語から Insertion を除外した ref-aligned 単語を母数とする
+3. Mispronunciation + Omission の単語数 / ref-aligned 単語数 = error_rate
+4. error_rate < ERROR_RATE_THRESHOLD (0.15) なら合格
 ```
+
+表示:
+- pronunciation_score（Overlapping・Live Delivery 共通）
+- 単語ごとの色分け（None=緑、Mispronunciation=赤太字、Omission=グレー取り消し線）
+- Live Delivery のみ追加で合格/不合格を表示
 
 ---
 

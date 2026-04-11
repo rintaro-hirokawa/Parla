@@ -143,7 +143,7 @@ class TestGetHistoryOverview:
             LiveDeliveryResult(
                 passage_id=uuid4(),
                 passed=True,
-                sentence_statuses=(),
+                words=(), accuracy_score=0.0, fluency_score=0.0, prosody_score=0.0, pronunciation_score=0.0,
                 duration_seconds=60.0,
                 wpm=120.0,
                 created_at=datetime(2026, 4, 5, 10, 0),
@@ -153,7 +153,7 @@ class TestGetHistoryOverview:
             LiveDeliveryResult(
                 passage_id=uuid4(),
                 passed=True,
-                sentence_statuses=(),
+                words=(), accuracy_score=0.0, fluency_score=0.0, prosody_score=0.0, pronunciation_score=0.0,
                 duration_seconds=60.0,
                 wpm=130.0,
                 created_at=datetime(2026, 4, 7, 10, 0),
@@ -213,9 +213,9 @@ class TestGetDailySummary:
         practice_repo = FakePracticeRepository()
         practice_repo.add_result(
             LiveDeliveryResult(
-                passage_id=uuid4(), passed=True, sentence_statuses=(),
-                duration_seconds=60.0, wpm=125.0,
-                created_at=datetime(2026, 4, 5, 9, 45),
+                passage_id=uuid4(), passed=True, words=(),
+                accuracy_score=0.0, fluency_score=0.0, prosody_score=0.0, pronunciation_score=0.0,
+                duration_seconds=60.0, wpm=125.0, created_at=datetime(2026, 4, 5, 9, 45),
             )
         )
 

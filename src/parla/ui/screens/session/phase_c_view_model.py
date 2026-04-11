@@ -43,7 +43,7 @@ class PhaseCViewModel(BaseViewModel):
     model_audio_failed = Signal(str)
     overlapping_result = Signal(float)  # pronunciation_score
     lag_detected = Signal(int)  # lag_count
-    live_delivery_result = Signal(bool, float)  # passed, wpm
+    live_delivery_result = Signal(bool, float, float, float)  # passed, error_rate, error_rate_threshold, wpm
     complete_enabled_changed = Signal(bool)
     phase_complete = Signal()
     error = Signal(str)
@@ -351,7 +351,7 @@ class PhaseCViewModel(BaseViewModel):
         if event.passed and not self._live_delivery_passed:
             self._live_delivery_passed = True
             self.complete_enabled_changed.emit(True)
-        self.live_delivery_result.emit(event.passed, event.wpm)
+        self.live_delivery_result.emit(event.passed, event.error_rate, event.error_rate_threshold, event.wpm)
 
         if self._session_query is not None:
             summary = self._session_query.get_live_delivery_summary(event.passage_id)

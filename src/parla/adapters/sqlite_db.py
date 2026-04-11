@@ -133,7 +133,11 @@ CREATE TABLE IF NOT EXISTS live_delivery_results (
     id                  TEXT PRIMARY KEY,
     passage_id          TEXT NOT NULL REFERENCES passages(id),
     passed              INTEGER NOT NULL,
-    sentence_statuses   TEXT NOT NULL,
+    words               TEXT NOT NULL,
+    accuracy_score      REAL NOT NULL,
+    fluency_score       REAL NOT NULL,
+    prosody_score       REAL NOT NULL,
+    pronunciation_score REAL NOT NULL,
     duration_seconds    REAL NOT NULL,
     wpm                 REAL NOT NULL,
     created_at          TEXT NOT NULL

@@ -13,7 +13,6 @@ from parla.domain.practice import (
     ModelAudio,
     OverlappingResult,
     PronunciationWord,
-    SentenceStatus,
     WordTimestamp,
 )
 from tests.conftest import make_wav_audio
@@ -139,22 +138,18 @@ class TestLiveDeliveryResult:
         result = LiveDeliveryResult(
             passage_id=passage_id,
             passed=True,
-            sentence_statuses=(
-                SentenceStatus(
-                    sentence_index=0,
-                    recognized_text="hello world",
-                    model_text="hello world",
-                    similarity=1.0,
-                    status="correct",
+            words=(
+                PronunciationWord(
+                    word="hello", accuracy_score=95.0, error_type="None", offset_seconds=0.1, duration_seconds=0.3
                 ),
-                SentenceStatus(
-                    sentence_index=1,
-                    recognized_text="good morning",
-                    model_text="good morning",
-                    similarity=0.95,
-                    status="correct",
+                PronunciationWord(
+                    word="world", accuracy_score=90.0, error_type="None", offset_seconds=0.5, duration_seconds=0.3
                 ),
             ),
+            accuracy_score=92.5,
+            fluency_score=88.0,
+            prosody_score=82.0,
+            pronunciation_score=90.0,
             duration_seconds=30.0,
             wpm=120.0,
         )
@@ -165,8 +160,9 @@ class TestLiveDeliveryResult:
         loaded = results[0]
         assert loaded.passed is True
         assert loaded.wpm == pytest.approx(120.0)
-        assert len(loaded.sentence_statuses) == 2
-        assert loaded.sentence_statuses[0].status == "correct"
+        assert loaded.pronunciation_score == pytest.approx(90.0)
+        assert len(loaded.words) == 2
+        assert loaded.words[0].word == "hello"
 
     def test_multiple_results_ordered(self, repo) -> None:
         practice_repo, conn = repo
@@ -177,7 +173,11 @@ class TestLiveDeliveryResult:
             result = LiveDeliveryResult(
                 passage_id=passage_id,
                 passed=passed,
-                sentence_statuses=(),
+                words=(),
+                accuracy_score=0.0,
+                fluency_score=0.0,
+                prosody_score=0.0,
+                pronunciation_score=0.0,
                 duration_seconds=30.0 + i,
                 wpm=100.0 + i * 10,
                 created_at=datetime(2026, 4, 10, 10, i),

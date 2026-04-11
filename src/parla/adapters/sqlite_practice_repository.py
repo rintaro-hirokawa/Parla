@@ -12,7 +12,6 @@ from parla.domain.practice import (
     ModelAudio,
     OverlappingResult,
     PronunciationWord,
-    SentenceStatus,
     WordTimestamp,
 )
 
@@ -132,17 +131,23 @@ class SQLitePracticeRepository:
     # --- Live Delivery Results ---
 
     def save_live_delivery_result(self, result: LiveDeliveryResult) -> None:
-        statuses_json = json.dumps([s.model_dump() for s in result.sentence_statuses])
+        words_json = json.dumps([w.model_dump() for w in result.words])
 
         self._conn.execute(
             """INSERT INTO live_delivery_results
-               (id, passage_id, passed, sentence_statuses, duration_seconds, wpm, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+               (id, passage_id, passed, words, accuracy_score,
+                fluency_score, prosody_score, pronunciation_score,
+                duration_seconds, wpm, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 str(result.id),
                 str(result.passage_id),
                 int(result.passed),
-                statuses_json,
+                words_json,
+                result.accuracy_score,
+                result.fluency_score,
+                result.prosody_score,
+                result.pronunciation_score,
                 result.duration_seconds,
                 result.wpm,
                 result.created_at.isoformat(),
@@ -200,12 +205,16 @@ class SQLitePracticeRepository:
 
     @staticmethod
     def _row_to_live_delivery(row: sqlite3.Row) -> LiveDeliveryResult:
-        statuses = tuple(SentenceStatus(**s) for s in json.loads(row["sentence_statuses"]))
+        words = tuple(PronunciationWord(**w) for w in json.loads(row["words"]))
         return LiveDeliveryResult(
             id=UUID(row["id"]),
             passage_id=UUID(row["passage_id"]),
             passed=bool(row["passed"]),
-            sentence_statuses=statuses,
+            words=words,
+            accuracy_score=row["accuracy_score"],
+            fluency_score=row["fluency_score"],
+            prosody_score=row["prosody_score"],
+            pronunciation_score=row["pronunciation_score"],
             duration_seconds=row["duration_seconds"],
             wpm=row["wpm"],
             created_at=datetime.fromisoformat(row["created_at"]),

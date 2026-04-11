@@ -148,7 +148,7 @@ class PhaseCView(QWidget):
         is_overlapping = mode == "overlapping"
         is_live = mode == "live_delivery"
 
-        self._model_text_label.setVisible(is_listening or is_overlapping)
+        self._model_text_label.setVisible(is_listening or is_overlapping or is_live)
         self._ja_text_label.setVisible(is_live)
         self._recording.setVisible(is_live)
         self._playback_controls.setVisible(is_listening or is_overlapping)
@@ -226,25 +226,27 @@ class PhaseCView(QWidget):
         current = self._status_label.text()
         self._status_label.setText(f"{current} | 遅延箇所: {count}")
 
-    def _on_delivery(self, passed: bool, wpm: float) -> None:
+    def _on_delivery(self, passed: bool, error_rate: float, threshold: float, wpm: float) -> None:
         result = "合格" if passed else "不合格"
-        self._status_label.setText(f"{result} — {wpm:.1f} WPM")
+        pct = error_rate * 100
+        threshold_pct = threshold * 100
+        self._status_label.setText(
+            f"{result} — エラー率: {pct:.0f}% (基準: {threshold_pct:.0f}%未満) — {wpm:.1f} WPM"
+        )
 
     def _on_delivery_detail(self, summary: LiveDeliverySummary) -> None:
-        """Show per-sentence results after live delivery evaluation."""
+        """Show per-word pronunciation highlights after live delivery evaluation."""
         _STYLES = {
-            "correct": 'color: #2E7D32;',
-            "paraphrase": 'color: #F57F17;',
-            "error": 'color: #D32F2F; font-weight: bold;',
+            "Mispronunciation": 'color: #D32F2F; font-weight: bold;',
+            "Omission": 'color: #9E9E9E; text-decoration: line-through;',
         }
+        _DEFAULT_STYLE = 'color: #2E7D32;'
 
         parts: list[str] = []
-        for s in summary.sentences:
-            style = _STYLES.get(s.status, '')
-            label = {"correct": "正解", "paraphrase": "言い換え", "error": "エラー"}
-            status_text = label.get(s.status, s.status)
-            line = f'<span style="{style}">[{status_text}] {s.model_text}</span>'
-            if s.status != "correct":
-                line += f'<br><span style="color: #757575; font-size: small;">発話: {s.recognized_text}</span>'
-            parts.append(line)
-        self._ja_text_label.setText("<br>".join(parts))
+        for sentence in summary.sentence_words:
+            word_spans: list[str] = []
+            for wr in sentence:
+                style = _STYLES.get(wr.error_type, _DEFAULT_STYLE)
+                word_spans.append(f'<span style="{style}">{wr.word}</span>')
+            parts.append(" ".join(word_spans))
+        self._model_text_label.setText("<br>".join(parts))

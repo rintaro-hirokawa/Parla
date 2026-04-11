@@ -1,48 +1,33 @@
-"""Difflib-based similarity judgment for Phase C evaluation — pure functions."""
+"""Error-rate-based pass/fail judgment for Phase C evaluation — pure functions."""
 
 from __future__ import annotations
 
-import difflib
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-SentenceJudgment = Literal["correct", "paraphrase", "error"]
+    from parla.ports.pronunciation_assessment import ErrorType
+
+#: Maximum ratio of error words (Mispronunciation + Omission) allowed to pass.
+ERROR_RATE_THRESHOLD: float = 0.15
 
 
-def calculate_similarity(reference: str, recognized: str) -> float:
-    """Calculate word-level similarity between reference and recognized text.
+def calculate_error_rate(
+    error_types: Sequence[ErrorType],
+) -> float:
+    """Calculate ratio of error words (Mispronunciation/Omission) excluding Insertions.
 
-    Uses difflib.SequenceMatcher ratio after lowercasing and tokenizing.
+    Insertions are excluded from both numerator and denominator because they
+    represent extra words not in the reference text.
     """
-    ref_words = reference.lower().split()
-    rec_words = recognized.lower().split()
-    if not ref_words and not rec_words:
-        return 1.0
-    if not ref_words or not rec_words:
+    ref_aligned = [e for e in error_types if e != "Insertion"]
+    if not ref_aligned:
         return 0.0
-    return difflib.SequenceMatcher(None, ref_words, rec_words).ratio()
+    error_count = sum(1 for e in ref_aligned if e in ("Mispronunciation", "Omission"))
+    return error_count / len(ref_aligned)
 
 
-def judge_sentence_status(similarity: float, omission_ratio: float) -> SentenceJudgment:
-    """Judge a single sentence's status based on similarity and omission ratio.
-
-    Rules (from 12-evaluation-criteria.md):
-      - omission_ratio > 0.50 → error (regardless of similarity)
-      - similarity >= 0.90 → correct
-      - similarity >= 0.50 → paraphrase
-      - similarity < 0.50 → error
-    """
-    if omission_ratio > 0.50:
-        return "error"
-    if similarity >= 0.90:
-        return "correct"
-    if similarity >= 0.50:
-        return "paraphrase"
-    return "error"
-
-
-def judge_passage(statuses: Sequence[str]) -> bool:
-    """Judge overall passage pass/fail. All sentences must be correct or paraphrase."""
-    return all(s in ("correct", "paraphrase") for s in statuses)
+def judge_passed(error_types: Sequence[ErrorType]) -> bool:
+    """Judge overall pass/fail based on error rate threshold."""
+    return calculate_error_rate(error_types) < ERROR_RATE_THRESHOLD

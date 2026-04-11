@@ -248,11 +248,11 @@ class ActiveSourceOption(BaseModel, frozen=True):
     remaining_passages: int = 0
 
 
-# --- Overlapping summary DTOs ---
+# --- Pronunciation assessment summary DTOs (shared by overlapping & live delivery) ---
 
 
-class OverlappingWordResult(BaseModel, frozen=True):
-    """Per-word pronunciation result for overlapping display."""
+class PronunciationWordResult(BaseModel, frozen=True):
+    """Per-word pronunciation result for display."""
 
     word: str
     error_type: str
@@ -263,24 +263,13 @@ class OverlappingSummary(BaseModel, frozen=True):
     """Overlapping evaluation summary for Phase C display."""
 
     pronunciation_score: float
-    sentence_words: tuple[tuple[OverlappingWordResult, ...], ...]
-
-
-# --- Live delivery summary DTOs ---
-
-
-class LiveDeliverySentenceResult(BaseModel, frozen=True):
-    """Per-sentence live delivery result for display."""
-
-    model_text: str
-    recognized_text: str
-    status: str  # "correct" / "paraphrase" / "error"
-    similarity: float
+    sentence_words: tuple[tuple[PronunciationWordResult, ...], ...]
 
 
 class LiveDeliverySummary(BaseModel, frozen=True):
     """Live delivery evaluation summary for Phase C display."""
 
     passed: bool
+    pronunciation_score: float
     wpm: float
-    sentences: tuple[LiveDeliverySentenceResult, ...]
+    sentence_words: tuple[tuple[PronunciationWordResult, ...], ...]

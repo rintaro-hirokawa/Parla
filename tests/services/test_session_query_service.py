@@ -300,7 +300,8 @@ class TestGetPassageSummary:
         practice_repo.add_result(
             LiveDeliveryResult(
                 passage_id=passage.id, passed=True,
-                sentence_statuses=(), duration_seconds=30.0, wpm=125.0,
+                words=(), accuracy_score=0.0, fluency_score=0.0, prosody_score=0.0, pronunciation_score=0.0,
+                duration_seconds=30.0, wpm=125.0,
             )
         )
 

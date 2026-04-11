@@ -15,13 +15,12 @@ from parla.ports.session_repository import SessionRepository
 from parla.ports.source_repository import SourceRepository
 from parla.services.query_models import (
     ActiveSourceOption,
-    LiveDeliverySentenceResult,
     LiveDeliverySummary,
     MenuBlockSummary,
     MenuPreview,
     OverlappingSummary,
-    OverlappingWordResult,
     PassageSummary,
+    PronunciationWordResult,
     SessionSummary,
     SessionSummaryBlock,
     TodayDashboard,
@@ -209,7 +208,7 @@ class SessionQueryService:
         groups = map_words_to_sentence_groups(result.words, model_audio.sentence_texts)
         sentence_words = tuple(
             tuple(
-                OverlappingWordResult(
+                PronunciationWordResult(
                     word=pw.word,
                     error_type=pw.error_type,
                     accuracy_score=pw.accuracy_score,
@@ -225,24 +224,34 @@ class SessionQueryService:
         )
 
     def get_live_delivery_summary(self, passage_id: UUID) -> LiveDeliverySummary | None:
-        """Get per-sentence live delivery results for display."""
+        """Get per-word live delivery results mapped to sentences for display."""
         results = self._practice_repo.get_live_delivery_results(passage_id)
         if not results:
             return None
         last = results[-1]
-        sentences = tuple(
-            LiveDeliverySentenceResult(
-                model_text=s.model_text,
-                recognized_text=s.recognized_text,
-                status=s.status,
-                similarity=s.similarity,
+
+        model_audio = self._practice_repo.get_model_audio(passage_id)
+        if model_audio is None:
+            return None
+
+        groups = map_words_to_sentence_groups(last.words, model_audio.sentence_texts)
+        sentence_words = tuple(
+            tuple(
+                PronunciationWordResult(
+                    word=pw.word,
+                    error_type=pw.error_type,
+                    accuracy_score=pw.accuracy_score,
+                )
+                for pw in group
             )
-            for s in last.sentence_statuses
+            for group in groups
         )
+
         return LiveDeliverySummary(
             passed=last.passed,
+            pronunciation_score=last.pronunciation_score,
             wpm=last.wpm,
-            sentences=sentences,
+            sentence_words=sentence_words,
         )
 
     def _count_remaining_passages(self, source_id: UUID) -> int:

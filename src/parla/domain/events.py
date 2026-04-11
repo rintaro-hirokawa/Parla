@@ -182,6 +182,8 @@ class LiveDeliveryCompleted(Event, frozen=True):
 
     passage_id: UUID
     passed: bool
+    error_rate: float
+    error_rate_threshold: float
     wpm: float
 
 

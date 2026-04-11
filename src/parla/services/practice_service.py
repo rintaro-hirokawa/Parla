@@ -22,9 +22,8 @@ from parla.domain.practice import (
     OverlappingResult,
     PronunciationWord,
     WordTimestamp,
-    evaluate_sentence_statuses,
 )
-from parla.domain.similarity import judge_passage
+from parla.domain.similarity import ERROR_RATE_THRESHOLD, calculate_error_rate, judge_passed
 from parla.domain.timing import calculate_timing_deviations
 from parla.domain.wpm import calculate_wpm, should_skip_phase_c
 from parla.event_bus import EventBus
@@ -328,32 +327,27 @@ class PracticeService:
         duration_seconds: float,
     ) -> LiveDeliveryResult:
         """Process raw assessment into LiveDeliveryResult, save, and emit events."""
-        passage = self._source_repo.get_passage(passage_id)
-        if passage is None:
+        reference_text = self._build_live_delivery_reference(passage_id)
+        if reference_text is None:
             msg = f"Passage not found: {passage_id}"
             raise ValueError(msg)
 
-        sentence_model_texts: list[str] = []
-        for sentence in passage.sentences:
-            feedback = self._feedback_repo.get_feedback_by_sentence(sentence.id)
-            if feedback is None:
-                sentence_model_texts.append(sentence.en)
-            else:
-                sentence_model_texts.append(feedback.model_answer)
-
         words = tuple(self._to_pronunciation_word(w) for w in raw_result.words)
-        sentence_statuses = evaluate_sentence_statuses(sentence_model_texts, words)
+        error_types = [w.error_type for w in words]
+        error_rate = calculate_error_rate(error_types)
+        passed = judge_passed(error_types)
 
-        status_strings = [s.status for s in sentence_statuses]
-        passed = judge_passage(status_strings)
-
-        total_words = sum(len(t.split()) for t in sentence_model_texts)
+        total_words = len(reference_text.split())
         wpm = calculate_wpm(total_words, duration_seconds)
 
         result = LiveDeliveryResult(
             passage_id=passage_id,
             passed=passed,
-            sentence_statuses=tuple(sentence_statuses),
+            words=words,
+            accuracy_score=raw_result.accuracy_score,
+            fluency_score=raw_result.fluency_score,
+            prosody_score=raw_result.prosody_score,
+            pronunciation_score=raw_result.pronunciation_score,
             duration_seconds=duration_seconds,
             wpm=wpm,
         )
@@ -368,6 +362,8 @@ class PracticeService:
             LiveDeliveryCompleted(
                 passage_id=passage_id,
                 passed=passed,
+                error_rate=error_rate,
+                error_rate_threshold=ERROR_RATE_THRESHOLD,
                 wpm=wpm,
             )
         )
